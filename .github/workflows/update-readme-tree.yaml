@@ -1,0 +1,35 @@
+name: Update README Tree
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  tree:
+    runs-on: ubuntu-latest
+    name: readme-tree
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate tree
+        uses: RavelloH/readme-tree@latest
+        with:
+          showall: 'no'
+          showdirectoryname: 'yes'
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: 'docs: atualizar árvore de diretórios'
+          branch: chore/update-docs-tree
+          delete-branch: true
+          title: 'docs: atualização automática da árvore de diretórios'
+          body: |
+            # 🤖 **Atualização Automática**
+
+            Este PR foi gerado automaticamente pelo pipeline de CI/CD.
+            Mudanças foram detectadas na estrutura de diretórios e o README foi atualizado para refletir a nova arquitetura.
+
+            Gerado por [readme-tree](https://github.com/RavelloH/readme-tree).
+          labels: documentation, automated pr

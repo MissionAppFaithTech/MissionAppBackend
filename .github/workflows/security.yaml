@@ -1,0 +1,64 @@
+name: Security
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 17 * * 1'
+
+jobs:
+  sca:
+    name: Snyk Open Source
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+
+      - run: corepack enable && pnpm install --frozen-lockfile
+
+      - name: Snyk SCA
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: >
+            --sarif-file-output=snyk-sca.sarif
+            --severity-threshold=high
+
+      - name: Upload SCA results ao GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-sca.sarif
+        if: always() && hashFiles('snyk-sca.sarif') != ''
+
+  sast:
+    name: Snyk Code
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snyk/actions/setup@master
+
+      - name: Snyk Code SAST
+        continue-on-error: true
+        run: snyk code test --sarif-file-output=snyk-code.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Upload SAST results ao GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-code.sarif
+        if: always() && hashFiles('snyk-code.sarif') != ''
