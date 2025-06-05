@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  password_digest String
+  login_attempts  Int       @default(0)
+  last_login      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  AuthenticationAudit AuthenticationAudit[]
+
+  @@map("users")
+}
+
+model AuthenticationAudit {
+  id          Int                   @id @default(autoincrement())
+  ip_address  String?
+  remote_port String?
+  browser     String?
+  status      AUTHENTICATION_STATUS
+  user_id     String?
+  user        User?                 @relation(fields: [user_id], references: [id], onDelete: NoAction)
+  created_at  DateTime              @default(now())
+
+  @@map("authentication_audit")
+}
+
+enum AUTHENTICATION_STATUS {
+  SUCCESS
+  USER_NOT_EXISTS
+  INCORRECT_PASSWORD
+  BLOCKED
+}
