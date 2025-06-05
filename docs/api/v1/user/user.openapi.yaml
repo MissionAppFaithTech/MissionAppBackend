@@ -1,0 +1,130 @@
+paths:
+  /accounts:
+    post:
+      operationId: accountSignup
+      tags: [user]
+      summary: Cadastro de conta
+      description: >-
+        Cria um novo usuário e emite o par de tokens de autenticação, sempre
+        no corpo da resposta — mesmo fluxo de entrega do login (ver ADR-0023).
+      security: []
+      parameters:
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/ClientType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: Conta criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/LoginResponse'
+        '422':
+          description: 'Erro de validação (ex: email já em uso, senhas não conferem).'
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /account/profile:
+    get:
+      operationId: accountProfileShow
+      tags: [user]
+      summary: Perfil do usuário autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil do usuário autenticado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '../auth/auth.openapi.yaml#/components/schemas/UserSummary'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+  /account/password:
+    patch:
+      operationId: accountPasswordUpdate
+      tags: [user]
+      summary: Troca de senha
+      description: >-
+        Valida a senha atual, atualiza o hash e dispara revogação global:
+        incrementa o auth_version do usuário (invalidando todos os access
+        tokens ativos, incluindo o da própria requisição na próxima chamada)
+        e revoga todos os refresh tokens. Ver ADR-0023.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Senha alterada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Senha atual incorreta, ou nova senha/confirmação inválidas.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+components:
+  schemas:
+    SignupRequest:
+      type: object
+      required: [email, password, passwordConfirmation]
+      properties:
+        fullName:
+          type: [string, 'null']
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Deve ser único — validado contra a tabela users.
+        password:
+          type: string
+          minLength: 8
+          maxLength: 32
+        passwordConfirmation:
+          type: string
+          minLength: 8
+          maxLength: 32
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword, newPasswordConfirmation]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 32
+        newPasswordConfirmation:
+          type: string
+          minLength: 8
+          maxLength: 32

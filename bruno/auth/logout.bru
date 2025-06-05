@@ -1,0 +1,33 @@
+meta {
+  name: Logout (dispositivo atual)
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{base_url}}/api/v1/auth/logout
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "refreshToken": "{{refresh_token}}"
+  }
+}
+
+docs {
+  Encerra apenas a sessão/dispositivo do refresh token enviado no corpo —
+  revoga somente a família de origem, outras sessões do mesmo usuário
+  (outros dispositivos/browsers) não são afetadas. Para logout em todos os
+  dispositivos, use "Logout (todos os dispositivos)" em `sessions/`.
+
+  Não exige access token válido (ver RFC 7009) — o header `Authorization` é
+  opcional; se presente e ainda válido, bloqueia também o `jti` corrente no
+  DragonflyDB como defesa extra, mas um access token ausente/expirado não
+  impede o logout. Ver ADR-0023.
+}

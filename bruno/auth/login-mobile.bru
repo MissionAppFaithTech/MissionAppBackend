@@ -1,0 +1,31 @@
+meta {
+  name: Login (mobile)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/v1/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  x-client-type: mobile
+  x-device-name: iPhone 15
+}
+
+body:json {
+  {
+    "login": "usuario@example.com",
+    "password": "senha12345"
+  }
+}
+
+docs {
+  Mesmo login, com `x-client-type: mobile` e `x-device-name` opcional. Esses
+  headers não mudam onde os tokens são entregues (sempre no corpo, em ambos
+  os casos) — determinam apenas: (1) a política de TTL do refresh token
+  (mobile tem sliding window mais longa, `JWT_REFRESH_EXPIRES_IN_MOBILE`) e
+  (2) os metadados exibidos na listagem de sessões ativas. Ver ADR-0023.
+}

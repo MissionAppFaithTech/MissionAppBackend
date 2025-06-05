@@ -1,0 +1,10 @@
+# Arquivo de agrupamento da pasta user/ (ADR-0027). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /accounts:
+    $ref: './user.openapi.yaml#/paths/~1accounts'
+  /account/profile:
+    $ref: './user.openapi.yaml#/paths/~1account~1profile'
+  /account/password:
+    $ref: './user.openapi.yaml#/paths/~1account~1password'

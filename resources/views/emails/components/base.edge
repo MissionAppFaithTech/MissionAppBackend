@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>{{ brandName }}</title>
+  <style>
+    body { margin: 0; padding: 0; }
+    table { border-collapse: collapse; }
+    img { border: 0; display: block; }
+    a { text-decoration: none; }
+
+    #preheader {
+      display: none !important;
+      visibility: hidden;
+      opacity: 0;
+      max-height: 0;
+      max-width: 0;
+      overflow: hidden;
+      mso-hide: all;
+    }
+
+    .logo-dark { display: none !important; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg-outer { background-color: #0b0b0f !important; }
+      .bg-card { background-color: #18181b !important; }
+      .text-heading { color: #fafafa !important; }
+      .text-body { color: #d4d4d8 !important; }
+      .text-muted { color: #71717a !important; }
+      .hr { border-color: #27272a !important; }
+      .logo-light { display: none !important; }
+      .logo-dark { display: block !important; }
+    }
+
+    @media screen and (max-width: 600px) {
+      .container { width: 100% !important; }
+      .card-padding { padding: 24px !important; }
+    }
+  </style>
+</head>
+<body class="bg-outer" style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <div id="preheader">{{{ await $slots.preheader() }}}</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg-outer" style="background-color: #f4f4f5;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" class="container" width="480" cellpadding="0" cellspacing="0" style="width: 480px; max-width: 100%;">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding-bottom: 24px;">
+              <img
+                src="{{ embedImage(logoLightPath) }}"
+                alt="{{ brandName }}"
+                width="160"
+                class="logo-light"
+                style="display: block; margin: 0 auto; width: 160px; max-width: 100%; height: auto;"
+              >
+              <img
+                src="{{ embedImage(logoDarkPath) }}"
+                alt="{{ brandName }}"
+                width="160"
+                class="logo-dark"
+                style="display: none; margin: 0 auto; width: 160px; max-width: 100%; height: auto;"
+              >
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td class="bg-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td class="card-padding" style="padding: 40px;">
+                    {{{ await $slots.main() }}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top: 24px;">
+              <p class="text-muted" style="margin: 0; font-size: 12px; line-height: 1.6; color: #a1a1aa;">
+                Este é um email automático — não responda a esta mensagem.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

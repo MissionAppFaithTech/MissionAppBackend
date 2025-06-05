@@ -1,0 +1,28 @@
+meta {
+  name: Revoke Session
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{base_url}}/api/v1/auth/sessions/:familyId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  familyId: cole-aqui-o-id-da-sessao-listada
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Revoga remotamente uma sessão/dispositivo específico (ex: "sair deste
+  dispositivo" a partir de outro). O `familyId` vem do campo `id` retornado
+  por "List Sessions". Diferente do logout local, o access token daquela
+  sessão é rejeitado quase imediatamente — via blocklist de família no
+  DragonflyDB — sem esperar sua expiração natural de 15 minutos. 404 se a
+  sessão não existir ou pertencer a outro usuário. Ver ADR-0023.
+}

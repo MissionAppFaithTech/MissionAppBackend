@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar vulnerabilidade de segurança
+    url: https://github.com/MissionAppFaithTech/MissionAppBackend/blob/main/SECURITY.md
+    about: Não abra uma issue pública para vulnerabilidades — siga o processo de divulgação responsável descrito no SECURITY.md.

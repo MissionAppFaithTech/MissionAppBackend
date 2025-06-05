@@ -1,0 +1,22 @@
+meta {
+  name: List Sessions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/auth/sessions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista as sessões (dispositivos) ativas do usuário autenticado — uma entrada
+  por família de refresh token, com `deviceType`, `deviceName`, `ipAddress`,
+  `lastUsedAt` e `current` (se é a sessão do token usado nesta requisição).
+  Use o `id` (que é o `family_id`) para revogar uma sessão específica.
+}
