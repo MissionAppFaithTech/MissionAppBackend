@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    "jripouteau.adonis-extension-pack",
+    "jripouteau.adonis-vscode-extension",
+    "jeff-hykin.better-dockerfile-syntax",
+    "formulahendry.code-runner",
+    "mikestead.dotenv",
+    "adonisjs.vscode-edge",
+    "usernamehw.errorlens",
+    "dbaeumer.vscode-eslint",
+    "waderyan.gitblame",
+    "eamodio.gitlens",
+    "jripouteau.japa-vscode",
+    "hverlin.mise-vscode",
+    "rvest.vs-code-prettier-eslint",
+    "esbenp.prettier-vscode",
+    "mylesmurphy.prettify-ts",
+    "yoavbls.pretty-ts-errors",
+    "kokakiwi.vscode-just"
+  ]
+}

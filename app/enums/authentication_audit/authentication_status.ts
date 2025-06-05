@@ -1,0 +1,6 @@
+export enum AuthenticationStatus {
+  SUCCESS = 'SUCCESS',
+  USER_NOT_EXISTS = 'USER_NOT_EXISTS',
+  INCORRECT_PASSWORD = 'INCORRECT_PASSWORD',
+  BLOCKED = 'BLOCKED',
+}
