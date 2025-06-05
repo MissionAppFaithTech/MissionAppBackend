@@ -1,0 +1,44 @@
+{
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
+
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Gere as mensagens de commit SEMPRE em Português do Brasil (PT-BR). Siga estritamente o padrão Conventional Commits com os tipos: feat, fix, chore, docs, refactor, test, perf, build, ci, revert. Use o imperativo no presente (ex: 'adicionar', 'corrigir', 'remover'). Seja conciso. Quando houver escopo, use letras minúsculas. Não crie mensagens demasiadamente extensas."
+    }
+  ],
+
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.trimTrailingWhitespace": true,
+
+  "json.schemas": [
+    {
+      "fileMatch": ["renovate.json", ".renovaterc", ".renovaterc.json"],
+      "url": "https://docs.renovatebot.com/renovate-schema.json"
+    }
+  ],
+
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.trimTrailingWhitespace": false
+  }
+}
