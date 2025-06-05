@@ -1,0 +1,19 @@
+{{#var modelName = generators.modelName(entity.name)}}
+{{#var modelFileName = generators.modelFileName(entity.name)}}
+{{#var modelSchemaName = `${modelName}Schema` }}
+{{{
+  exports({
+    to: app.modelsPath(entity.path, modelFileName)
+  })
+}}}
+import { {{ modelSchemaName }} } from '#database/schema'
+import { compose } from '@adonisjs/core/helpers'
+import { Filterable } from '@dirupt/adonis-lucid-filter'
+import { WithPrimaryUuid } from './mixins/with_primary_uuid.ts'
+import { WithTimestamps } from './mixins/with_timestamps.ts'
+
+export default class {{ modelName }} extends compose(
+  {{ modelSchemaName }},
+  WithPrimaryUuid,
+  WithTimestamps,
+) {}
