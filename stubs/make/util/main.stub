@@ -1,0 +1,10 @@
+{{#var utilFunctionName = string(entity.name).camelCase().toString()}}
+{{#var utilFileName = string(entity.name).snakeCase().ext('.ts').toString()}}
+{{{
+  exports({
+    to: app.makePath('app', 'utils', entity.path, utilFileName)
+  })
+}}}
+export function {{ utilFunctionName }}() {
+  //
+}
