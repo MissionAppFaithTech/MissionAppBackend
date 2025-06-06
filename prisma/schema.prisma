@@ -13,19 +13,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AUTHENTICATION_STATUS {
+  SUCCESS
+  USER_NOT_EXISTS
+  INCORRECT_PASSWORD
+  BLOCKED
+}
+
+// missionario, usuario e administrador
 model User {
-  id              String    @id @default(uuid())
-  name            String
+  id             String  @id @default(uuid())
+  bio            String
+  fullName       String
+  phoneNumber    String
+  username       String
+  publicEmail    String?
+  publicPhone    String?
+  profilePicture String?
+
   email           String    @unique
   password_digest String
   login_attempts  Int       @default(0)
   last_login      DateTime?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  roleId String
+  Role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  missionaryAgencyId String
+  MissionaryAgency   MissionaryAgency @relation(fields: [missionaryAgencyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  churchId String?
+  Church   Church? @relation(fields: [churchId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   AuthenticationAudit AuthenticationAudit[]
 
   @@map("users")
+}
+
+model MissionaryAgency {
+  id         String @id @default(uuid())
+  agencyName String
+
+  User User[]
+
+  @@map("missionary_agency")
+}
+
+model Church {
+  id          String  @id @default(uuid())
+  name        String
+  churchPhone String?
+
+  // TODO: revisar consistência de attendedBy
+  attendedBy String // userId from the missionary
+  // User       User   @relation(fields: [attendedBy], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  User User[]
+
+  @@map("church")
+}
+
+model Role {
+  id   String @id @default(uuid())
+  role String
+
+  User User[]
 }
 
 model AuthenticationAudit {
@@ -39,11 +94,4 @@ model AuthenticationAudit {
   created_at  DateTime              @default(now())
 
   @@map("authentication_audit")
-}
-
-enum AUTHENTICATION_STATUS {
-  SUCCESS
-  USER_NOT_EXISTS
-  INCORRECT_PASSWORD
-  BLOCKED
 }

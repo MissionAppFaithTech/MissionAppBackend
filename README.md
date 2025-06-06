@@ -22,4 +22,3 @@ Segue algumas particularidades e características do modelo banco de dados:
 4. Inicialize os contêiners do Docker executando o comando `docker-compose up -d`.
 5. Execute o comando `npx prisma migrate dev` para transferir as migrações do banco de dados.
 6. Execute o projeto com o comando: `npm run start:dev`.
-
