@@ -12,3 +12,14 @@ Segue algumas particularidades e características do modelo banco de dados:
 8. following são as pessoas que um usuário está seguindo.
 9. project é o projeto pessoal de um missionário.
 10. churches é um modelo necessário e está presente no cadastro. Também precisamos normalizar o campo "faithCommunity".
+
+
+# Execução
+
+1. Clone este repositório: `git clone https://github.com/Amaro-peter/Mission_App_v1.1`.
+2. Instale as dependências ao executar o comando no console: `npm install`.
+3. Crie um arquivo `.env`, copie e cole o conteúdo de `.env.example` e configure as variáveis de ambiente.
+4. Inicialize os contêiners do Docker executando o comando `docker-compose up -d`.
+5. Execute o comando `npx prisma migrate dev` para transferir as migrações do banco de dados.
+6. Execute o projeto com o comando: `npm run start:dev`.
+

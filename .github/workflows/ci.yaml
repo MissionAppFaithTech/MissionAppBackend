@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Build and lint
+        run: |
+          npm run build
+          npm run lint
+      - name: Test
+        run: npm run test
+        env:
+          NODE_ENV: 'test'
+          JWT_SECRET: 'jwt-secret'
+          FRONTEND_URL: 'localhost:5173'
+          EMAIL_HOST: 'smtp.example.com'
+          EMAIL_PORT: 587
+          EMAIL_USER: 'user@gmail.com'
+          EMAIL_PASSWORD: 'abacaxi123'
