@@ -13,85 +13,151 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AUTHENTICATION_STATUS {
+enum AuthenticationStatus {
   SUCCESS
   USER_NOT_EXISTS
   INCORRECT_PASSWORD
   BLOCKED
 }
 
-// missionario, usuario e administrador
+enum UserRole {
+  ADMIN
+  MISSIONARY
+  NORMAL_USER
+}
+
+model AuthenticationAudit {
+  id          Int                  @id @default(autoincrement())
+  ip_address  String?
+  remote_port String?
+  browser     String?
+  status      AuthenticationStatus
+  userId      Int?
+  user        User?                @relation(fields: [userId], references: [id], onDelete: NoAction)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@map("authentication_audits")
+}
+
 model User {
-  id             String  @id @default(uuid())
-  bio            String
-  fullName       String
-  phoneNumber    String
+  id             Int      @id @default(autoincrement())
+  publicId       String   @unique @default(uuid(7)) @map("public_id")
+  name           String
   username       String
-  publicEmail    String?
-  publicPhone    String?
-  profilePicture String?
+  phoneNumber    String   @map("phone_number")
+  profilePicture String?  @map("profile_picture")
+  biography      String?
+  role           UserRole @map("user_role")
 
-  email           String    @unique
-  password_digest String
-  login_attempts  Int       @default(0)
-  last_login      DateTime?
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  loginAttempts Int       @default(0) @map("login_attempts")
+  lastLogin     DateTime? @map("last_login")
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  roleId String
-  Role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  faithCommunityId Int?            @map("faith_community_id")
+  FaithCommunity   FaithCommunity? @relation(fields: [faithCommunityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  missionaryAgencyId String
-  MissionaryAgency   MissionaryAgency @relation(fields: [missionaryAgencyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-  churchId String?
-  Church   Church? @relation(fields: [churchId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-  AuthenticationAudit AuthenticationAudit[]
+  Missionary          Missionary?           @relation()
+  Following           Follow[]              @relation("following")
+  FaithCommunityOwner FaithCommunity[]      @relation("created_by")
+  AuthenticationAudit AuthenticationAudit[] @relation()
 
   @@map("users")
 }
 
-model MissionaryAgency {
-  id         String @id @default(uuid())
-  agencyName String
+model Missionary {
+  id                Int     @id @default(autoincrement())
+  publicEmail       String? @map("public_email")
+  publicPhoneNumber String? @map("public_phone")
 
-  User User[]
+  missionaryAgencyId Int
+  MissionaryAgency   MissionaryAgency @relation(fields: [missionaryAgencyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  @@map("missionary_agency")
+  userId Int  @unique @map("user_id")
+  User   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  Followers Follow[] @relation("followers")
+  Post      Post[]
+
+  @@map("missionaries")
 }
 
-model Church {
-  id          String  @id @default(uuid())
+model Follow {
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  Follower  User       @relation("following", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Following Missionary @relation("followers", fields: [followingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId]) // Índice para otimizar busca por usuários seguidores
+  @@index([followerId]) // Índice para otimizar busca por usuários seguidos
+  @@map("followers")
+}
+
+model FaithCommunity {
+  id          Int    @id @default(autoincrement())
   name        String
-  churchPhone String?
+  phoneNumber String @map("phone_number")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  // TODO: revisar consistência de attendedBy
-  attendedBy String // userId from the missionary
-  // User       User   @relation(fields: [attendedBy], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  userId Int?  @map("user_id")
+  User   User? @relation("created_by", fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  User User[]
+  Members User[]   @relation()
+  Pastor  Pastor[] @relation()
 
-  @@map("church")
+  @@map("faith_communities")
 }
 
-model Role {
-  id   String @id @default(uuid())
-  role String
+model MissionaryAgency {
+  id   Int    @id @default(autoincrement())
+  name String
+  createdAt DateTime @default(now()) @map("created_at")
 
-  User User[]
+  Missionary Missionary[] @relation()
+
+  @@map("missionary_agencies")
 }
 
-model AuthenticationAudit {
-  id          Int                   @id @default(autoincrement())
-  ip_address  String?
-  remote_port String?
-  browser     String?
-  status      AUTHENTICATION_STATUS
-  user_id     String?
-  user        User?                 @relation(fields: [user_id], references: [id], onDelete: NoAction)
-  created_at  DateTime              @default(now())
+model Pastor {
+  id          Int    @id @default(autoincrement())
+  name        String
+  phoneNumber String @map("phone_number")
 
-  @@map("authentication_audit")
+  faithCommunityId Int
+  FaithCommunity   FaithCommunity @relation(fields: [faithCommunityId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  @@map("pastors")
+}
+
+model Post {
+  id            Int      @id @default(autoincrement())
+  content       String
+  highlightLink String?  @map("highlight_link")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  missionaryId Int        @map("missionary_id")
+  Missionary   Missionary @relation(fields: [missionaryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  PostImage PostImage[] @relation()
+
+  @@index([missionaryId, createdAt])
+  @@map("posts")
+}
+
+model PostImage {
+  id       Int    @id @default(autoincrement())
+  imageURL String
+  order    Int    @default(0)
+
+  postId Int  @map("post_id")
+  Post   Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([postId])
+  @@map("post_images")
 }
