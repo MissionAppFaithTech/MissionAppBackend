@@ -62,6 +62,7 @@ model User {
 
   Missionary          Missionary?           @relation()
   Following           Follow[]              @relation("following")
+  Followers           Follow[]              @relation("followers")
   FaithCommunityOwner FaithCommunity[]      @relation("created_by")
   AuthenticationAudit AuthenticationAudit[] @relation()
 
@@ -79,8 +80,7 @@ model Missionary {
   userId Int  @unique @map("user_id")
   User   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  Followers Follow[] @relation("followers")
-  Post      Post[]
+  Post Post[] @relation()
 
   @@map("missionaries")
 }
@@ -90,8 +90,8 @@ model Follow {
   followingId Int      @map("following_id")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  Follower  User       @relation("following", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  Following Missionary @relation("followers", fields: [followingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Follower  User @relation("following", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Following User @relation("followers", fields: [followingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([followerId, followingId])
   @@index([followingId]) // Índice para otimizar busca por usuários seguidores
@@ -100,10 +100,10 @@ model Follow {
 }
 
 model FaithCommunity {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
-  phoneNumber String @map("phone_number")
-  createdAt DateTime @default(now()) @map("created_at")
+  phoneNumber String   @map("phone_number")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   userId Int?  @map("user_id")
   User   User? @relation("created_by", fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -115,8 +115,8 @@ model FaithCommunity {
 }
 
 model MissionaryAgency {
-  id   Int    @id @default(autoincrement())
-  name String
+  id        Int      @id @default(autoincrement())
+  name      String
   createdAt DateTime @default(now()) @map("created_at")
 
   Missionary Missionary[] @relation()
