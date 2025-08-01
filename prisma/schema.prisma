@@ -49,6 +49,10 @@ model User {
   biography      String?
   role           UserRole @map("user_role")
 
+  // Cache para recuperação da quantidade de seguidores mais rápido:
+  followersCount Int @default(0)
+  followingCount Int @default(0)
+
   email         String    @unique
   passwordHash  String    @map("password_hash")
   loginAttempts Int       @default(0) @map("login_attempts")

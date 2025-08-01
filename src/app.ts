@@ -4,21 +4,30 @@ import { ZodError } from 'zod'
 import 'dotenv/config'
 import fastifyJwt from '@fastify/jwt'
 import fastifyCookie from '@fastify/cookie'
+import cors from '@fastify/cors'
+import { env } from './env'
 
 export const app = fastify()
 
+app.register(fastifyCookie)
+
+app.register(cors, {
+  origin: env.FRONTEND_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+})
+
 app.register(fastifyJwt, {
-  secret: process.env.JWT_SECRET,
+  secret: env.JWT_SECRET,
   cookie: {
     cookieName: 'refreshToken',
     signed: false,
   },
   sign: {
-    expiresIn: '5m',
+    expiresIn: '2h',
   },
 })
-
-app.register(fastifyCookie)
 
 app.register(appRoutes)
 
