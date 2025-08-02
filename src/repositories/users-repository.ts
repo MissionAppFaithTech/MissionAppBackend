@@ -7,8 +7,9 @@ export interface UsersRepository {
   findByEmail: (email: string) => Promise<UserWithDetails | null>
   findByEmailOrUsername: (
     emailOrUsername: string,
-    usernameOrEmail: string,
+    usernameOrEmail?: string,
   ) => Promise<UserWithDetails | null>
+  incrementLoginAttempts: (id: number) => Promise<void>
   create: (data: Prisma.UserCreateInput) => Promise<UserWithDetails>
   setLastLogin: (id: number) => Promise<void>
 }

@@ -22,7 +22,7 @@ export class PrismaAuthenticationAuditRepository
   async getLast() {
     const authenticationAudit = await prisma.authenticationAudit.findMany({
       orderBy: {
-        created_at: 'desc',
+        createdAt: 'desc',
       },
       take: 1,
     })

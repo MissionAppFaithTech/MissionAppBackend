@@ -1,16 +1,21 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { env } from 'src/env'
 
 export async function refreshToken(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  await request.jwtVerify({ onlyCookie: true })
+  try {
+    await request.jwtVerify({ onlyCookie: true })
+  } catch (error) {
+    return await reply.status(401).send({ message: 'Invalid Token' })
+  }
 
   const accessToken = await reply.jwtSign(
     {},
     {
       sign: {
-        sub: (request.user as { sub: string }).sub,
+        sub: request.user.publicId,
       },
     },
   )
@@ -19,7 +24,7 @@ export async function refreshToken(
     {},
     {
       sign: {
-        sub: (request.user as { sub: string }).sub,
+        sub: request.user.publicId,
         expiresIn: '7d',
       },
     },
@@ -28,8 +33,8 @@ export async function refreshToken(
   return await reply
     .setCookie('refreshToken', refreshToken, {
       path: '/',
-      secure: true,
-      sameSite: true,
+      secure: env.NODE_ENV === 'production',
+      sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
       httpOnly: true,
     })
     .status(200)

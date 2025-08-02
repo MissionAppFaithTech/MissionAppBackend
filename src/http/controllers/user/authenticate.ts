@@ -1,20 +1,16 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { z } from 'zod'
+import { authenticateBodySchema } from 'src/http/schemas/user/authenticate-schema'
 import { InvalidCredentialsError } from '@/use-cases/errors/invalid-credentials-error'
 import { makeAuthenticateUseCase } from '@/use-cases/factories/make-authenticate-use-case'
+import { env } from 'src/env'
+import { UserPresenter } from '@/presenters/user-presenter'
 
 export async function authenticate(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const authenticateBodySchema = z
-    .object({
-      email: z.string().email(),
-      password: z.string().min(6).max(200),
-    })
-    .parse(request.body)
+  const { email, password } = authenticateBodySchema.parse(request.body)
 
-  const { email, password } = authenticateBodySchema
   const { ip: ipAddress } = request
   const { 'user-agent': browser } = request.headers
   const { remotePort } = request.socket
@@ -36,7 +32,7 @@ export async function authenticate(
       {},
       {
         sign: {
-          sub: user?.id,
+          sub: user?.publicId,
         },
       },
     )
@@ -45,26 +41,26 @@ export async function authenticate(
       {},
       {
         sign: {
-          sub: user?.id,
+          sub: user?.publicId,
           expiresIn: '7d',
-        },
+        }
       },
     )
 
     return await reply
       .setCookie('refreshToken', refreshToken, {
         path: '/',
-        secure: true,
-        sameSite: true,
+        secure: env.NODE_ENV === 'production',
+        sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
         httpOnly: true,
       })
       .status(200)
-      .send({ user, accessToken })
-  } catch (err: unknown) {
-    if (err instanceof InvalidCredentialsError) {
-      return await reply.status(400).send({ message: err.message })
+      .send({ accessToken, user: UserPresenter.toHTTP(user) })
+  } catch (error: unknown) {
+    if (error instanceof InvalidCredentialsError) {
+      return await reply.status(400).send({ message: error.message })
     }
 
-    throw err
+    throw error
   }
 }

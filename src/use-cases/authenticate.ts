@@ -1,4 +1,5 @@
-import type { User } from '@prisma/client'
+import { compare } from 'bcryptjs'
+import type { UserWithDetails } from 'src/@types/user-with-details'
 import { InvalidCredentialsError } from './errors/invalid-credentials-error'
 import type { AuthenticationAuditRepository } from '@/repositories/authentication-audit-repository'
 import type { UsersRepository } from '@/repositories/users-repository'
@@ -12,7 +13,7 @@ interface AuthenticateUseCaseRequest {
 }
 
 interface AuthenticateUseCaseResponse {
-  user: User
+  user: UserWithDetails
 }
 
 export class AuthenticateUseCase {
@@ -46,7 +47,9 @@ export class AuthenticateUseCase {
       throw new InvalidCredentialsError()
     }
 
-    const doesPasswordMatch = false
+    await this.usersRepository.incrementLoginAttempts(user.id)
+
+    const doesPasswordMatch = await compare(password, user.passwordHash)
 
     if (!doesPasswordMatch) {
       await this.authenticationAuditRepository.create({
@@ -62,11 +65,11 @@ export class AuthenticateUseCase {
     await this.authenticationAuditRepository.create({
       ...auditAuthenticateObject,
       status: 'SUCCESS',
-      user_id: user.id,
+      userId: user.id,
     })
 
     return {
-      user,
+      user
     }
   }
 }

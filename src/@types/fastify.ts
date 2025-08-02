@@ -1,7 +1,14 @@
-import 'fastify'
+// src/@types/fastify-jwt.d.ts
+import '@fastify/jwt'
 
-declare module 'fastify' {
-  interface FastifyRequest {
-    userId?: string
+declare module '@fastify/jwt' {
+  interface FastifyJWT {
+    user: {
+      publicId: string
+    }
+    sign: {
+      sub: string
+      expiresIn?: string
+    }
   }
 }

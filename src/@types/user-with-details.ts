@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client'
 export const userWithDetails = Prisma.validator<Prisma.UserDefaultArgs>()({
   include: {
     FaithCommunity: true,
-    Missionary: true,
+    Missionary: {
+      include: {
+        MissionaryAgency: true
+      }
+    },
   },
 })
 
