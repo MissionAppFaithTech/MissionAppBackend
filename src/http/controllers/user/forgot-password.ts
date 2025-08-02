@@ -1,10 +1,10 @@
-import { makeForgotPasswordUseCase } from '@/use-cases/factories/make-forgot-password-use-case'
 import { type FastifyReply, type FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { makeForgotPasswordUseCase } from '@/use-cases/factories/make-forgot-password-use-case'
 
 export async function forgotPassword(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { email } = z
     .object({

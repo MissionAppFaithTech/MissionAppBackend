@@ -47,11 +47,11 @@ model User {
   phoneNumber    String   @map("phone_number")
   profilePicture String?  @map("profile_picture")
   biography      String?
-  role           UserRole @map("user_role")
+  role           UserRole @default(NORMAL_USER)
 
   // Cache para recuperação da quantidade de seguidores mais rápido:
-  followersCount Int @default(0)
-  followingCount Int @default(0)
+  followersCount Int @default(0) @map("followers_count")
+  followingCount Int @default(0) @map("following_count")
 
   email         String    @unique
   passwordHash  String    @map("password_hash")
@@ -62,7 +62,7 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   faithCommunityId Int?            @map("faith_community_id")
-  FaithCommunity   FaithCommunity? @relation(fields: [faithCommunityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  FaithCommunity   FaithCommunity? @relation("belongs_to", fields: [faithCommunityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   Missionary          Missionary?           @relation()
   Following           Follow[]              @relation("following")
@@ -74,9 +74,10 @@ model User {
 }
 
 model Missionary {
-  id                Int     @id @default(autoincrement())
-  publicEmail       String? @map("public_email")
-  publicPhoneNumber String? @map("public_phone")
+  id                Int      @id @default(autoincrement())
+  publicEmail       String?  @map("public_email")
+  publicPhoneNumber String?  @map("public_phone")
+  createdAt         DateTime @default(now()) @map("created_at")
 
   missionaryAgencyId Int
   MissionaryAgency   MissionaryAgency @relation(fields: [missionaryAgencyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -112,7 +113,7 @@ model FaithCommunity {
   userId Int?  @map("user_id")
   User   User? @relation("created_by", fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  Members User[]   @relation()
+  Members User[]   @relation("belongs_to")
   Pastor  Pastor[] @relation()
 
   @@map("faith_communities")
@@ -129,9 +130,10 @@ model MissionaryAgency {
 }
 
 model Pastor {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
-  phoneNumber String @map("phone_number")
+  phoneNumber String   @map("phone_number")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   faithCommunityId Int
   FaithCommunity   FaithCommunity @relation(fields: [faithCommunityId], references: [id], onDelete: NoAction, onUpdate: Cascade)
@@ -155,9 +157,10 @@ model Post {
 }
 
 model PostImage {
-  id       Int    @id @default(autoincrement())
-  imageURL String
-  order    Int    @default(0)
+  id        Int      @id @default(autoincrement())
+  imageURL  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
 
   postId Int  @map("post_id")
   Post   Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)

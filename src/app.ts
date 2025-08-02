@@ -2,9 +2,9 @@ import fastify from 'fastify'
 import { appRoutes } from './http/routes'
 import { ZodError } from 'zod'
 import 'dotenv/config'
-import fastifyJwt from '@fastify/jwt'
 import fastifyCookie from '@fastify/cookie'
 import cors from '@fastify/cors'
+import fastifyJwt from '@fastify/jwt'
 import { env } from './env'
 
 export const app = fastify()

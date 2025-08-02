@@ -1,6 +1,6 @@
-import type { UsersRepository } from '@/repositories/users-repository'
 import { sign } from 'jsonwebtoken'
 import { UserEmailNotFoundError } from './errors/user-email-not-found-error'
+import type { UsersRepository } from '@/repositories/users-repository'
 import 'dotenv/config'
 import { sendEmail } from '@/utils/send-email'
 

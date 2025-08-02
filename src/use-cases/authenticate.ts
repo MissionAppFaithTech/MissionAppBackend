@@ -1,7 +1,7 @@
-import type { UsersRepository } from '@/repositories/users-repository'
 import type { User } from '@prisma/client'
 import { InvalidCredentialsError } from './errors/invalid-credentials-error'
 import type { AuthenticationAuditRepository } from '@/repositories/authentication-audit-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 interface AuthenticateUseCaseRequest {
   email: string
@@ -18,7 +18,7 @@ interface AuthenticateUseCaseResponse {
 export class AuthenticateUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly authenticationAuditRepository: AuthenticationAuditRepository
+    private readonly authenticationAuditRepository: AuthenticationAuditRepository,
   ) {}
 
   async execute({

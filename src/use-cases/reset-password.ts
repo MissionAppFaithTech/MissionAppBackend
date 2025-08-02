@@ -1,9 +1,9 @@
 import 'dotenv/config'
-import type { UsersRepository } from '@/repositories/users-repository'
+import { hash } from 'bcryptjs'
 import { verify } from 'jsonwebtoken'
 import { InvalidJwtTokenError } from './errors/invalid-jwt-token-error'
 import { UserEmailNotFoundError } from './errors/user-email-not-found-error'
-import { hash } from 'bcryptjs'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 interface ResetPasswordUseCaseCaseRequest {
   bearerAuth: string
