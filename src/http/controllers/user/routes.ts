@@ -6,11 +6,11 @@ import { register } from './register'
 import { resetPassword } from './reset-password'
 
 export async function userRoutes(app: FastifyInstance) {
-  app.post('/users', register)
+  app.post('/', register)
 
-  app.post('/users/forgot-password', forgotPassword)
+  app.post('/forgot-password', forgotPassword)
 
-  app.patch('/users/reset-password', resetPassword)
+  app.patch('/reset-password', resetPassword)
 
   app.post('/sessions', authenticate)
 

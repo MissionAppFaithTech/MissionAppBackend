@@ -35,7 +35,7 @@ export class AuthenticateUseCase {
       browser: browser ?? null,
       ip_address: ipAddress ?? null,
       remote_port: remotePort ?? null,
-      user_id: user?.id ?? null,
+      userId: user?.id ?? null,
     }
 
     if (user == null) {
