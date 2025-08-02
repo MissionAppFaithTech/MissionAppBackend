@@ -5,8 +5,8 @@ export const userWithDetails = Prisma.validator<Prisma.UserDefaultArgs>()({
     FaithCommunity: true,
     Missionary: {
       include: {
-        MissionaryAgency: true
-      }
+        MissionaryAgency: true,
+      },
     },
   },
 })

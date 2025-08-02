@@ -1,9 +1,9 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { env } from 'src/env'
 import { authenticateBodySchema } from 'src/http/schemas/user/authenticate-schema'
+import { UserPresenter } from '@/presenters/user-presenter'
 import { InvalidCredentialsError } from '@/use-cases/errors/invalid-credentials-error'
 import { makeAuthenticateUseCase } from '@/use-cases/factories/make-authenticate-use-case'
-import { env } from 'src/env'
-import { UserPresenter } from '@/presenters/user-presenter'
 
 export async function authenticate(
   request: FastifyRequest,
@@ -43,7 +43,7 @@ export async function authenticate(
         sign: {
           sub: user?.publicId,
           expiresIn: '7d',
-        }
+        },
       },
     )
 

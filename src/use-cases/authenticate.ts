@@ -69,7 +69,7 @@ export class AuthenticateUseCase {
     })
 
     return {
-      user
+      user,
     }
   }
 }
