@@ -175,7 +175,7 @@ docker compose up -d
 7. Execute o comando para resetar o banco de dados, populá-lo com dados de teste definidos em `prisma/seed.ts` e habilitar as extensões necessárias:
 
 ```bash
-npm run start:dev
+npx prisma migrate reset
 ```
 
 8. Rode o projeto com o comando: 
