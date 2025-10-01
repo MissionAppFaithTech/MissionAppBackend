@@ -129,11 +129,11 @@ Certifique-se de que você tenha os seguintes softwares instalados antes de cont
 <a name="versoes-utilizadas"></a>
 
 ## ⚙️ Versões Utilizadas:
-- **Node.js**: 22.18.0
-- **PostgreSQL**: 17.4.0 (Imagem Docker Bitnami)
-- **Prisma**: 6.14.0
-- **Redis**: 
-- **ElasticSearch**: 
+- **Node.js**: 22.19.0
+- **PostgreSQL**: 3.22.0 (alpine)
+- **Prisma**: 6.16.3
+- **Redis**: 8.2.1
+- **ElasticSearch**: 9.1.4
 
 ---
 

@@ -57,7 +57,7 @@ model User {
   phoneNumber    String   @map("phone_number")
   profilePicture String?  @map("profile_picture")
   biography      String?
-  role           UserRole @default(NORMAL_USER)
+  role           UserRole @default(DEFAULT)
   gender         Gender?
 
   // Cache para recuperação da quantidade de seguidores mais rápido:
