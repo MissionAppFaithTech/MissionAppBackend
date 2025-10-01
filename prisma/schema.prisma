@@ -23,7 +23,7 @@ enum AuthenticationStatus {
 enum UserRole {
   ADMIN
   MISSIONARY
-  NORMAL_USER
+  DEFAULT
 }
 
 enum IdentityType {
