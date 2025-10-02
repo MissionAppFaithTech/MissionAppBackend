@@ -192,7 +192,7 @@ npm run start:dev
 
 - **Design Figma do Projeto**: <a href="https://www.figma.com/design/uMAwJPYKaEoN7ScjAmgZ6O/Mission-app?node-id=0-1&p=f&t=tbv9G0Hex8H0IrXX-0" target="_blank">Clique Aqui</a>
 - **Documentação da API**: <a href="#" target="_blank">(a fazer)</a>
-- **Diagrama ER do Banco de Dados**: <a href="https://dbdiagram.io/d/Mission-App-v1-1-68dd6bc2d2b621e422d705fe" target="_blank">Clique Aqui</a>
+- **Diagrama ER do Banco de Dados**: <a href="[https://dbdiagram.io/d/Mission-App-v1-1-68dd6bc2d2b621e422d705fe](https://dbdocs.io/allber31415/MissionAPP?view=table_structure)" target="_blank">Clique Aqui</a>
 
 ---
 
