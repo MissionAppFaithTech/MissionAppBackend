@@ -39,6 +39,6 @@
       "@messages/*": ["./src/messages/*"]
     }
   },
-  "include": ["./**/*.ts", "./tsconfig.json"],
+  "include": ["./**/*.ts", "./**/*.cjs", "./tsconfig.json"],
   "exclude": ["node_modules", "dist", "uploads"]
 }
