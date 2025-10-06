@@ -1,6 +1,18 @@
 {
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.trimTrailingWhitespace": true,
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
   "cSpell.words": [
     "autoincrement",
-    "loglevel"
+    "fkey",
+    "loglevel",
+    "pkey",
+    "treeify",
+    "uuidv"
   ]
 }

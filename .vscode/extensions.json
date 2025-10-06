@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "prisma.prisma",
+    "mikestead.dotenv",
+    "usernamehw.errorlens",
+    "dbaeumer.vscode-eslint",
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-portuguese-brazilian",
+  ]
+}

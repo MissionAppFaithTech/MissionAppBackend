@@ -1,24 +1,35 @@
 {
   "name": "mission-app",
   "version": "1.1.0",
+  "type": "module",
   "main": "index.js",
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  },
-  "scripts": {
-    "start:dev": "tsx watch src/server.ts",
-    "start:prod": "node build/server.js",
-    "build": "tsup src --out-dir build",
-    "husky:prepare": "husky install",
-    "lint": "prettier ./src/ --write && eslint ./src --ext .ts,.tsx --fix",
-    "test": "echo Test",
-    "test:coverage": "echo Test Coverage",
-    "prepare": "husky"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
+  "scripts": {
+    "build": "tsup",
+    "start:dev": "tsx watch --env-file=.env --no-deprecation src/server.ts",
+    "start:prod": "node --enable-source-maps --env-file=.env dist/server.js",
+    "start:prod:docker": "node --enable-source-maps dist/server.js",
+    "ci:build": "rimraf dist && tsc",
+    "ci:lint": "npm run lint:fix:prisma && npm run lint:fix:src",
+    "ci:format": "npm run format:prisma && npm run format:src",
+    "lint:src": "eslint src/**/*.{js,ts,tsx,jsx}",
+    "lint:prisma": "eslint prisma/**/*.{js,ts,tsx,jsx}",
+    "lint:fix:src": "eslint --fix src/**/*.{js,ts,tsx,jsx}",
+    "lint:fix:prisma": "eslint --fix prisma/**/*.{js,ts,tsx,jsx}",
+    "format:src": "prettier --config .prettierrc.json --ignore-path .prettierignore --write 'src/**/*.{js,ts,tsx,jsx}'",
+    "format:prisma": "prettier --config .prettierrc.json --ignore-path .prettierignore --write 'prisma/**/*.{js,ts,tsx,jsx}'",
+    "husky": "husky",
+    "husky:install": "husky install",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:dev:default": "prisma migrate dev --name creating_database_models",
+    "db:migrate:reset": "prisma migrate reset --force --skip-seed",
+    "db:seed": "prisma db seed",
+    "db:reset:all": "rimraf prisma/migrations && npm run db:migrate:reset && npm run db:migrate:dev:default && prisma generate && npm run db:seed",
+    "db:deploy": "prisma migrate deploy && prisma generate && npm run db:seed"
+  },
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.9",
     "@types/node": "22.13.9",
