@@ -9,8 +9,15 @@
   },
   "cSpell.words": [
     "autoincrement",
+    "bitnami",
     "fkey",
+    "FLUSHALL",
+    "FLUSHDB",
+    "healthcheck",
+    "isready",
     "loglevel",
+    "MAXMEMORY",
+    "noeviction",
     "pkey",
     "treeify",
     "uuidv"
