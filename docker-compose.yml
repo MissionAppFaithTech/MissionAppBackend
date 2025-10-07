@@ -66,7 +66,7 @@ services:
 
     volumes:
       - elasticsearch_data:/elasticsearch
-      - ./certs:/usr/share/elasticsearch/config/certs  # Certificados TLS
+      # - ./certs:/usr/share/elasticsearch/config/certs  # Certificados TLS
       - ./es_snapshots:/usr/share/elasticsearch/snapshots  # Snapshot local (S3/Cloud pode ser configurado depois)
 
 

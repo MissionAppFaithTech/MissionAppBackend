@@ -1,4 +1,4 @@
-# Mission App ⛪
+# ⛪ Mission App
 
 ## 📋 Sumário:
 
@@ -20,7 +20,7 @@
 
 ## 🗺️ Visão Geral:
 
-Neste projeto consta o backend recriado para o sistema do projeto MissionAPP. 
+Neste projeto consta o backend recriado para o sistema do projeto MissionAPP.
 
 ---
 
@@ -30,6 +30,7 @@ Neste projeto consta o backend recriado para o sistema do projeto MissionAPP.
 
 ```bash
 ├─── .github
+├─── .husky
 ├─── .vscode
 ├─── logs
 ├─── prisma
@@ -141,13 +142,13 @@ Certifique-se de que você tenha os seguintes softwares instalados antes de cont
 
 ## 💻 Como Executar o Servidor:
 1. Abra o terminal - `CMD`, `PowerShell`, `Bash` ou similares - em algum diretório de preferência em sua máquina.
-2. Clone este repositório com o comando: 
+2. Clone este repositório com o comando:
 
 ```bash
 git clone https://github.com/Amaro-peter/Mission_App_v1.1
 ```
 
-3. Navegue para dentro do projeto clonado com o comando: 
+3. Navegue para dentro do projeto clonado com o comando:
 
 ```bash
 cd Mission_App_v1.1
@@ -178,7 +179,7 @@ docker compose up -d
 npx prisma migrate reset
 ```
 
-8. Rode o projeto com o comando: 
+8. Rode o projeto com o comando:
 
 ```bash
 npm run start:dev
