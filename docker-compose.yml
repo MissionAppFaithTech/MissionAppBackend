@@ -98,6 +98,8 @@ services:
   #       condition: service_healthy
   #     redis:
   #       condition: service_healthy
+  #     elasticsearch:
+  #       condition: service_healthy
   #   ports:
   #     - ${APP_PORT:-3000}:3000
   #   volumes:
