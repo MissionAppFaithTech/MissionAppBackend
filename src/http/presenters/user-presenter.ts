@@ -35,9 +35,7 @@ interface HTTPUser {
 export class UserPresenter {
   static toHTTP(user: UserWithDetails): HTTPUser
   static toHTTP(users: UserWithDetails[]): HTTPUser[]
-  static toHTTP(
-    input: UserWithDetails | UserWithDetails[],
-  ): HTTPUser | HTTPUser[] {
+  static toHTTP(input: UserWithDetails | UserWithDetails[]): HTTPUser | HTTPUser[] {
     if (Array.isArray(input)) {
       return input.map((user) => this.toHTTP(user))
     }

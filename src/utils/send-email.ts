@@ -8,12 +8,7 @@ interface SendEmailProps {
   html?: string
 }
 
-export async function sendEmail({
-  to,
-  subject,
-  message,
-  html,
-}: SendEmailProps) {
+export async function sendEmail({ to, subject, message, html }: SendEmailProps) {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
