@@ -1,5 +1,6 @@
-import type { UserRole } from '@prisma/client'
-import type { UserWithDetails } from '@/@types/user-with-details'
+
+import type { UserWithDetails } from '@custom-types/user-with-details'
+import type { UserRoleType } from '@prisma/client'
 
 interface HTTPUserDetails {
   id: string
@@ -7,7 +8,7 @@ interface HTTPUserDetails {
   username: string
   email: string
   biography: string | null
-  role: UserRole
+  role: UserRoleType
   phoneNumber: string
   profilePicture: string | null
   followersCount: number

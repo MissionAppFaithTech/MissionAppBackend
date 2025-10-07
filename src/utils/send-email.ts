@@ -1,31 +1,26 @@
-import 'dotenv/config'
+import { transporterOptions } from '@constants/email-configuration'
+import  type { SendEmailRequest } from '@custom-types/send-email-request-type'
+import { env } from '@env/index'
 import nodemailer from 'nodemailer'
+import type { SentMessageInfo } from 'nodemailer'
 
-interface SendEmailProps {
-  to: string
-  subject: string
-  message: string
-  html?: string
-}
+const transporter = nodemailer.createTransport(transporterOptions)
 
-export async function sendEmail({ to, subject, message, html }: SendEmailProps) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_PORT === 465,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  })
-
-  const emailOptions = {
-    from: 'fulano@injunior.com',
+export async function sendEmail({
+  to,
+  subject,
+  message,
+  html,
+  attachments,
+}: SendEmailRequest): Promise<SentMessageInfo> {
+  const info = await transporter.sendMail({
+    from: env.SMTP_EMAIL,
     to,
     subject,
     text: message,
     html,
-  }
+    ...(attachments !== undefined ? { attachments } : {}),
+  })
 
-  await transporter.sendMail(emailOptions)
+  return info
 }
