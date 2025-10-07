@@ -55,8 +55,7 @@ services:
     ports:
       - ${ELASTICSEARCH_PORT:-9200}:9200
     volumes:
-      - elasticsearch_data:/elasticsearch
-      # - ./certs:/usr/share/elasticsearch/config/certs  # Certificados TLS
+      - elasticsearch_data:/usr/share/elasticsearch/data
     # networks:
     #   - app-network
     healthcheck:
