@@ -65,7 +65,6 @@ Neste projeto consta o backend recriado para o sistema do projeto MissionAPP.
      ├─── use-cases
      │    ├─── errors
      │    ├─── factories
-     │    ├─── messaging
      │    └─── users
      └─── utils
 ```
@@ -94,8 +93,8 @@ Neste projeto consta o backend recriado para o sistema do projeto MissionAPP.
 
 ### 📌 Requisito 1 – (Nome do Requisito 1):
 
-- [x] 1.1 Cadastro de usuário
-- [x] 1.2 Redefinição de senha (esqueci a senha)
+- [ ] 1.1 Cadastro de usuário
+- [ ] 1.2 Redefinição de senha (esqueci a senha)
 - [x] 1.3 Login com email e senha
 
 ### 📌 Requisito 2 – (Nome do Requisito 2):
@@ -204,6 +203,7 @@ npm run start:dev
 - **Design Figma do Projeto**: <a href="https://www.figma.com/design/uMAwJPYKaEoN7ScjAmgZ6O/Mission-app?node-id=0-1&p=f&t=tbv9G0Hex8H0IrXX-0" target="_blank">Clique Aqui</a>
 - **Documentação da API**: <a href="#" target="_blank">(a fazer)</a>
 - **Diagrama ER do Banco de Dados**: <a href="https://dbdiagram.io/d/Mission-App-v1-1-68dd6bc2d2b621e422d705fe" target="_blank">Clique Aqui</a>
+- **Trello do Projeto**: <a href="https://trello.com/b/3lhDRlzx/mission-app" target="_blank">Clique Aqui</a>
 
 ---
 
@@ -212,4 +212,5 @@ npm run start:dev
 ## 👥 Equipe de Desenvolvimento:
 
 - **Dev Backend**: <a href="https://github.com/Amaro-peter" target="_blank">Pedro Amaro</a>
+- **Dev Backend**: <a href="https://github.com/AllanaOliveira" target="_blank">Allana Oliveira</a>
 - **Dev Backend**: <a href="https://github.com/AFSFerreira" target="_blank">Allber Ferreira</a>
