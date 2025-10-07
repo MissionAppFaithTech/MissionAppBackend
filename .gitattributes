@@ -1,5 +1,5 @@
 # Arquivos Textuais:
-**/*.{js,ts,tsx,jsx, cjs} text eol=lf
+**/*.{js,ts,tsx,jsx,cjs} text eol=lf
 
 # Arquivos de Imagem:
 **/*.{jpg,jpeg,png,webp} binary
