@@ -8,6 +8,7 @@
     "editor.defaultFormatter": "Prisma.prisma"
   },
   "cSpell.words": [
+    "appendonly",
     "autoincrement",
     "bitnami",
     "fkey",
@@ -19,6 +20,7 @@
     "MAXMEMORY",
     "noeviction",
     "pkey",
+    "requirepass",
     "treeify",
     "uuidv"
   ]
