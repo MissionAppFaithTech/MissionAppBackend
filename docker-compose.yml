@@ -8,12 +8,16 @@ services:
       - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRESQL_DATABASE=${POSTGRES_DB}
       - POSTGRESQL_PORT_NUMBER=5432
+
     ports:
       - ${POSTGRES_PORT:-5432}:5432
+
     volumes:
       - postgres_data:/bitnami/postgresql
+
     # networks:
     #   - app-network
+
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${POSTGRES_USERNAME}"]
       interval: 10s
@@ -33,12 +37,16 @@ services:
       - REDIS_PORT_NUMBER=6379
       - REDIS_AOF_ENABLED=yes
       - REDIS_DATABASES=16
+
     ports:
       - ${REDIS_PORT:-6379}:6379
+
     volumes:
       - redis_data:/bitnami/redis
+
     # networks:
     #   - app-network
+
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
@@ -49,11 +57,10 @@ services:
     image: elasticsearch:9.1.5@sha256:9dac882b67afe5161f8988a7ede0e9890145182af83e4e1d4d10631c2f66656f
     container_name: ${ELASTICSEARCH_CONTAINER_NAME:-elasticsearch}
     environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms2g -Xmx2g
-
       - ELASTIC_USERNAME=${ELASTIC_USERNAME}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms${ES_JAVA_XMS:-2g} -Xmx${ES_JAVA_XMX:-2g}
       # - xpack.security.enabled=true
       # - xpack.security.http.ssl.enabled=true
       # - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch.key
@@ -67,7 +74,16 @@ services:
     volumes:
       - elasticsearch_data:/elasticsearch
       # - ./certs:/usr/share/elasticsearch/config/certs  # Certificados TLS
-      - ./es_snapshots:/usr/share/elasticsearch/snapshots  # Snapshot local (S3/Cloud pode ser configurado depois)
+
+    # networks:
+    #   - app-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-f", "-u", "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}", "http://localhost:9200/_cluster/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 
   # backend:
