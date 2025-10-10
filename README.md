@@ -76,7 +76,7 @@ Neste projeto consta o backend recriado para o sistema do projeto MissionAPP.
 
 <div align="center">
 
-| Tipo de Usuário   |            Permissões Principais                   |
+| Tipo de Usuário   |             Permissões Principais                  |
 | :---------------: | :------------------------------------------------: |
 |   ADMIN           |       Gerenciamento global do sistema              |
 |   MISSIONARY      |  Missionário com permissão de criar postagens      |
