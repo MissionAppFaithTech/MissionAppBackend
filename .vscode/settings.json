@@ -12,6 +12,7 @@
     "appendonly",
     "autoincrement",
     "bitnami",
+    "cnpj",
     "everysec",
     "fkey",
     "FLUSHALL",

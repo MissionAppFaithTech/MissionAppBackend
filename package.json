@@ -33,10 +33,9 @@
   "devDependencies": {
     "@commitlint/config-conventional": "19.8.1",
     "@swc/core": "1.13.5",
+    "@types/elasticsearch": "5.0.43",
     "@types/fs-extra": "11.0.4",
-    "@types/json2csv": "5.0.7",
     "@types/jsonwebtoken": "9.0.10",
-    "@types/multer": "1.4.13",
     "@types/node": "24.5.1",
     "@types/nodemailer": "7.0.1",
     "@typescript-eslint/eslint-plugin": "6.21.0",
@@ -61,6 +60,7 @@
     "typescript": "5.3.3"
   },
   "dependencies": {
+    "@elastic/elasticsearch": "9.1.1",
     "@fastify/cookie": "11.0.2",
     "@fastify/cors": "11.1.0",
     "@fastify/jwt": "10.0.0",
@@ -78,7 +78,6 @@
     "firebase": "12.0.0",
     "fs-extra": "11.3.2",
     "ioredis": "5.8.0",
-    "json2csv": "6.0.0-alpha.2",
     "jsonwebtoken": "9.0.2",
     "node-cron": "4.2.1",
     "nodemailer": "7.0.6",
