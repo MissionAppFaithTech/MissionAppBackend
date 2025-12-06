@@ -214,6 +214,7 @@ npm run start:dev
 - **Documentação da API**: <a href="https://documenter.getpostman.com/view/49158090/2sB3QKrpbz" target="_blank">Clique Aqui</a>
 - **Diagrama ER do Banco de Dados**: <a href="https://dbdocs.io/missionapp.faithtech/Mission-App-DB?view=relationships" target="_blank">Clique Aqui</a>
 - **Trello do Projeto**: <a href="https://trello.com/b/3lhDRlzx/mission-app" target="_blank">Clique Aqui</a>
+- **Requisitos do Projeto**: <a href="https://docs.google.com/document/d/1aTgtD6RwDOv-ElDbvlErbRf1JiwT4dvD950_ZKWVTGU/edit?tab=t.0" target="_blank">Clique Aqui</a>
 
 ---
 
