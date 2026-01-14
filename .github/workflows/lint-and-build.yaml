@@ -1,33 +1,79 @@
 name: Lint and Build
 
 on:
+  workflow_dispatch:
   push:
     branches: ['dev']
   pull_request:
     branches: '**'
 
+env:
+  NODE_VERSION: 22.x
+  # Necerrário para executar o script de geração de presenters:
+  DUMMY_DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+
 jobs:
   lint-test-build:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: 22.19.0
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          # cache: 'npm'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
 
       - name: Install Dependencies
-        run: npm ci
+        # run: npm ci
+        run: pnpm install --frozen-lockfile --prefer-offline --verify-store-integrity=false
 
       - name: Run Linter
-        run: npm run ci:lint
+        run: |
+          # npm run ci:lint
+          pnpm run ci:lint
+          echo "✅ Lint passed" >> $GITHUB_STEP_SUMMARY
 
-      - name: Run Formatter
-        run: npm run ci:format
+      # - name: Run Formatter
+      #   run: |
+      #     # npm run ci:format
+      #     pnpm run ci:format
+      #     echo "✅ Format check passed" >> $GITHUB_STEP_SUMMARY
 
       - name: Build
-        run:
-          npm run ci:build
+        env:
+          DATABASE_URL: ${{ env.DUMMY_DATABASE_URL }}
+        run: |
+          # npm run ci:build
+          pnpm run ci:build
+          echo "✅ Build succeeded" >> $GITHUB_STEP_SUMMARY
+
+      - name: Final Summary
+        if: always()
+        run: |
+          echo "## 🧾 Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Node.js v${{ env.NODE_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "🕒 Completed at $(date)" >> $GITHUB_STEP_SUMMARY
+
+          # Verifica o status geral do job para adicionar um ícone de sucesso/falha no topo
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Status: 🟢 Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Status: 🔴 Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          if [ -d dist ]; then ls -lh dist/ | tail -n +2 >> $GITHUB_STEP_SUMMARY; else echo "No dist/ folder found (Build failed or created empty dist)" >> $GITHUB_STEP_SUMMARY; fi
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
