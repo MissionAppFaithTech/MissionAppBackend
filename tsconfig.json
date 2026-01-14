@@ -1,44 +1,47 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist",
-    "module": "es2022",
-    "target": "es2022",
-    "moduleResolution": "node",
-    "lib": ["es2022"],
+    "module": "esnext",
+    "target": "es2024",
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "lib": ["ESNext"],
     "types": ["node"],
     "resolveJsonModule": true,
-
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "allowJs": true,
+    "checkJs": true,
     "allowSyntheticDefaultImports": true,
-
-    "typeRoots": ["./node_modules/@types", "./src/@types"],
-
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmitOnError": true,
     "skipLibCheck": true,
-
     "removeComments": false,
     "sourceMap": false,
-
+    "moduleDetection": "force",
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
     "paths": {
+      "@presenters/*": ["./src/http/presenters/*"],
+      "@factories/*": ["./src/use-cases/factories/*"],
+      "@middlewares/*": ["./src/http/middlewares/*"],
+      "@schemas/*": ["./src/http/schemas/*"],
+      "@uploads/*": ["./src/uploads/*"],
       "@use-cases/*": ["./src/use-cases/*"],
       "@repositories/*": ["./src/repositories/*"],
-      "@schemas/*": ["./src/http/schemas/*"],
-      "@middlewares/*": ["./src/http/middlewares/*"],
-      "@custom-types/*": ["src/@types/*"],
+      "@custom-types/*": ["./src/@types/*"],
       "@utils/*": ["./src/utils/*"],
       "@services/*": ["./src/services/*"],
-      "@factories/*": ["./src/use-cases/factories/*"],
-      "@env/*": ["./src/env/*"],
-      "@presenters/*": ["./src/http/presenters/*"],
-      "@lib/*": ["./src/lib/*"],
       "@constants/*": ["./src/constants/*"],
       "@templates/*": ["./src/templates/*"],
-      "@messages/*": ["./src/messages/*"]
+      "@messages/*": ["./src/messages/*"],
+      "@errors/*": ["./src/errors/*"],
+      "@env/*": ["./src/env/*"],
+      "@lib/*": ["./src/lib/*"]
     }
   },
-  "include": ["./**/*.ts", "./**/*.cjs", "./tsconfig.json"],
-  "exclude": ["node_modules", "dist", "uploads"]
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist", "uploads", "./**/*.cjs", "./**/*.js", "./**/*.json", "./**/*.mjs"]
 }

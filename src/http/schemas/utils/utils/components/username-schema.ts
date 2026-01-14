@@ -1,3 +1,3 @@
-import { textWithoutInnerSpacesSchema } from '../primitives/text-without-inner-spaces-schema'
+import { textWithoutInnerSpacesSchema } from "../primitives/text-without-inner-spaces-schema";
 
-export const usernameSchema = textWithoutInnerSpacesSchema.min(3)
+export const usernameSchema = textWithoutInnerSpacesSchema.min(3);

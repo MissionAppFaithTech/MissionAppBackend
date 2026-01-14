@@ -26,5 +26,9 @@
     "requirepass",
     "treeify",
     "uuidv"
-  ]
+  ],
+  "liveshare.allowGuestDebugControl": true,
+  "liveshare.allowGuestTaskControl": true,
+  "liveshare.alwaysFollowHost": true,
+  "liveshare.anonymousGuestApproval": "accept"
 }

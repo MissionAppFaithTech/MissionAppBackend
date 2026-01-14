@@ -1,9 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: 'mission-app-backend',
+      name: 'mission-app',
       script: './dist/server.js',
-      cwd: '/home/infra/dev/projects/mission-app-backend', // a definir
+      // cwd: <insira o caminho aqui>,
       max_memory_restart: '256M',
 
       // Node flags + Environment:

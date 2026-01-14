@@ -1,9 +1,9 @@
-import type { Attachment } from 'nodemailer/lib/mailer'
+import type { Attachment } from "nodemailer/lib/mailer";
 
 export interface SendEmailRequest {
-  to: string
-  subject: string
-  message: string
-  html: string
-  attachments?: Attachment[]
+	to: string;
+	subject: string;
+	message: string;
+	html: string;
+	attachments?: Attachment[];
 }

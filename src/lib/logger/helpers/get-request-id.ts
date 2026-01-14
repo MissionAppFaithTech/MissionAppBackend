@@ -1,5 +1,5 @@
-import { asyncLocalStorage } from '@lib/async-local-storage'
+import { asyncLocalStorage } from "@lib/async-local-storage";
 
 export function getRequestId() {
-  return asyncLocalStorage.getStore()?.requestId
+	return asyncLocalStorage.getStore()?.requestId;
 }

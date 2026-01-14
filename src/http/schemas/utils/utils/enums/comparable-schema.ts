@@ -1,4 +1,4 @@
-import { COMPARISON_OPERATORS } from '@custom-types/orderable'
-import z from 'zod'
+import { COMPARISON_OPERATORS } from "@custom-types/orderable";
+import z from "zod";
 
-export const comparableSchema = z.enum(COMPARISON_OPERATORS)
+export const comparableSchema = z.enum(COMPARISON_OPERATORS);

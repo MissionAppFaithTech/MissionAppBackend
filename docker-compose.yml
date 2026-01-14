@@ -1,7 +1,7 @@
 services:
   postgres:
     env_file: .env
-    image: postgres:13.22-alpine3.21@sha256:07b1bc17380637c18bfc23470dad5bead835fe3c1d02ae5a902fdcdf9e592ee7
+    image: postgres:14.19-alpine3.21@sha256:5078d8d88aa34e961582822feb73eef6b1b1f45965debdadab848bd254c2d336
     container_name: ${POSTGRES_CONTAINER_NAME:-postgres}
     restart: on-failure:5
     environment:
@@ -23,10 +23,10 @@ services:
 
   redis:
     env_file: .env
-    image: redis:7.2.11-alpine3.21@sha256:b19a2cb55412c26e0c3725011ac04397eba5cb0d7f090f739cbbce8dc97f8e60
+    image: redis:8.2.2-bookworm@sha256:4521b581dbddea6e7d81f8fe95ede93f5648aaa66a9dacd581611bf6fe7527bd
     container_name: ${REDIS_CONTAINER_NAME:-redis}
     restart: on-failure:5
-    command: ["redis-server", "/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}", "--bind", "0.0.0.0", "--port", "${REDIS_PORT:-6379}"]
     ports:
       - ${REDIS_PORT:-6379}:6379
     volumes:
@@ -59,7 +59,7 @@ services:
     # networks:
     #   - app-network
     healthcheck:
-      test: ["CMD", "curl", "-s", "-f", "-u", "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}", "http://localhost:9200/_cluster/health"]
+      test: ["CMD", "curl", "-s", "-f", "-u", "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}", "http://127.0.0.1:9200/_cluster/health"]
       interval: 10s
       timeout: 5s
       retries: 5

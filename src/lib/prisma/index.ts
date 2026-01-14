@@ -1,6 +1,8 @@
-import { IS_DEBUG } from '@constants/env-constants'
-import { PrismaClient } from '@prisma/client'
+import { env } from "@env/index";
+import { adapter } from "./helpers/adapter";
+import { PrismaClient } from "@prisma/client";
 
 export const prisma = new PrismaClient({
-  log: IS_DEBUG ? ['query', 'info', 'warn'] : [],
-})
+	adapter,
+	log: env.LOG_LEVEL === "debug" ? ["query", "info", "warn"] : [],
+});

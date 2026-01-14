@@ -1,1 +1,1 @@
-export const PASSWORD_RESET_SUBJECT = 'Recuperação de Senha'
+export const PASSWORD_RESET_SUBJECT = "Recuperação de Senha";

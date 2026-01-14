@@ -1,3 +1,3 @@
-import z from 'zod'
+import z from "zod";
 
-export const uuidv7Schema = z.uuidv7()
+export const uuidv7Schema = z.uuidv7();
