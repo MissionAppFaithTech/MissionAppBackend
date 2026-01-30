@@ -13,78 +13,118 @@ datasource db {
 }
 
 model AuthenticationAudit {
-  id         Int                      @id @default(autoincrement())
-  ipAddress  String?                  @map("ip_address") @db.Inet
-  remotePort String?                  @map("remote_port")
-  browser    String?
-  status     AuthenticationStatusType
-  createdAt  DateTime                 @default(now()) @map("created_at")
-  userId     Int?                     @map("user_id")
-  user       User?                    @relation(fields: [userId], references: [id])
+  id         String               @id @default(uuid(7))
+  ipAddress  String?              @map("ip_address")
+  remotePort String?              @map("remote_port")
+  userAgent  String?              @map("user_agent")
+  origin     String?
+  status     AuthenticationStatus
+  userId     Int?                 @map("user_id")
+  user       User?                @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@map("authentication_audits")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt], name: "idx_auth_audit_user_date")
+  @@map("authentication_audit")
 }
 
 model User {
-  id             Int      @id @default(autoincrement())
-  publicId       String   @unique @default(uuid(7)) @map("public_id")
-  name           String
-  username       String   @unique
-  phoneNumber    String   @map("phone_number")
-  profilePicture String?  @map("profile_picture")
-  biography      String?
-  role           UserRoleType @default(DEFAULT)
-  gender         GenderType?
+  id       Int    @id @default(autoincrement())
+  publicId String @unique @default(uuid(7)) @map("public_id")
 
-  // Cache para recuperação da quantidade de seguidores mais rápido:
+  isEmailVerified Boolean @default(false) @map("is_email_verified")
+  isActive        Boolean @default(true) @map("is_active")
+
+  // Dados de Perfil [Req 2.1, 8.1]
+  name           String
+  username       String  @unique
+  phoneNumber    String  @map("phone_number")
+  profilePicture String? @map("profile_picture")
+  biography      String?
+
+  role   UserRole    @default(SUPPORTER)
+  gender GenderType?
+
+  // Dados de Login [Req 1.1]
+  email        String @unique
+  passwordHash String @map("password_hash")
+
+  // Cache de contadores [NF 2.4]
   followersCount Int @default(0) @map("followers_count")
   followingCount Int @default(0) @map("following_count")
 
-  email         String    @unique
-  passwordHash  String    @map("password_hash")
-  loginAttempts Int       @default(0) @map("login_attempts")
-  lastLogin     DateTime? @map("last_login")
+  // Auditoria e Recuperação
+  loginAttempts                  Int       @default(0) @map("login_attempts")
+  lastLogin                      DateTime? @map("last_login") @db.Timestamptz(3)
+  recoveryPasswordTokenHash      String?   @unique @map("recovery_password_token")
+  recoveryPasswordTokenExpiresAt DateTime? @map("recovery_password_token_expires_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  newEmail                        String?   @map("new_email")
+  emailVerificationTokenHash      String?   @unique @map("email_verification_token")
+  emailVerificationTokenExpiresAt DateTime? @map("email_verification_token_expires_at") @db.Timestamptz(3)
+  emailVerifiedAt                 DateTime? @map("email_verified_at") @db.Timestamptz(3)
 
-  faithCommunityId Int?            @map("faith_community_id")
-  FaithCommunity   FaithCommunity? @relation("belongs_to", fields: [faithCommunityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  Missionary          Missionary?           @relation()
-  Following           Follow[]              @relation("following")
-  Followers           Follow[]              @relation("followers")
-  FaithCommunityOwner FaithCommunity[]      @relation("created_by")
+  // Relacionamento Eclesiástico (Apoiadores e Missionários) [Req 2.1, 3.1.4]
+  faithCommunityId    Int?             @map("faith_community_id")
+  FaithCommunity      FaithCommunity?  @relation("belongs_to", fields: [faithCommunityId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  FaithCommunityOwner FaithCommunity[] @relation("created_by")
+
+  // Auditoria
   AuthenticationAudit AuthenticationAudit[] @relation()
 
+  // Relacionamentos Específicos
+  Missionary Missionary? @relation()
+
+  // Social
+  Following Follow[]  @relation("following")
+  Followers Follow[]  @relation("followers")
+  Likes     Like[]    @relation()
+  Comments  Comment[] @relation()
+
+  @@index([name], name: "idx_user_name")
+  @@index([role], name: "idx_user_role")
   @@map("users")
 }
 
 model Missionary {
-  id                Int           @id @default(autoincrement())
+  id     Int              @id @default(autoincrement())
+  status MissionaryStatus @default(PENDING) // [Req 5.1] Status para aprovação
+
+  // Dados de Contato Específicos [Req 3.1.1]
   publicEmail       String?       @map("public_email")
   publicPhoneNumber String?       @map("public_phone")
-  // status
   identityType      IdentityType? @map("identity_type")
   identityDocument  String?       @map("identity_document")
-  createdAt         DateTime      @default(now()) @map("created_at")
 
-  missionaryAgencyId Int
-  MissionaryAgency   MissionaryAgency @relation("belongs_to", fields: [missionaryAgencyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
+  // Dados da Agência [Req 3.1.2]
+  missionaryAgencyId    Int
+  MissionaryAgency      MissionaryAgency   @relation("belongs_to", fields: [missionaryAgencyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   MissionaryAgencyOwner MissionaryAgency[] @relation("created_by")
 
+  // Configuração de Doação [Req 9.1]
+  donationMessage String? @map("donation_message") @db.Text
+
+  // Relacionamento 1:1 com User
   userId Int  @unique @map("user_id")
   User   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  Address     Address?
-  WorkAddress WorkAddress?
-  Post        Post[]       @relation()
+  // Relacionamento com Configurações Financeiras
+  FinancialConfig FinancialConfig? @relation()
+
+  // Conteúdo
+  Posts          Post[]          @relation()
+  ImpactProjects ImpactProject[] @relation()
+
+  Address               Address?
+  MissionaryWorkAddress MissionaryWorkAddress?
 
   @@map("missionaries")
 }
 
-model WorkAddress {
+model MissionaryWorkAddress {
   id       Int    @id @default(autoincrement())
   district String
   city     String
@@ -105,8 +145,8 @@ model Address {
   state    String
   country  String
 
-  missionaryId Int        @unique
-  Missionary   Missionary @relation(fields: [missionaryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  missionaryId Int?        @unique
+  Missionary   Missionary? @relation(fields: [missionaryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("addresses")
 }
@@ -114,7 +154,7 @@ model Address {
 model Follow {
   followerId  Int      @map("follower_id")
   followingId Int      @map("following_id")
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   Follower  User @relation("following", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Following User @relation("followers", fields: [followingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -129,14 +169,17 @@ model FaithCommunity {
   id          Int      @id @default(autoincrement())
   name        String
   phoneNumber String   @map("phone_number")
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   userId Int?  @map("user_id")
   User   User? @relation("created_by", fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  Members User[]   @relation("belongs_to")
-  Pastor  Pastor[] @relation("is_part_of")
+  Members User[] @relation("belongs_to")
 
+  // Dados do Pastor [Req 2.2, 3.1.1]
+  Pastor Pastor[] @relation("is_part_of")
+
+  @@index([name])
   @@map("faith_communities")
 }
 
@@ -144,13 +187,14 @@ model MissionaryAgency {
   id          Int      @id @default(autoincrement())
   name        String
   phoneNumber String?
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   missionaryId          Int?        @map("missionary_id")
   MissionaryAgencyOwner Missionary? @relation("created_by", fields: [missionaryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   Missionary Missionary[] @relation("belongs_to")
 
+  @@index([name])
   @@map("missionary_agencies")
 }
 
@@ -158,7 +202,7 @@ model Pastor {
   id          Int      @id @default(autoincrement())
   name        String
   phoneNumber String   @map("phone_number")
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   faithCommunityId Int
   FaithCommunity   FaithCommunity @relation("is_part_of", fields: [faithCommunityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -168,14 +212,17 @@ model Pastor {
 
 model Post {
   id            Int      @id @default(autoincrement())
-  content       String   @db.Text
-  highlightLink String?  @map("highlight_link")
-  createdAt     DateTime @default(now()) @map("created_at")
+  content       String   @db.Text // [Req 6.1] Legenda obrigatória
+  highlightLink String?  @map("highlight_link") // [Req 6.1] Link opcional
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3) // [Req 6.1] Uma imagem
 
   missionaryId Int        @map("missionary_id")
   Missionary   Missionary @relation(fields: [missionaryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   PostImage PostImage[] @relation()
+
+  Likes    Like[]    @relation()
+  Comments Comment[] @relation()
 
   @@index([missionaryId, createdAt])
   @@map("posts")
@@ -185,7 +232,7 @@ model PostImage {
   id        Int      @id @default(autoincrement())
   imageURL  String
   order     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   postId Int  @map("post_id")
   Post   Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -194,17 +241,133 @@ model PostImage {
   @@map("post_images")
 }
 
-enum AuthenticationStatusType {
+model Like {
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId]) // [Req 6.4] Garante um like por usuário por post
+  @@map("likes")
+}
+
+// [Req 6.3] Feature futura de comentários
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  userId Int  @map("user_id") // Quem comentou
+  postId Int  @map("post_id")
+  Post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model ImpactProject {
+  id Int @id @default(autoincrement())
+
+  // [Req 7.2]
+  title       String
+  description String  @db.Text
+  videoUrl    String? @map("video_url")
+  coverImage  String  @map("cover_image")
+
+  missionaryId Int        @map("missionary_id")
+  Missionary   Missionary @relation(fields: [missionaryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Relação com campanhas de curadoria administrativa
+  campaigns CampaignProject[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("impact_projects")
+}
+
+model Campaign {
+  id       Int     @id @default(autoincrement())
+  name     String // [Req 5.4.3] Nome da campanha (ex: "Dia da igreja perseguida")
+  isActive Boolean @default(false) @map("is_active") // [Req 5.4.4] Controle Mestre
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  startDate   DateTime? @map("start_date") @db.Timestamptz(3)
+  suspendedAt DateTime? @map("suspended_at") @db.Timestamptz(3)
+  endDate     DateTime? @map("end_date") @db.Timestamptz(3)
+
+  projects CampaignProject[]
+
+  @@map("campaigns")
+}
+
+model CampaignProject {
+  campaignId Int      @map("campaign_id")
+  projectId  Int      @map("project_id")
+  addedAt    DateTime @default(now()) @map("added_at")
+
+  Campaign Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  Project  ImpactProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, projectId]) // [Req 5.4.2] Impede duplicados
+  @@map("campaign_projects")
+}
+
+model FinancialConfig {
+  id Int @id @default(autoincrement())
+
+  // Pix [Req 9.1.2 A]
+  pixKey    String? @map("pix_key")
+  qrCodeUrl String? @map("qr_code_url")
+
+  // Transferência Bancária [Req 9.1.2 B]
+  // IMPORTANTE: [NF 1.1] Requer criptografia (AES-256) em repouso.
+  // A aplicação deve criptografar antes de salvar e descriptografar ao ler.
+  bankName      String?          @map("bank_name") // Encrypted string
+  bankNumber    String?          @map("bank_number") // Encrypted string
+  agency        String? // Encrypted string
+  accountNumber String?          @map("account_number") // Encrypted string
+  accountType   BankAccountType? @map("account_type")
+  holderName    String?          @map("holder_name") // Encrypted string
+  holderDoc     String?          @map("holder_document") // Encrypted string (CPF/CNPJ)
+
+  missionaryId Int        @unique @map("missionary_id")
+  Missionary   Missionary @relation(fields: [missionaryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("financial_configs")
+}
+
+enum AuthenticationStatus {
   SUCCESS
   USER_NOT_EXISTS
   INCORRECT_PASSWORD
+  RECOVER_PASSWORD
+  INVALID_TOKEN
   BLOCKED
 }
 
-enum UserRoleType {
-  ADMIN
-  MISSIONARY
-  DEFAULT
+enum MissionaryStatus {
+  PENDING // [Req 5.1] Aguardando aprovação
+  APPROVED // [Req 5.3] Aprovado e ativo
+  REJECTED // Caso seja negado (implícito no fluxo)
+}
+
+enum UserRole {
+  ADMIN // [Req 4.2] Acesso ao painel de gestão
+  MISSIONARY // [Req 3] Acesso a postar, criar projetos
+  SUPPORTER // [Req 2] Apoiador (User comum)
+}
+
+enum BankAccountType {
+  CHECKING // Corrente
+  SAVINGS // Poupança
+  PAYMENT // Pagamento
 }
 
 enum IdentityType {
