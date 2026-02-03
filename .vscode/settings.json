@@ -30,5 +30,5 @@
   "liveshare.allowGuestDebugControl": true,
   "liveshare.allowGuestTaskControl": true,
   "liveshare.alwaysFollowHost": true,
-  "liveshare.anonymousGuestApproval": "accept"
+  "liveshare.anonymousGuestApproval": "prompt"
 }
