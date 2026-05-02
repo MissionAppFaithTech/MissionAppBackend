@@ -1,9 +1,0 @@
-node_modules
-build
-dist
-.gitignore
-.env
-
-# Logs:
-logs/*
-!logs/.gitkeep
