@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
+  "packageManager": "pnpm@11.0.8",
   "exports": {
     "./data": "./.adonisjs/client/data.d.ts",
     "./registry": "./.adonisjs/client/registry/index.ts"
@@ -68,7 +69,8 @@
     "better-sqlite3": "^12.9.0",
     "luxon": "^3.7.2",
     "pg": "^8.20.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "uuid": "14.0.0"
   },
   "hotHook": {
     "boundaries": [
