@@ -7,7 +7,7 @@ const authConfig = defineConfig({
   /**
    * Default guard used when no guard is explicitly specified.
    */
-  default: 'api',
+  default: 'web',
 
   guards: {
     /**

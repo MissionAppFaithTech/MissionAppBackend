@@ -10,9 +10,18 @@ const hashConfig = defineConfig({
   /**
    * Default hasher used by the application.
    */
-  default: 'scrypt',
+  default: 'argon',
 
   list: {
+    argon: drivers.argon2({
+      variant: 'id',
+      iterations: 3,
+      memory: 65536,
+      parallelism: 4,
+      saltSize: 16,
+      hashLength: 32,
+    }),
+
     /**
      * Scrypt is memory-hard, which makes brute-force attacks more expensive.
      */

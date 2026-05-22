@@ -11,13 +11,13 @@ export class AuthAccessTokenSchema extends BaseModel {
   static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
   $columns = AuthAccessTokenSchema.$columns
   @column()
-  declare abilities: string
+  declare abilities: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column.dateTime()
   declare expiresAt: DateTime | null
   @column()
-  declare hash: string
+  declare hash: string | null
   @column({ isPrimary: true })
   declare id: number
   @column.dateTime()
@@ -25,26 +25,64 @@ export class AuthAccessTokenSchema extends BaseModel {
   @column()
   declare name: string | null
   @column()
-  declare tokenableId: string
+  declare tokenableId: string | null
   @column()
-  declare type: string
+  declare type: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'updatedAt'] as const
+  static $columns = ['activedAt', 'biography', 'createdAt', 'deletedAt', 'email', 'emailVerifiedAt', 'followersCount', 'followingCount', 'fullName', 'gender', 'id', 'lastLogin', 'loginAttempts', 'membershipStatus', 'passwordHash', 'pendingEmail', 'pendingEmailToken', 'pendingEmailTokenExpiresAt', 'phoneNumber', 'profilePicture', 'recoveryPasswordToken', 'recoveryPasswordTokenExpiresAt', 'role', 'updatedAt', 'username'] as const
   $columns = UserSchema.$columns
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
+  @column.dateTime()
+  declare activedAt: DateTime | null
   @column()
-  declare email: string
+  declare biography: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare email: string | null
+  @column.dateTime()
+  declare emailVerifiedAt: DateTime | null
+  @column()
+  declare followersCount: number | null
+  @column()
+  declare followingCount: number | null
   @column()
   declare fullName: string | null
+  @column()
+  declare gender: string | null
   @column({ isPrimary: true })
   declare id: string
-  @column({ serializeAs: null })
-  declare password: string
+  @column.dateTime()
+  declare lastLogin: DateTime | null
+  @column()
+  declare loginAttempts: number | null
+  @column()
+  declare membershipStatus: string | null
+  @column()
+  declare passwordHash: string | null
+  @column()
+  declare pendingEmail: string | null
+  @column()
+  declare pendingEmailToken: string | null
+  @column.dateTime()
+  declare pendingEmailTokenExpiresAt: DateTime | null
+  @column()
+  declare phoneNumber: string | null
+  @column()
+  declare profilePicture: string | null
+  @column()
+  declare recoveryPasswordToken: string | null
+  @column.dateTime()
+  declare recoveryPasswordTokenExpiresAt: DateTime | null
+  @column()
+  declare role: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare username: string | null
 }

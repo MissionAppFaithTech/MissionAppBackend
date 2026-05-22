@@ -17,7 +17,7 @@ export const WithPrimaryUuid = <Model extends NormalizeConstructor<typeof BaseMo
 
     @beforeCreate()
     static generateId(model: any) {
-      model.id = randomUUID()
+      model.id ??= randomUUID()
     }
   }
 
