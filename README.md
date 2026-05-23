@@ -71,9 +71,9 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
 <table width="100%">
   <thead>
     <tr>
-      <th align="left">Pasta</th>
-      <th align="left">Audiência</th>
-      <th align="left">O que contém</th>
+      <th align="center">Pasta</th>
+      <th align="center">Audiência</th>
+      <th align="center">O que contém</th>
     </tr>
   </thead>
   <tbody>
@@ -116,16 +116,50 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
 
 ## 👤 Tipos de Usuários
 
+A plataforma reconhece **três perfis principais**, cada um com privilégios e responsabilidades específicas alinhadas com o fluxo de negócio da MissionApp:
+
 <div align="center">
 
-| Tipo de Usuário | Permissões Principais |
-| :---: | :--- |
-| `ADMIN` | Gerenciamento global do sistema; aprovação de cadastros de missionários |
-| `MISSIONARY` | Criação de posts, projetos de impacto e campanhas; perfil expandido com agência |
-| `PASTOR` | Gestão de comunidade de fé vinculada; acesso a recursos pastorais |
-| `DEFAULT` | Usuário padrão: segue missionários, curte e comenta posts, apoia campanhas |
+<table width="100%">
+  <colgroup>
+    <col width="18%">
+    <col width="28%">
+    <col width="54%">
+  </colgroup>
+  <thead>
+    <tr>
+      <th align="center">Role</th>
+      <th align="center">Criação de Conta</th>
+      <th align="center">Permissões Principais</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ADMIN</code></td>
+      <td>Provisionamento interno (DB) — sem auto-cadastro (Req 4.1)</td>
+      <td><strong>Gerenciamento global:</strong> Aprovação de missionários (Req 5), curadoria de projetos (Req 5.4), gestão de campanhas de promoção, controle de usuários. Acesso exclusivo ao painel administrativo com verificação explícita de role (Req 4.2).</td>
+    </tr>
+    <tr>
+      <td><code>MISSIONARY</code></td>
+      <td>Auto-cadastro + email verification + aprovação de admin (Req 3)</td>
+      <td><strong>Produção de conteúdo:</strong> Criar posts com imagens (Req 6), projetos de impacto com vídeo e capa (Req 7), campanhas de arrecadação. <strong>Gerenciamento financeiro:</strong> Configurar Pix, transferência bancária e futuros gateways (Req 9). <strong>Rede social:</strong> Seguir outros missionários, visualizar feeds de conexões (Req 14.4). Perfil expandido com agência missionária e dados eclesiásticos (Req 3.1.1).</td>
+    </tr>
+    <tr>
+      <td><code>SUPPORTER</code></td>
+      <td>Auto-cadastro com dados básicos (Req 2.1) — opcional: criar/vincular comunidade de fé</td>
+      <td><strong>Consumo e apoio:</strong> Seguir missionários, visualizar feed de postagens, interagir com likes em posts (Req 5.4, 15.2.1). <strong>Descoberta:</strong> Explorar projetos recomendados (Req 12, 15.4.1), pesquisar missionários e projetos (Req 11). <strong>Doações:</strong> Realizar contribuições via Pix, transferência bancária e futuro gateway (Req 9). <strong>Acesso anônimo:</strong> Usuários não autenticados podem acessar rotas públicas em leitura (Req 1.4).</td>
+    </tr>
+  </tbody>
+</table>
 
 </div>
+
+### Contexto de Comunidade de Fé
+
+Usuários **SUPPORTER** e **MISSIONARY** podem estar vinculados a uma **Comunidade de Fé (igreja)** durante o cadastro:
+- Os dados eclesiásticos podem ser atualizados pelo próprio usuário dentro de **30 dias** após cadastro
+- Após 30 dias, alterações requerem aprovação formal do administrador (Req 13.3)
+- Pastores são implementados como usuários **SUPPORTER** com vinculação à comunidade de fé, sem role separada
 
 ---
 
