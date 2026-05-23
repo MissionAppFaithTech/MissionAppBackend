@@ -1,0 +1,130 @@
+name: Update Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main", "dev"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-docs:
+    name: Update Directory Tree
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Install tree utility
+        run: sudo apt-get install -y tree
+
+      - name: Generate Directory Tree
+        run: |
+          tree . -a -d -L 3 -F --noreport \
+            -I "node_modules|.git|dist|coverage|build|.turbo|tmp" > tree.txt
+
+      - name: Inject Tree into Markdown
+        uses: actions/github-script@v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const rawTree = fs.readFileSync('tree.txt', 'utf8');
+
+            // Filtra o texto cru e mantém estritamente as linhas que contêm os caracteres do desenho da árvore.
+            // O sistema `tree` usa unicode nativo (│, ├, └, ─).
+            // A flag -F não adiciona '/' quando combinada com -d em algumas versões do tree,
+            // então o sufixo é adicionado manualmente via pós-processamento:
+            // toda linha com '──' contém um nome de pasta e deve terminar com '/'.
+            const cleanTreeLines = rawTree
+              .split('\n')
+              .filter(line => line.includes('├') || line.includes('└') || line.includes('│') || line.includes('─'))
+              .map(line => line.includes('──') ? line.trimEnd() + '/' : line);
+
+            // Adiciona um ponto '.' no topo para representar a raiz do projeto de forma limpa e profissional.
+            // O `tree . ...` emite o caminho completo na primeira linha — ela é filtrada acima e substituída aqui.
+            const finalTree = ".\n" + cleanTreeLines.join('\n');
+
+            const startTag = '<!-- START_TREE -->';
+            const endTag = '<!-- END_TREE -->';
+
+            // Safe multiline regex that finds content between the anchor tags
+            const regex = new RegExp(`${startTag}[\\s\\S]*?${endTag}`, 'g');
+
+            // Builds the new block (keeping the tags)
+            const newContent = `${startTag}\n\`\`\`text\n${finalTree}\n\`\`\`\n${endTag}`;
+
+            // Recursively searches for .md files in the project:
+            function getAllMarkdownFiles(dir, fileList = []) {
+              const files = fs.readdirSync(dir);
+
+              for (const file of files) {
+                const filePath = path.join(dir, file);
+
+                if (fs.statSync(filePath).isDirectory()) {
+                  // Optimization: Avoids entering infrastructure/build folders
+                  if (!['node_modules', '.git', 'dist', 'build', 'coverage', '.turbo'].includes(file)) {
+                    getAllMarkdownFiles(filePath, fileList);
+                  }
+                } else if (filePath.endsWith('.md')) {
+                  fileList.push(filePath);
+                }
+              }
+              return fileList;
+            }
+
+            const mdFiles = getAllMarkdownFiles('.');
+            let updatedCount = 0;
+
+            // Idempotent processing of .md files:
+            for (const file of mdFiles) {
+              try {
+                let content = fs.readFileSync(file, 'utf8');
+
+                // Only spends processing and I/O if the file contains the anchor tags:
+                if (content.includes(startTag) && content.includes(endTag)) {
+                  const updatedContent = content.replace(regex, newContent);
+
+                  if (updatedContent !== content) {
+                    fs.writeFileSync(file, updatedContent);
+                    console.log(`✅ Tree successfully injected into: ${file}`);
+                    updatedCount++;
+                  } else {
+                    console.log(`ℹ️ No tree changes detected for: ${file}`);
+                  }
+                }
+              } catch (error) {
+                console.error(`❌ Error while processing file ${file}:`, error);
+                // We don't use process.exit(1) here so that a file with permission issues doesn't break the update of the others.
+              }
+            }
+
+            console.log(`\nSummary: ${updatedCount} file(s) updated.`);
+
+            // Cleanup temporary artifact
+            fs.unlinkSync('tree.txt');
+
+      - name: Create Automatic Pull Request
+        if: ${{ !env.ACT }}
+        uses: peter-evans/create-pull-request@v8.1.0
+        with:
+          commit-message: "docs: update directory tree"
+          branch: chore/update-docs-tree
+          delete-branch: true
+          title: "docs: Automatic Directory Tree Update"
+          body: |
+            # 🤖 **Automatic Update**:
+
+            This PR was automatically generated by the CI/CD pipeline.
+            Changes were detected in the directory structure and all `*.md` files have been updated to reflect the new architecture.
+          labels: documentation, automated pr

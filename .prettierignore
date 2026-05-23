@@ -1,3 +1,3 @@
-**/.git
-src/generated/**
-ecosystem.config.js
+.adonisjs
+node_modules
+build
