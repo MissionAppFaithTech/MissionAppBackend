@@ -4,7 +4,7 @@
 
 1. [Visão Geral](#visao-geral)
 2. [Estrutura do Projeto](#estrutura-do-projeto)
-3. [Esquema do Banco de Dados e Migrations](#esquema-do-banco-de-dados)
+3. [Estrutura da Documentação](#estrutura-da-documentacao)
 4. [Tipos de Usuários](#tipos-de-usuarios)
 5. [Funcionalidades por Requisito](#funcionalidades-por-requisito)
 6. [Requisitos Não Funcionais](#requisitos-nao-funcionais)
@@ -59,6 +59,8 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 └── tsconfig.json
 ```
 <!-- END_TREE -->
+
+<a name="estrutura-da-documentacao"></a>
 
 ## 📁 Estrutura da Documentação (`docs/`)
 
