@@ -1,6 +1,6 @@
 # [ADR-0000]: Adoção de Architecture Decision Records (ADR) como Mecanismo de Documentação Arquitetural
 
-## Meta
+## Dados
 * **Status:** Proposto
 * **Data:** 2026-05-23
 * **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
