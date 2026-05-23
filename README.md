@@ -4,14 +4,15 @@
 
 1. [Visão Geral](#visao-geral)
 2. [Estrutura do Projeto](#estrutura-do-projeto)
-3. [Tipos de Usuários](#tipos-de-usuarios)
-4. [Funcionalidades por Requisito](#funcionalidades-por-requisito)
-5. [Requisitos Não Funcionais](#requisitos-nao-funcionais)
-6. [Ferramentas Necessárias](#ferramentas-necessarias)
-7. [Versões de Tecnologias Utilizadas](#versoes-de-tecnologias-utilizadas)
-8. [Como Executar o Servidor](#como-executar-o-servidor)
-9. [Links Externos](#links-externos)
-10. [Equipe de Desenvolvimento](#equipe-de-desenvolvimento)
+3. [Esquema do Banco de Dados e Migrations](#esquema-do-banco-de-dados)
+4. [Tipos de Usuários](#tipos-de-usuarios)
+5. [Funcionalidades por Requisito](#funcionalidades-por-requisito)
+6. [Requisitos Não Funcionais](#requisitos-nao-funcionais)
+7. [Ferramentas Necessárias](#ferramentas-necessarias)
+8. [Versões de Tecnologias Utilizadas](#versoes-de-tecnologias-utilizadas)
+9. [Como Executar o Servidor](#como-executar-o-servidor)
+10. [Links Externos](#links-externos)
+11. [Equipe de Desenvolvimento](#equipe-de-desenvolvimento)
 
 ---
 
@@ -59,7 +60,7 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ```
 <!-- END_TREE -->
 
-### 📁 Estrutura da Documentação (`docs/`)
+## 📁 Estrutura da Documentação (`docs/`)
 
 A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um perfil diferente de colaborador:
 
