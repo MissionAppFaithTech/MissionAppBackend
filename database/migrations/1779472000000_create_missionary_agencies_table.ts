@@ -10,17 +10,17 @@ export default class extends BaseSchema {
       table.string('phone_number').nullable()
       table.timestamp('created_at', { precision: 3, useTz: true }).notNullable()
 
-      table.uuid('missionary_id').nullable()
+      table.uuid('user_id').nullable()
 
       table
-        .foreign('missionary_id')
+        .foreign('user_id', 'fk_missionary_agencies_user_id')
         .references('id')
-        .inTable('missionaries')
+        .inTable('users')
         .onDelete('SET NULL')
         .onUpdate('CASCADE')
 
       table.index(['name'], 'idx_missionary_agencies_name')
-      table.index(['missionary_id'], 'idx_missionary_agencies_missionary_id')
+      table.index(['user_id'], 'idx_missionary_agencies_user_id')
     })
   }
 
