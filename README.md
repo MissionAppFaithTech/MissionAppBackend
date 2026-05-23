@@ -29,34 +29,48 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ## 📂 Estrutura do Projeto
 
 <!-- START_TREE -->
-```bash
+```text
+.
+├── .adonisjs/
+│   ├── client/
+│   │   └── registry/
+│   └── server/
+├── .github/
+│   └── workflows/
 ├── app/
-│   ├── controllers/            # Handlers HTTP das rotas
-│   ├── enums/                  # Enums do domínio (usuário, missionário, mídia, auditoria...)
-│   ├── exceptions/             # Handler global de erros
-│   ├── middleware/             # Auth, silent auth, force JSON response...
-│   ├── models/                 # Modelos Lucid ORM
-│   │   └── mixins/             # Mixins reutilizáveis (soft delete, timestamps...)
-│   ├── transformers/           # Serialização e formatação das respostas
-│   └── validators/             # Schemas de validação com VineJS
-├── bin/                        # Entrypoints: server, console e test
-├── config/                     # Configurações do framework (auth, DB, CORS, session...)
+│   ├── controllers/
+│   ├── enums/
+│   │   ├── authentication_audit/
+│   │   ├── financial_config/
+│   │   ├── media_asset/
+│   │   ├── missionary/
+│   │   ├── user/
+│   │   └── user_action_audit/
+│   ├── exceptions/
+│   ├── middleware/
+│   ├── models/
+│   │   └── mixins/
+│   ├── transformers/
+│   └── validators/
+├── bin/
+├── client/
+│   └── registry/
+├── config/
 ├── database/
-│   └── migrations/             # Migrations Lucid ordenadas por timestamp
+│   └── migrations/
 ├── docs/
-│   ├── api/v1/                 # Specs OpenAPI, coleções Postman/Insomnia
-│   ├── architecture/
-│   │   ├── decisions/          # Architecture Decision Records (ADRs)
-│   │   └── templates/          # Template oficial de ADR
-│   ├── business/               # Regras de negócio e fluxos funcionais
-│   ├── deployment/             # Pipelines CI/CD, infraestrutura cloud, runbooks
-│   └── setup/                  # Guia de setup local para novos contribuidores
-├── providers/                  # Service providers customizados do AdonisJS
-├── start/                      # Bootstrap: rotas, kernel, env, validadores globais
-├── tests/                      # Testes de integração com Japa
-├── docker-compose.yml
-├── adonisrc.ts
-└── tsconfig.json
+│   ├── api/
+│   │   └── v1/
+│   ├── architecture/
+│   │   ├── decisions/
+│   │   └── templates/
+│   ├── business/
+│   ├── deployment/
+│   └── setup/
+├── providers/
+├── server/
+├── start/
+└── tests/
 ```
 <!-- END_TREE -->
 
