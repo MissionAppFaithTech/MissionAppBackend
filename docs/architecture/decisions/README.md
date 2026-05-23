@@ -354,7 +354,7 @@ flowchart LR
       <tr>
          <td align="center"><a href="./0000-uso-de-architecture-decision-records.md">ADR-0000</a></td>
          <td align="left">Adoção de Architecture Decision Records como Mecanismo de Documentação Arquitetural</td>
-         <td align="center">🟡 Proposto</td>
+         <td align="center">🟢 Aceito</td>
       </tr>
    </tbody>
 </table>
