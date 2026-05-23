@@ -19,7 +19,60 @@
 
 ## 🗺️ Visão Geral
 
-API RESTful open-source do MissionApp — plataforma de conexão, apoio e visibilidade para missionários e agências missionárias. Construída com **AdonisJS 7** e **TypeScript**.
+O **MissionApp** é uma plataforma open-source de conexão entre **missionários** e seus **apoiadores**. O sistema oferece ao missionário uma presença digital estruturada — perfil, projetos de impacto, campanhas e feed de postagens — enquanto os apoiadores acompanham, interagem e contribuem financeiramente com as causas que acreditam.
+
+A plataforma opera com **três perfis de usuário** com permissões distintas:
+
+<div align="center">
+
+<table width="100%">
+  <thead>
+    <tr>
+      <th align="left">Perfil</th>
+      <th align="left">Papel na plataforma</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>⛪ <strong>Missionário</strong></td>
+      <td>Cria e gerencia seu perfil público, projetos de impacto, campanhas de arrecadação, postagens e configurações de recebimento de doações (PIX / transferência bancária).</td>
+    </tr>
+    <tr>
+      <td>🙏 <strong>Apoiador</strong></td>
+      <td>Segue missionários, consome o feed de postagens, explora projetos recomendados e realiza doações diretamente pela plataforma.</td>
+    </tr>
+    <tr>
+      <td>🛡️ <strong>Administrador</strong></td>
+      <td>Aprova cadastros de missionários, gerencia a curadoria de projetos em destaque e supervisiona o sistema. Não pode ser criado via cadastro público.</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+### Principais capacidades do sistema
+
+- **Autenticação e controle de acesso** — Login com e-mail e senha, redefinição de senha via link seguro, aprovação manual de missionários pelo administrador e acesso público (somente leitura) em rotas abertas.
+- **Perfil e identidade do missionário** — Cabeçalho com avatar, minibiografia, contatos públicos, abas de navegação (Projeto, Campanha, Postagens) e gestão de seguidores.
+- **Projetos de Impacto e Campanhas** — Vitrine da causa missionária com título, descrição, imagem de capa e vídeo embed; campanhas com metas e progresso de arrecadação.
+- **Feed e interações sociais** — Postagens com imagem e legenda, likes, e arquitetura preparada para comentários futuros. Feed personalizado por conexões.
+- **Área de Doações** — Suporte a PIX (chave + QR Code estático) e transferência bancária; dados sensíveis criptografados em repouso (AES-256). Fluxo extensível para gateway de pagamento futuro.
+- **Curadoria de projetos pelo administrador** — Seleção manual de projetos para destaque em campanhas temáticas (ex: *"Semana de Missões Batista"*); exibição aleatória como fallback.
+- **Busca global** — Localização de missionários e projetos por nome.
+
+### Destaques técnicos e não funcionais
+
+| Categoria | Detalhe |
+|---|---|
+| **Segurança** | Senhas com Argon2; dados bancários com AES-256; rate limiting em login e reset de senha; tráfego via HTTPS (TLS 1.2+). |
+| **Performance** | Paginação por key cursor; cache Redis para agências, comunidades de fé, contadores e projetos em destaque; compressão automática de imagens (≤ 200 KB). |
+| **Conformidade** | LGPD — direito ao esquecimento e exportação de dados (religião e dados financeiros são dados sensíveis). |
+| **Confiabilidade** | Operações críticas com transação atômica (rollback em falha); uptime mínimo de 99,5%; e-mail transacional com taxa de entrega > 98%. |
+| **Manutenibilidade** | Arquitetura modular; API documentada via OpenAPI/Swagger; monitoramento centralizado de erros (Sentry/GlitchTip). |
+| **Portabilidade** | 100% responsivo (largura mínima 320px) — missionários em campo acessam pelo celular. |
+
+> [!NOTE]
+> Rotas públicas (perfil do missionário, projetos, feed, área de doação em modo leitura) são acessíveis sem autenticação. Ações que exigem conta (like, follow, doação) redirecionam o visitante para cadastro ou login.
 
 ---
 
@@ -27,6 +80,7 @@ API RESTful open-source do MissionApp — plataforma de conexão, apoio e visibi
 
 ## 📂 Estrutura do Projeto
 
+<!-- START_TREE -->
 ```bash
 ├── app/
 │   ├── controllers/            # Handlers HTTP das rotas
@@ -56,6 +110,7 @@ API RESTful open-source do MissionApp — plataforma de conexão, apoio e visibi
 ├── adonisrc.ts
 └── tsconfig.json
 ```
+<!-- END_TREE -->
 
 ### 📁 Estrutura da Documentação (`docs/`)
 
