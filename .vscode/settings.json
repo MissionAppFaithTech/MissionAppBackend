@@ -1,9 +1,9 @@
 {
-  "typescript.tsdk": "./node_modules/typescript/lib",
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
 
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "text": "Gere as mensagens de commit SEMPRE em Português do Brasil (PT-BR). Siga estritamente o padrão Conventional Commits com os tipos: feat, fix, chore, docs, refactor, test, perf, build, ci, revert. Use o imperativo no presente (ex: 'adicionar', 'corrigir', 'remover'). Seja conciso. Quando houver escopo, use letras minúsculas."
+      "text": "Gere as mensagens de commit SEMPRE em Português do Brasil (PT-BR). Siga estritamente o padrão Conventional Commits com os tipos: feat, fix, chore, docs, refactor, test, perf, build, ci, revert. Use o imperativo no presente (ex: 'adicionar', 'corrigir', 'remover'). Seja conciso. Quando houver escopo, use letras minúsculas. Não crie mensagens demasiadamente extensas."
     }
   ],
 
