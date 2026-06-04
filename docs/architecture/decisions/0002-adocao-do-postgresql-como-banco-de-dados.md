@@ -1,9 +1,10 @@
 # [ADR-0002]: Adoção do PostgreSQL como Banco de Dados Relacional
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-30
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-30
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -51,36 +52,36 @@ O PostgreSQL foi escolhido por ser o banco relacional que melhor atende ao conju
 
 ## Alternativas Consideradas
 
-* **MySQL / MariaDB:** Banco relacional maduro, amplamente adotado e com bom suporte no Lucid. Descartado porque: (1) o suporte a `CHECK constraints` só é confiável a partir do MySQL 8 — versões anteriores as ignoram silenciosamente, o que é um risco em ambientes onde a versão não é controlada; (2) o suporte a JSONB indexável é inferior; (3) o PostgreSQL é tecnicamente superior na maioria das dimensões relevantes para este projeto sem custo adicional.
+- **MySQL / MariaDB:** Banco relacional maduro, amplamente adotado e com bom suporte no Lucid. Descartado porque: (1) o suporte a `CHECK constraints` só é confiável a partir do MySQL 8 — versões anteriores as ignoram silenciosamente, o que é um risco em ambientes onde a versão não é controlada; (2) o suporte a JSONB indexável é inferior; (3) o PostgreSQL é tecnicamente superior na maioria das dimensões relevantes para este projeto sem custo adicional.
 
-* **MongoDB:** Banco de documentos com schema flexível, amplamente usado em stacks Node.js. Descartado porque: (1) o modelo de dados do MissionApp é altamente relacional — tentar representar follows, likes, campanhas vinculadas a projetos e auditorias em documentos resultaria em desnormalização excessiva ou referências manuais sem integridade garantida; (2) transações multi-documento no MongoDB existem desde a v4.0, mas introduzem latência adicional e são estruturalmente mais complexas que transações relacionais; (3) dados financeiros em banco não-relacional é padrão de alto risco para um domínio que exige rastreabilidade e auditoria.
+- **MongoDB:** Banco de documentos com schema flexível, amplamente usado em stacks Node.js. Descartado porque: (1) o modelo de dados do MissionApp é altamente relacional — tentar representar follows, likes, campanhas vinculadas a projetos e auditorias em documentos resultaria em desnormalização excessiva ou referências manuais sem integridade garantida; (2) transações multi-documento no MongoDB existem desde a v4.0, mas introduzem latência adicional e são estruturalmente mais complexas que transações relacionais; (3) dados financeiros em banco não-relacional é padrão de alto risco para um domínio que exige rastreabilidade e auditoria.
 
-* **SQLite:** Banco embarcado, zero-configuração, excelente para testes e desenvolvimento local. Descartado porque: (1) não suporta escritas concorrentes de múltiplos processos — inviável para uma API com múltiplos workers; (2) não possui tipos avançados como `JSONB` ou suporte robusto a `CHECK constraints`; (3) não é adequado para produção em APIs com tráfego real. Pode ser considerado exclusivamente para ambiente de testes isolados, mas não como banco principal.
+- **SQLite:** Banco embarcado, zero-configuração, excelente para testes e desenvolvimento local. Descartado porque: (1) não suporta escritas concorrentes de múltiplos processos — inviável para uma API com múltiplos workers; (2) não possui tipos avançados como `JSONB` ou suporte robusto a `CHECK constraints`; (3) não é adequado para produção em APIs com tráfego real. Pode ser considerado exclusivamente para ambiente de testes isolados, mas não como banco principal.
 
-* **CockroachDB:** Banco distribuído compatível com o protocolo PostgreSQL, projetado para alta disponibilidade e escalabilidade horizontal. Descartado porque: (1) adiciona complexidade operacional significativa sem justificativa para o volume atual do MissionApp; (2) a compatibilidade com PostgreSQL é parcial — alguns comportamentos do Lucid podem não funcionar corretamente; (3) a escala distribuída é uma solução para um problema que o MissionApp não tem neste momento.
+- **CockroachDB:** Banco distribuído compatível com o protocolo PostgreSQL, projetado para alta disponibilidade e escalabilidade horizontal. Descartado porque: (1) adiciona complexidade operacional significativa sem justificativa para o volume atual do MissionApp; (2) a compatibilidade com PostgreSQL é parcial — alguns comportamentos do Lucid podem não funcionar corretamente; (3) a escala distribuída é uma solução para um problema que o MissionApp não tem neste momento.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Integridade financeira garantida:** Transações ACID asseguram que operações de doação, atualização de campanhas e geração de auditoria são atômicas — sem estados intermediários inconsistentes mesmo em caso de falha.
+- **Integridade financeira garantida:** Transações ACID asseguram que operações de doação, atualização de campanhas e geração de auditoria são atômicas — sem estados intermediários inconsistentes mesmo em caso de falha.
 
-* **Integridade referencial no banco, não só na aplicação:** Foreign keys com `CASCADE` garantem que deleções de entidades pai propagam corretamente para filhos, independentemente de qual camada faz a deleção — removendo uma classe inteira de bugs de inconsistência.
+- **Integridade referencial no banco, não só na aplicação:** Foreign keys com `CASCADE` garantem que deleções de entidades pai propagam corretamente para filhos, independentemente de qual camada faz a deleção — removendo uma classe inteira de bugs de inconsistência.
 
-* **Ecossistema familiar:** Alta probabilidade de que contribuidores já conheçam PostgreSQL, reduzindo a barreira de entrada para contribuições que envolvam migrations ou otimizações de query.
+- **Ecossistema familiar:** Alta probabilidade de que contribuidores já conheçam PostgreSQL, reduzindo a barreira de entrada para contribuições que envolvam migrations ou otimizações de query.
 
 ### Negativas / Riscos
 
-* **Requer Docker para desenvolvimento local:** Diferente do SQLite, o PostgreSQL exige um processo de banco em execução. O Docker Compose mitiga isso, mas adiciona um pré-requisito de setup para novos contribuidores.
+- **Requer Docker para desenvolvimento local:** Diferente do SQLite, o PostgreSQL exige um processo de banco em execução. O Docker Compose mitiga isso, mas adiciona um pré-requisito de setup para novos contribuidores.
 
-* **Migrations são stateful e exigem disciplina:** Migrações PostgreSQL com `ALTER TABLE`, remoção de colunas ou mudança de tipos em tabelas com dados existentes requerem cuidado para não gerar downtime ou perda de dados. Rollbacks precisam ser planejados explicitamente.
+- **Migrations são stateful e exigem disciplina:** Migrações PostgreSQL com `ALTER TABLE`, remoção de colunas ou mudança de tipos em tabelas com dados existentes requerem cuidado para não gerar downtime ou perda de dados. Rollbacks precisam ser planejados explicitamente.
 
-* **Limites de conexão em infraestrutura menor:** PostgreSQL tem limite de conexões simultâneas configurável, mas finito. Em produção, um connection pooler (ex: PgBouncer) pode ser necessário dependendo do perfil de tráfego — o que adiciona uma peça de infraestrutura não prevista no setup inicial.
+- **Limites de conexão em infraestrutura menor:** PostgreSQL tem limite de conexões simultâneas configurável, mas finito. Em produção, um connection pooler (ex: PgBouncer) pode ser necessário dependendo do perfil de tráfego — o que adiciona uma peça de infraestrutura não prevista no setup inicial.
 
-* **Complexidade de backup e recuperação:** Backups do PostgreSQL exigem estratégia adequada (`pg_dump`, WAL archiving). Em produção, isso demanda atenção operacional que um banco gerenciado (RDS, Supabase) simplificaria — mas introduziria custo e acoplamento a provedor.
+- **Complexidade de backup e recuperação:** Backups do PostgreSQL exigem estratégia adequada (`pg_dump`, WAL archiving). Em produção, isso demanda atenção operacional que um banco gerenciado (RDS, Supabase) simplificaria — mas introduziria custo e acoplamento a provedor.
 
 ## Referências
 
-* [Documentação oficial do PostgreSQL 18](https://www.postgresql.org/docs/18/)
-* [Lucid ORM — configuração com PostgreSQL](https://lucid.adonisjs.com/docs/introduction)
-* [ADR-0001 — Adoção do AdonisJS como Framework Web Backend](./0001-adocao-do-adonisjs-como-framework-backend.md)
+- [Documentação oficial do PostgreSQL 18](https://www.postgresql.org/docs/18/)
+- [Lucid ORM — configuração com PostgreSQL](https://lucid.adonisjs.com/docs/introduction)
+- [ADR-0001 — Adoção do AdonisJS como Framework Web Backend](./0001-adocao-do-adonisjs-como-framework-backend.md)

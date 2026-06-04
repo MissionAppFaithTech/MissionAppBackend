@@ -1,9 +1,10 @@
 # [ADR-0009]: Padronização da Nomenclatura de Buckets S3
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-23
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-23
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -34,7 +35,6 @@ missionapp-{ambiente}-{visibilidade}-{proposito-ou-ciclo}
 ```
 
 ### Segmentos da fórmula
-
 
 <table width="100%">
    <colgroup>
@@ -73,13 +73,11 @@ missionapp-{ambiente}-{visibilidade}-{proposito-ou-ciclo}
    </tbody>
 </table>
 
-
 ---
 
 ### Sufixos por propósito — dados permanentes
 
 Use quando os arquivos **não têm data de expiração** e devem ser gerenciados manualmente:
-
 
 <table width="100%">
    <colgroup>
@@ -112,11 +110,9 @@ Use quando os arquivos **não têm data de expiração** e devem ser gerenciados
    </tbody>
 </table>
 
-
 ### Sufixos por ciclo de vida — dados temporários
 
 Use quando os arquivos **têm data de validade** e devem ser apagados automaticamente via AWS Lifecycle Rules:
-
 
 <table width="100%">
    <colgroup>
@@ -150,11 +146,9 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
    </tbody>
 </table>
 
-
 ---
 
 ### Matriz de infraestrutura do MissionApp
-
 
 <table width="100%">
    <colgroup>
@@ -233,7 +227,6 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
    </tbody>
 </table>
 
-
 ---
 
 ### Fluxograma de decisão para novos buckets
@@ -253,7 +246,7 @@ flowchart TD
 
 ## Justificativa
 
-- **Legibilidade imediata:** O nome do bucket responde às três perguntas de governança — *qual ambiente?*, *quem pode acessar?*, *até quando?* — sem necessidade de consultar documentação externa ou tags de recurso. Qualquer engenheiro consegue auditar a infraestrutura apenas lendo a lista de buckets.
+- **Legibilidade imediata:** O nome do bucket responde às três perguntas de governança — _qual ambiente?_, _quem pode acessar?_, _até quando?_ — sem necessidade de consultar documentação externa ou tags de recurso. Qualquer engenheiro consegue auditar a infraestrutura apenas lendo a lista de buckets.
 
 - **Automação de Lifecycle Rules via sufixo:** AWS Lifecycle Rules e scripts Terraform podem aplicar regras de expiração com um filtro de sufixo (`*-temp`, `*-archive`). Isso torna a governança de custos automatizável: uma única regra no Terraform cobre todos os buckets temporários presentes e futuros, independentemente de quantas aplicações os criem.
 
@@ -267,41 +260,41 @@ flowchart TD
 
 ## Alternativas Consideradas
 
-* **Nenhuma convenção formal (nomes livres):** Cada colaborador nomeia buckets conforme sua intuição. Resulta nos problemas descritos no Contexto — ambiguidade de ambiente, impossibilidade de automação e dificuldade de auditoria. Descartado.
+- **Nenhuma convenção formal (nomes livres):** Cada colaborador nomeia buckets conforme sua intuição. Resulta nos problemas descritos no Contexto — ambiguidade de ambiente, impossibilidade de automação e dificuldade de auditoria. Descartado.
 
-* **Tags AWS no lugar de nomenclatura estruturada:** Usar tags (`Environment: prod`, `Visibility: private`) em vez de codificar essas informações no nome. Tags são poderosas para billing e IAM, mas não eliminam a necessidade de um nome legível — o nome ainda aparece nas listas, nos logs e nos erros de aplicação. Tags e nomenclatura estruturada são complementares, não substitutos. Descartado como abordagem exclusiva.
+- **Tags AWS no lugar de nomenclatura estruturada:** Usar tags (`Environment: prod`, `Visibility: private`) em vez de codificar essas informações no nome. Tags são poderosas para billing e IAM, mas não eliminam a necessidade de um nome legível — o nome ainda aparece nas listas, nos logs e nos erros de aplicação. Tags e nomenclatura estruturada são complementares, não substitutos. Descartado como abordagem exclusiva.
 
-* **Prefixo com ID de conta AWS (`{account-id}-{purpose}`):** Alguns times usam o ID numérico da conta AWS no prefixo para garantir unicidade. IDs numéricos são opacos, não carregam contexto organizacional e dificultam a leitura humana. Descartado.
+- **Prefixo com ID de conta AWS (`{account-id}-{purpose}`):** Alguns times usam o ID numérico da conta AWS no prefixo para garantir unicidade. IDs numéricos são opacos, não carregam contexto organizacional e dificultam a leitura humana. Descartado.
 
-* **Fórmula sem o segmento de visibilidade (`{org}-{env}-{purpose}`):** Simplifica o nome mas perde a informação de visibilidade (público vs. privado) imediatamente legível. Em um projeto com dados sensíveis de missionários e documentos jurídicos, esse segmento é crítico para auditorias de segurança. Descartado.
+- **Fórmula sem o segmento de visibilidade (`{org}-{env}-{purpose}`):** Simplifica o nome mas perde a informação de visibilidade (público vs. privado) imediatamente legível. Em um projeto com dados sensíveis de missionários e documentos jurídicos, esse segmento é crítico para auditorias de segurança. Descartado.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Governança de custos automatizável:** Lifecycle Rules aplicadas por sufixo (`*-temp`) cobrem toda a infraestrutura presente e futura sem configuração adicional por bucket. Arquivos temporários como relatórios PDF nunca mais acumularão custo indefinidamente.
+- **Governança de custos automatizável:** Lifecycle Rules aplicadas por sufixo (`*-temp`) cobrem toda a infraestrutura presente e futura sem configuração adicional por bucket. Arquivos temporários como relatórios PDF nunca mais acumularão custo indefinidamente.
 
-* **Auditoria de segurança simplificada:** Qualquer revisão de política de acesso pode filtrar imediatamente por `*-public-*` para verificar quais buckets expõem conteúdo publicamente, sem precisar inspecionar as ACLs de cada bucket individualmente.
+- **Auditoria de segurança simplificada:** Qualquer revisão de política de acesso pode filtrar imediatamente por `*-public-*` para verificar quais buckets expõem conteúdo publicamente, sem precisar inspecionar as ACLs de cada bucket individualmente.
 
-* **Onboarding de infraestrutura acelerado:** Novos colaboradores entendem a topologia de storage do projeto lendo a lista de buckets — sem precisar de documentação adicional para saber o que cada bucket contém ou a quem pertence.
+- **Onboarding de infraestrutura acelerado:** Novos colaboradores entendem a topologia de storage do projeto lendo a lista de buckets — sem precisar de documentação adicional para saber o que cada bucket contém ou a quem pertence.
 
-* **Eliminação de colisões de nome:** O prefixo organizacional garante que o projeto possa criar buckets sem se preocupar com conflitos de namespace global.
+- **Eliminação de colisões de nome:** O prefixo organizacional garante que o projeto possa criar buckets sem se preocupar com conflitos de namespace global.
 
-* **Scripts Terraform e CI/CD mais simples:** Módulos de infraestrutura podem gerar nomes de buckets programaticamente a partir de variáveis (`var.env`, `var.visibility`, `var.purpose`), sem hardcode de nomes arbitrários.
+- **Scripts Terraform e CI/CD mais simples:** Módulos de infraestrutura podem gerar nomes de buckets programaticamente a partir de variáveis (`var.env`, `var.visibility`, `var.purpose`), sem hardcode de nomes arbitrários.
 
 ### Negativas / Riscos
 
-* **Nomes mais longos:** `missionapp-prod-private-docs` tem 28 caracteres. O limite da AWS é 63. Para projetos com prefixos organizacionais muito longos, o segmento de propósito pode precisar ser abreviado.
+- **Nomes mais longos:** `missionapp-prod-private-docs` tem 28 caracteres. O limite da AWS é 63. Para projetos com prefixos organizacionais muito longos, o segmento de propósito pode precisar ser abreviado.
 
-* **Custo de migração de buckets existentes:** Buckets S3 não podem ser renomeados na AWS — é necessário criar um novo bucket com o nome correto, migrar o conteúdo via `aws s3 sync`, atualizar todas as referências no código e no Terraform, e deletar o bucket antigo. Qualquer bucket criado antes desta decisão exigirá esse processo.
+- **Custo de migração de buckets existentes:** Buckets S3 não podem ser renomeados na AWS — é necessário criar um novo bucket com o nome correto, migrar o conteúdo via `aws s3 sync`, atualizar todas as referências no código e no Terraform, e deletar o bucket antigo. Qualquer bucket criado antes desta decisão exigirá esse processo.
 
-* **Disciplina de equipe:** A convenção só funciona se todos os colaboradores a seguirem. Um único bucket criado fora do padrão quebra a legibilidade e pode escapar das Lifecycle Rules automáticas. Recomenda-se adicionar validação de nomenclatura no pipeline de CI (ex: checklist de PR ou script de lint de Terraform).
+- **Disciplina de equipe:** A convenção só funciona se todos os colaboradores a seguirem. Um único bucket criado fora do padrão quebra a legibilidade e pode escapar das Lifecycle Rules automáticas. Recomenda-se adicionar validação de nomenclatura no pipeline de CI (ex: checklist de PR ou script de lint de Terraform).
 
-* **Não cobre buckets de terceiros:** Integrações com serviços externos (ex: Stripe, Resend) podem criar ou referenciar buckets com nomes fora do controle do projeto. Essa convenção se aplica apenas a buckets gerenciados diretamente pelo time do MissionApp.
+- **Não cobre buckets de terceiros:** Integrações com serviços externos (ex: Stripe, Resend) podem criar ou referenciar buckets com nomes fora do controle do projeto. Essa convenção se aplica apenas a buckets gerenciados diretamente pelo time do MissionApp.
 
 ## Referências
 
-* [Amazon S3 — Bucket naming rules (documentação oficial)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html)
-* [AWS S3 Lifecycle configuration (documentação oficial)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html)
-* [Amazon S3 Glacier storage classes](https://aws.amazon.com/s3/storage-classes/glacier/)
-* [Terraform AWS S3 Bucket resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket)
+- [Amazon S3 — Bucket naming rules (documentação oficial)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html)
+- [AWS S3 Lifecycle configuration (documentação oficial)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html)
+- [Amazon S3 Glacier storage classes](https://aws.amazon.com/s3/storage-classes/glacier/)
+- [Terraform AWS S3 Bucket resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket)

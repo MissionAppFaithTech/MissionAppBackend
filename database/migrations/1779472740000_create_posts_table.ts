@@ -21,7 +21,9 @@ export default class extends BaseSchema {
       table
         .string('slug')
         .notNullable()
-        .comment('Identificador único legível para URL da postagem; derivado do conteúdo; imutável após criação')
+        .comment(
+          'Identificador único legível para URL da postagem; derivado do conteúdo; imutável após criação'
+        )
       table
         .timestamp('created_at', { precision: 3, useTz: true })
         .notNullable()

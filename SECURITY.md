@@ -4,10 +4,10 @@
 
 Apenas a versão mais recente na branch `main` recebe correções de segurança. Versões anteriores não são mantidas.
 
-| Branch / Versão | Recebe correções de segurança |
-|---|---|
-| `main` (última) | ✅ Sim |
-| Qualquer outra branch | ❌ Não |
+| Branch / Versão       | Recebe correções de segurança |
+| --------------------- | ----------------------------- |
+| `main` (última)       | ✅ Sim                        |
+| Qualquer outra branch | ❌ Não                        |
 
 ---
 

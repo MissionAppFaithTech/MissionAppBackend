@@ -1,15 +1,16 @@
 # [ADR-0012]: Adoção do Snyk para Detecção e Correção de Vulnerabilidades
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-31
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-31
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
 ## Contexto e Problema
 
-O MissionApp processa dados sensíveis sob a LGPD: afiliação religiosa de missionários (dado sensível por definição — Art. 5º, II da LGPD), dados bancários de apoiadores, tokens de autenticação e informações de doações. O Art. 46 da LGPD impõe que os agentes de tratamento adotem *"medidas de segurança, técnicas e administrativas aptas a proteger os dados pessoais de acessos não autorizados e de situações acidentais ou ilícitas"*. Vulnerabilidades não corrigidas em dependências ou imagens de container são vetores diretos de violação desse requisito legal.
+O MissionApp processa dados sensíveis sob a LGPD: afiliação religiosa de missionários (dado sensível por definição — Art. 5º, II da LGPD), dados bancários de apoiadores, tokens de autenticação e informações de doações. O Art. 46 da LGPD impõe que os agentes de tratamento adotem _"medidas de segurança, técnicas e administrativas aptas a proteger os dados pessoais de acessos não autorizados e de situações acidentais ou ilícitas"_. Vulnerabilidades não corrigidas em dependências ou imagens de container são vetores diretos de violação desse requisito legal.
 
 O stack do MissionApp expõe quatro superfícies de ataque distintas que requerem cobertura de segurança ativa:
 
@@ -78,45 +79,45 @@ O Snyk foi escolhido por cobrir as quatro superfícies de ataque identificadas c
 
 ## Alternativas Consideradas
 
-* **GitHub Dependabot Security Alerts:** Alertas de segurança nativos do GitHub para dependências com CVEs conhecidos, sem custo e sem configuração adicional. Descartado como solução exclusiva porque: (1) cobre apenas dependências npm — não faz scanning de imagens Docker nem análise estática de código (SAST); (2) não possui análise de alcançabilidade — todos os CVEs em dependências são reportados com a mesma prioridade, independentemente de o código vulnerável ser chamado; (3) não bloqueia PRs que introduzem novas vulnerabilidades via status check configurável; (4) não gera fix PRs com contexto do CVE e changelog. O Dependabot Security Alerts pode coexistir com o Snyk como camada adicional de alertas no GitHub, mas não é substituto para a cobertura completa do Snyk.
+- **GitHub Dependabot Security Alerts:** Alertas de segurança nativos do GitHub para dependências com CVEs conhecidos, sem custo e sem configuração adicional. Descartado como solução exclusiva porque: (1) cobre apenas dependências npm — não faz scanning de imagens Docker nem análise estática de código (SAST); (2) não possui análise de alcançabilidade — todos os CVEs em dependências são reportados com a mesma prioridade, independentemente de o código vulnerável ser chamado; (3) não bloqueia PRs que introduzem novas vulnerabilidades via status check configurável; (4) não gera fix PRs com contexto do CVE e changelog. O Dependabot Security Alerts pode coexistir com o Snyk como camada adicional de alertas no GitHub, mas não é substituto para a cobertura completa do Snyk.
 
-* **OWASP Dependency-Check:** Ferramenta open-source de SCA que verifica dependências contra o NVD (National Vulnerability Database) da NIST. Descartada porque: (1) é uma ferramenta CLI sem integração nativa com fluxo de PR do GitHub — gera relatórios HTML/XML que precisam ser consumidos manualmente ou via scripts customizados; (2) não cobre imagens Docker nem SAST; (3) a base de dados do NVD tem latência de publicação maior do que a do Snyk, que combina múltiplas fontes (NVD, GitHub Security Advisories, banco próprio) para detecção mais rápida; (4) não possui mecanismo de fix PRs automáticos.
+- **OWASP Dependency-Check:** Ferramenta open-source de SCA que verifica dependências contra o NVD (National Vulnerability Database) da NIST. Descartada porque: (1) é uma ferramenta CLI sem integração nativa com fluxo de PR do GitHub — gera relatórios HTML/XML que precisam ser consumidos manualmente ou via scripts customizados; (2) não cobre imagens Docker nem SAST; (3) a base de dados do NVD tem latência de publicação maior do que a do Snyk, que combina múltiplas fontes (NVD, GitHub Security Advisories, banco próprio) para detecção mais rápida; (4) não possui mecanismo de fix PRs automáticos.
 
-* **Trivy (Aqua Security):** Scanner de vulnerabilidades open-source, gratuito e sem limites, com excelente suporte a containers e IaC. Considerado como alternativa séria. Descartado porque: (1) a integração com IDE para feedback em tempo real de escrita de código é mais limitada que a do Snyk — o Trivy é primariamente uma ferramenta CLI e CI/CD; (2) não possui análise de alcançabilidade para priorização de CVEs; (3) o fix PR automático não é uma funcionalidade nativa do Trivy — requer integração adicional com Renovate ou scripts customizados para propor correções; (4) a DX de interpretação dos resultados no contexto de PR é inferior à do Snyk com GitHub Code Scanning. O Trivy pode ser adotado como complemento específico para scanning de containers em estágios futuros, dado seu modelo completamente open-source e sem limites.
+- **Trivy (Aqua Security):** Scanner de vulnerabilidades open-source, gratuito e sem limites, com excelente suporte a containers e IaC. Considerado como alternativa séria. Descartado porque: (1) a integração com IDE para feedback em tempo real de escrita de código é mais limitada que a do Snyk — o Trivy é primariamente uma ferramenta CLI e CI/CD; (2) não possui análise de alcançabilidade para priorização de CVEs; (3) o fix PR automático não é uma funcionalidade nativa do Trivy — requer integração adicional com Renovate ou scripts customizados para propor correções; (4) a DX de interpretação dos resultados no contexto de PR é inferior à do Snyk com GitHub Code Scanning. O Trivy pode ser adotado como complemento específico para scanning de containers em estágios futuros, dado seu modelo completamente open-source e sem limites.
 
-* **`pnpm audit` em CI/CD:** Executar `pnpm audit` como step no pipeline para detectar vulnerabilidades em dependências npm. Descartado como solução exclusiva porque: (1) cobre apenas dependências npm — não cobre imagens Docker, SAST nem IaC; (2) não tem análise de alcançabilidade; (3) não possui integração com GitHub Security tab via SARIF; (4) não abre fix PRs automaticamente; (5) os resultados são exibidos apenas nos logs de CI, sem visibilidade inline no contexto de PR. O `pnpm audit` pode ser mantido como verificação adicional rápida no pipeline, mas não substitui a cobertura completa do Snyk.
+- **`pnpm audit` em CI/CD:** Executar `pnpm audit` como step no pipeline para detectar vulnerabilidades em dependências npm. Descartado como solução exclusiva porque: (1) cobre apenas dependências npm — não cobre imagens Docker, SAST nem IaC; (2) não tem análise de alcançabilidade; (3) não possui integração com GitHub Security tab via SARIF; (4) não abre fix PRs automaticamente; (5) os resultados são exibidos apenas nos logs de CI, sem visibilidade inline no contexto de PR. O `pnpm audit` pode ser mantido como verificação adicional rápida no pipeline, mas não substitui a cobertura completa do Snyk.
 
-* **SonarQube / SonarCloud:** Plataforma de qualidade de código com capacidades SAST. Descartada porque: (1) o foco principal é qualidade de código (code smells, cobertura, duplicação) — as capacidades de detecção de vulnerabilidades de segurança são menos maduras que as do Snyk Code para o perfil de ameaças de uma API Node.js; (2) não cobre SCA (dependências com CVE) nem scanning de containers — seria necessário combinar com outra ferramenta para atingir a mesma cobertura do Snyk; (3) o plano gratuito do SonarCloud tem limitações para projetos com muitas linhas de código. O SonarCloud pode ser adotado no futuro como ferramenta complementar de qualidade de código, não de segurança.
+- **SonarQube / SonarCloud:** Plataforma de qualidade de código com capacidades SAST. Descartada porque: (1) o foco principal é qualidade de código (code smells, cobertura, duplicação) — as capacidades de detecção de vulnerabilidades de segurança são menos maduras que as do Snyk Code para o perfil de ameaças de uma API Node.js; (2) não cobre SCA (dependências com CVE) nem scanning de containers — seria necessário combinar com outra ferramenta para atingir a mesma cobertura do Snyk; (3) o plano gratuito do SonarCloud tem limitações para projetos com muitas linhas de código. O SonarCloud pode ser adotado no futuro como ferramenta complementar de qualidade de código, não de segurança.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Cobertura de segurança em todo o ciclo de vida:** Do commit local (IDE plugin) ao merge (PR check) ao deploy (container scan em CI/CD) — cada etapa do desenvolvimento tem cobertura ativa de vulnerabilidades, sem dependência de revisão manual.
+- **Cobertura de segurança em todo o ciclo de vida:** Do commit local (IDE plugin) ao merge (PR check) ao deploy (container scan em CI/CD) — cada etapa do desenvolvimento tem cobertura ativa de vulnerabilidades, sem dependência de revisão manual.
 
-* **Bloqueio proativo de regressões de segurança:** PRs que introduzem CVEs High/Critical não chegam a `main` sem revisão explícita — a vulnerabilidade é interceptada antes de entrar na base de código de produção.
+- **Bloqueio proativo de regressões de segurança:** PRs que introduzem CVEs High/Critical não chegam a `main` sem revisão explícita — a vulnerabilidade é interceptada antes de entrar na base de código de produção.
 
-* **Priorização inteligente via reachability analysis:** A análise de alcançabilidade reduz o ruído de alertas ao distinguir vulnerabilidades em código que é efetivamente chamado daquelas em código morto ou nunca invocado — permitindo que os mantenedores foquem nos riscos reais.
+- **Priorização inteligente via reachability analysis:** A análise de alcançabilidade reduz o ruído de alertas ao distinguir vulnerabilidades em código que é efetivamente chamado daquelas em código morto ou nunca invocado — permitindo que os mantenedores foquem nos riscos reais.
 
-* **Evidência de conformidade LGPD documentada:** O histórico de scans no GitHub Security tab fornece rastreabilidade das medidas de segurança adotadas — relevante para demonstrar diligência técnica em caso de incidente ou auditoria regulatória.
+- **Evidência de conformidade LGPD documentada:** O histórico de scans no GitHub Security tab fornece rastreabilidade das medidas de segurança adotadas — relevante para demonstrar diligência técnica em caso de incidente ou auditoria regulatória.
 
-* **Fix PRs com contexto completo:** PRs de correção gerados pelo Snyk incluem a descrição do CVE, a versão vulnerável, a versão corrigida, o changelog e o caminho de dependência — reduzindo o esforço de avaliação de impacto pelos mantenedores.
+- **Fix PRs com contexto completo:** PRs de correção gerados pelo Snyk incluem a descrição do CVE, a versão vulnerável, a versão corrigida, o changelog e o caminho de dependência — reduzindo o esforço de avaliação de impacto pelos mantenedores.
 
 ### Negativas / Riscos
 
-* **Ruído de falsos positivos em análise estática (SAST):** O Snyk Code pode sinalizar padrões de código como potencialmente vulneráveis em contextos onde o risco é mitigado por validação em outra camada (ex: VineJS antes do controller). A equipe precisará definir uma política de triagem de alertas para distinguir falsos positivos de vulnerabilidades reais — e documentar aceites de risco para que não sejam re-reportados indefinidamente.
+- **Ruído de falsos positivos em análise estática (SAST):** O Snyk Code pode sinalizar padrões de código como potencialmente vulneráveis em contextos onde o risco é mitigado por validação em outra camada (ex: VineJS antes do controller). A equipe precisará definir uma política de triagem de alertas para distinguir falsos positivos de vulnerabilidades reais — e documentar aceites de risco para que não sejam re-reportados indefinidamente.
 
-* **Limite de testes em repositórios privados:** O plano gratuito do Snyk é ilimitado para repositórios públicos, mas impõe limites por período de cobrança para repositórios privados (400 testes para Open Source, 100 para Code, 300 para IaC, 100 para Container). O MissionApp Backend é open-source e público, portanto não enfrenta esses limites atualmente. Se o repositório se tornar privado em algum momento, a estratégia de plano precisará ser reavaliada.
+- **Limite de testes em repositórios privados:** O plano gratuito do Snyk é ilimitado para repositórios públicos, mas impõe limites por período de cobrança para repositórios privados (400 testes para Open Source, 100 para Code, 300 para IaC, 100 para Container). O MissionApp Backend é open-source e público, portanto não enfrenta esses limites atualmente. Se o repositório se tornar privado em algum momento, a estratégia de plano precisará ser reavaliada.
 
-* **Latência adicional no pipeline de CI/CD:** Os steps de `snyk test` e `snyk code test` adicionam tempo ao pipeline de PR. O impacto deve ser monitorado e os scans de menor urgência (IaC, container) devem ser configurados para rodar apenas em pushes para `main`, não em todos os PRs — balanceando cobertura e velocidade de feedback.
+- **Latência adicional no pipeline de CI/CD:** Os steps de `snyk test` e `snyk code test` adicionam tempo ao pipeline de PR. O impacto deve ser monitorado e os scans de menor urgência (IaC, container) devem ser configurados para rodar apenas em pushes para `main`, não em todos os PRs — balanceando cobertura e velocidade de feedback.
 
-* **Dependência de serviço de terceiro para postura de segurança:** O Snyk é um serviço externo (SaaS). Indisponibilidade do Snyk durante o pipeline de CI/CD pode bloquear merges se o status check for obrigatório. A configuração dos status checks deve diferenciar entre falha do scan (vulnerabilidade encontrada) e falha do serviço (Snyk indisponível) — apenas o primeiro deve bloquear o merge.
+- **Dependência de serviço de terceiro para postura de segurança:** O Snyk é um serviço externo (SaaS). Indisponibilidade do Snyk durante o pipeline de CI/CD pode bloquear merges se o status check for obrigatório. A configuração dos status checks deve diferenciar entre falha do scan (vulnerabilidade encontrada) e falha do serviço (Snyk indisponível) — apenas o primeiro deve bloquear o merge.
 
 ## Referências
 
-* [Snyk Open Source — Scanning de dependências](https://docs.snyk.io/scan-with-snyk/snyk-open-source)
-* [Snyk — Reachability analysis](https://docs.snyk.io/manage-risk/prioritize-issues-for-fixing/reachability-analysis)
-* [Snyk — GitHub Actions: setup e verificação de vulnerabilidades](https://docs.snyk.io/developer-tools/snyk-ci-cd-integrations/github-actions-for-snyk-setup-and-checking-for-vulnerabilities)
-* [Snyk — Container test](https://docs.snyk.io/snyk-cli/commands/container-test)
-* [ADR-0011 — Renovate para Atualização Automática de Dependências](./0011-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md)
-* [ADR-0007 — pnpm como Gerenciador de Pacotes](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)
+- [Snyk Open Source — Scanning de dependências](https://docs.snyk.io/scan-with-snyk/snyk-open-source)
+- [Snyk — Reachability analysis](https://docs.snyk.io/manage-risk/prioritize-issues-for-fixing/reachability-analysis)
+- [Snyk — GitHub Actions: setup e verificação de vulnerabilidades](https://docs.snyk.io/developer-tools/snyk-ci-cd-integrations/github-actions-for-snyk-setup-and-checking-for-vulnerabilities)
+- [Snyk — Container test](https://docs.snyk.io/snyk-cli/commands/container-test)
+- [ADR-0011 — Renovate para Atualização Automática de Dependências](./0011-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md)
+- [ADR-0007 — pnpm como Gerenciador de Pacotes](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)

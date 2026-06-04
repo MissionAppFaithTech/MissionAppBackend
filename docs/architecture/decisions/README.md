@@ -9,8 +9,7 @@
 
 ## 🧭 O que é um ADR?
 
-Um **Architecture Decision Record** captura uma decisão arquitetural importante em um documento estruturado. Não descreve *como* o código funciona — descreve *por que* ele foi escrito daquela forma.
-
+Um **Architecture Decision Record** captura uma decisão arquitetural importante em um documento estruturado. Não descreve _como_ o código funciona — descreve _por que_ ele foi escrito daquela forma.
 
 <table width="100%">
    <colgroup>
@@ -47,7 +46,6 @@ Um **Architecture Decision Record** captura uma decisão arquitetural importante
    </tbody>
 </table>
 
-
 > [!TIP]
 > Leia os ADRs em ordem cronológica (`0000 → 0001 → ...`) para entender a evolução arquitetural do projeto. É a forma mais eficiente de fazer onboarding na arquitetura.
 
@@ -58,7 +56,6 @@ O formato adotado é baseado no modelo de [Michael Nygard (2011)](https://cognit
 ## ✅ Quando criar um ADR
 
 Crie um ADR quando a decisão...
-
 
 <table width="100%">
    <colgroup>
@@ -152,7 +149,6 @@ Crie um ADR quando a decisão...
    </tbody>
 </table>
 
-
 > [!IMPORTANT]
 > **Em caso de dúvida:** se a mudança geraria debate em uma code review ou em uma issue, ela merece um ADR.
 
@@ -161,7 +157,6 @@ Crie um ADR quando a decisão...
 ## ❌ Quando NÃO criar um ADR
 
 Não é necessário um ADR para:
-
 
 <table width="100%">
    <colgroup>
@@ -206,7 +201,6 @@ Não é necessário um ADR para:
    </tbody>
 </table>
 
-
 ---
 
 ## 🚀 Como propor uma decisão arquitetural
@@ -232,7 +226,6 @@ Substitua `XXXX` pelo próximo número sequencial (verifique o último arquivo n
 ---
 
 ### 3. Preencha o ADR
-
 
 <table width="100%">
    <colgroup>
@@ -281,7 +274,6 @@ Substitua `XXXX` pelo próximo número sequencial (verifique o último arquivo n
    </tbody>
 </table>
 
-
 ---
 
 ### 4. Abra um Pull Request
@@ -326,7 +318,6 @@ flowchart LR
 ---
 
 ## 📚 Índice de ADRs
-
 
 <table width="100%">
    <colgroup>
@@ -434,4 +425,3 @@ flowchart LR
       </tr>
    </tbody>
 </table>
-

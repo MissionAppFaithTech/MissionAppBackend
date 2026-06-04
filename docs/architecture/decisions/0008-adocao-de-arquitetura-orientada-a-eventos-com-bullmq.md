@@ -1,9 +1,10 @@
 # [ADR-0008]: Adoção de Arquitetura Orientada a Eventos com BullMQ para Operações Assíncronas
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-31
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-31
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -28,7 +29,7 @@ A pergunta central é: **como garantir que efeitos colaterais assíncronos (inde
 
 Adotaremos uma **Arquitetura Orientada a Eventos (EDA) em dois estágios** como padrão para todas as operações assíncronas do MissionApp Backend.
 
-O **BullMQ** é uma biblioteca Node.js de código aberto para gerenciamento de filas de mensagens e processamento em background, construída sobre Redis (ou compatíveis, como DragonflyDB). Reescrita inteiramente em TypeScript a partir da popular biblioteca Bull, implementa o padrão produtor-consumidor com suporte a filas prioritárias, retries configuráveis com backoff exponencial, jobs agendados (*delayed jobs*), jobs recorrentes (cron), concorrência configurável por worker e tipagem de payloads — sendo a escolha padrão do ecossistema Node.js para processamento assíncrono robusto.
+O **BullMQ** é uma biblioteca Node.js de código aberto para gerenciamento de filas de mensagens e processamento em background, construída sobre Redis (ou compatíveis, como DragonflyDB). Reescrita inteiramente em TypeScript a partir da popular biblioteca Bull, implementa o padrão produtor-consumidor com suporte a filas prioritárias, retries configuráveis com backoff exponencial, jobs agendados (_delayed jobs_), jobs recorrentes (cron), concorrência configurável por worker e tipagem de payloads — sendo a escolha padrão do ecossistema Node.js para processamento assíncrono robusto.
 
 A arquitetura divide as operações assíncronas em dois estágios:
 
@@ -39,7 +40,7 @@ A arquitetura divide as operações assíncronas em dois estágios:
 O fluxo completo para cada operação assíncrona segue esta sequência:
 
 ```
-Service (transação relacional) 
+Service (transação relacional)
   → emitter.emit('evento:ocorreu', payload)
     → Listener (recebe evento, enfileira Job em < 1ms)
       → BullMQ Queue (persistido no DragonflyDB)
@@ -91,50 +92,50 @@ O padrão de dois estágios foi escolhido por resolver simultaneamente os proble
 
 ## Alternativas Consideradas
 
-* **Hooks do Lucid ORM (`@afterCreate`, `@afterSave`):** Executar efeitos colaterais diretamente nos hooks de ciclo de vida do Model. Descartado porque: (1) acopla a camada de persistência a serviços externos — o Model passa a depender do cliente Elasticsearch, do provedor de email, de configurações de fila; (2) hooks Lucid executam no contexto da transação do banco — uma falha no Elasticsearch pode reverter uma operação relacional válida; (3) hooks são executados em memória, sem persistência — mesma fragilidade a reinicializações do puramente in-memory; (4) torna os Models difíceis de testar em isolamento, pois cada operação de escrita dispara efeitos colaterais em serviços externos.
+- **Hooks do Lucid ORM (`@afterCreate`, `@afterSave`):** Executar efeitos colaterais diretamente nos hooks de ciclo de vida do Model. Descartado porque: (1) acopla a camada de persistência a serviços externos — o Model passa a depender do cliente Elasticsearch, do provedor de email, de configurações de fila; (2) hooks Lucid executam no contexto da transação do banco — uma falha no Elasticsearch pode reverter uma operação relacional válida; (3) hooks são executados em memória, sem persistência — mesma fragilidade a reinicializações do puramente in-memory; (4) torna os Models difíceis de testar em isolamento, pois cada operação de escrita dispara efeitos colaterais em serviços externos.
 
-* **Chamadas diretas a serviços externos no Service (`await esClient.index(...)`):** Invocar o Elasticsearch, SMTP ou compressor de imagens diretamente dentro do método `execute()` do Service, após a transação relacional. Descartado porque: (1) acopla a lógica de negócio à infraestrutura de forma explícita — o Service precisa importar, configurar e conhecer o cliente de cada serviço externo; (2) uma falha ou lentidão no serviço externo impacta diretamente a latência da resposta HTTP ao usuário; (3) não há mecanismo de retry automático — uma falha pontual do Elasticsearch resulta em perda permanente de indexação sem implementação manual de lógica de retentativa; (4) o Service torna-se difícil de testar sem mocks extensivos de serviços externos.
+- **Chamadas diretas a serviços externos no Service (`await esClient.index(...)`):** Invocar o Elasticsearch, SMTP ou compressor de imagens diretamente dentro do método `execute()` do Service, após a transação relacional. Descartado porque: (1) acopla a lógica de negócio à infraestrutura de forma explícita — o Service precisa importar, configurar e conhecer o cliente de cada serviço externo; (2) uma falha ou lentidão no serviço externo impacta diretamente a latência da resposta HTTP ao usuário; (3) não há mecanismo de retry automático — uma falha pontual do Elasticsearch resulta em perda permanente de indexação sem implementação manual de lógica de retentativa; (4) o Service torna-se difícil de testar sem mocks extensivos de serviços externos.
 
-* **Event Bus nativo do AdonisJS sem BullMQ (puramente em memória):** Usar `emitter.emit()` e Listeners que executam as operações diretamente, sem enfileiramento no BullMQ. Descartado porque: (1) eventos em memória são perdidos permanentemente em caso de reinicialização do servidor Node.js — não há persistência; (2) sem retry automático, falhas temporárias no Elasticsearch ou SMTP resultam em perda silenciosa de operações; (3) o processamento de operações lentas (indexação, compressão) bloqueia a thread de execução do Node.js se o Listener não retornar rapidamente — degradando a latência da API; (4) sem fila persistida, não há visibilidade sobre o estado das operações assíncronas (pendentes, em falha, aguardando retry).
+- **Event Bus nativo do AdonisJS sem BullMQ (puramente em memória):** Usar `emitter.emit()` e Listeners que executam as operações diretamente, sem enfileiramento no BullMQ. Descartado porque: (1) eventos em memória são perdidos permanentemente em caso de reinicialização do servidor Node.js — não há persistência; (2) sem retry automático, falhas temporárias no Elasticsearch ou SMTP resultam em perda silenciosa de operações; (3) o processamento de operações lentas (indexação, compressão) bloqueia a thread de execução do Node.js se o Listener não retornar rapidamente — degradando a latência da API; (4) sem fila persistida, não há visibilidade sobre o estado das operações assíncronas (pendentes, em falha, aguardando retry).
 
-* **Enfileiramento direto no BullMQ dentro do Service (sem emitter):** O Service chama diretamente `queue.add('index-missionary', payload)` após a transação, sem passar pelo emitter. Descartado porque: (1) embora mais simples, acopla o Service diretamente à infraestrutura de filas — o Service precisa importar e configurar instâncias do BullMQ; (2) perde a vantagem de tipagem centralizada via `contracts/events.ts`; (3) múltiplos consumidores do mesmo evento (ex: indexação ES + envio de email + auditoria) exigiriam múltiplas chamadas `queue.add()` no Service, espalhando lógica de roteamento pela camada de negócio; (4) a separação entre "o fato ocorreu" (evento de domínio) e "o que fazer com esse fato" (roteamento para filas) é uma distinção arquitetural importante que o emitter preserva e o enfileiramento direto elimina.
+- **Enfileiramento direto no BullMQ dentro do Service (sem emitter):** O Service chama diretamente `queue.add('index-missionary', payload)` após a transação, sem passar pelo emitter. Descartado porque: (1) embora mais simples, acopla o Service diretamente à infraestrutura de filas — o Service precisa importar e configurar instâncias do BullMQ; (2) perde a vantagem de tipagem centralizada via `contracts/events.ts`; (3) múltiplos consumidores do mesmo evento (ex: indexação ES + envio de email + auditoria) exigiriam múltiplas chamadas `queue.add()` no Service, espalhando lógica de roteamento pela camada de negócio; (4) a separação entre "o fato ocorreu" (evento de domínio) e "o que fazer com esse fato" (roteamento para filas) é uma distinção arquitetural importante que o emitter preserva e o enfileiramento direto elimina.
 
-* **Processamento síncrono com transações distribuídas (Saga / Two-Phase Commit):** Garantir consistência entre PostgreSQL e Elasticsearch via protocolo de commit distribuído. Descartado porque: (1) o Elasticsearch não suporta participação em transações distribuídas — não implementa Two-Phase Commit; (2) o padrão Saga exigiria implementação de transações compensatórias (rollback do ES em caso de falha do PostgreSQL e vice-versa), adicionando complexidade desproporcional para o escopo atual; (3) a consistência eventual com retry automático via BullMQ é a solução padrão de mercado para esse perfil de integração assíncrona.
+- **Processamento síncrono com transações distribuídas (Saga / Two-Phase Commit):** Garantir consistência entre PostgreSQL e Elasticsearch via protocolo de commit distribuído. Descartado porque: (1) o Elasticsearch não suporta participação em transações distribuídas — não implementa Two-Phase Commit; (2) o padrão Saga exigiria implementação de transações compensatórias (rollback do ES em caso de falha do PostgreSQL e vice-versa), adicionando complexidade desproporcional para o escopo atual; (3) a consistência eventual com retry automático via BullMQ é a solução padrão de mercado para esse perfil de integração assíncrona.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Durabilidade de eventos:** Jobs persistidos no DragonflyDB sobrevivem a reinicializações do servidor. Nenhuma operação assíncrona é perdida por falha de infraestrutura temporária.
+- **Durabilidade de eventos:** Jobs persistidos no DragonflyDB sobrevivem a reinicializações do servidor. Nenhuma operação assíncrona é perdida por falha de infraestrutura temporária.
 
-* **Resiliência automática:** Retries com backoff exponencial garantem que falhas pontuais de serviços downstream (Elasticsearch offline, SMTP com timeout) sejam absorvidas sem intervenção manual e sem perda de dados.
+- **Resiliência automática:** Retries com backoff exponencial garantem que falhas pontuais de serviços downstream (Elasticsearch offline, SMTP com timeout) sejam absorvidas sem intervenção manual e sem perda de dados.
 
-* **Latência da API desacoplada do trabalho assíncrono:** Operações lentas (indexação, compressão, envio de email) não impactam o tempo de resposta HTTP. O usuário recebe a confirmação imediatamente.
+- **Latência da API desacoplada do trabalho assíncrono:** Operações lentas (indexação, compressão, envio de email) não impactam o tempo de resposta HTTP. O usuário recebe a confirmação imediatamente.
 
-* **Services testáveis em isolamento:** A camada de negócio pode ser testada sem mocks de Elasticsearch, SMTP ou storage — apenas verificando que o evento correto foi emitido com o payload correto.
+- **Services testáveis em isolamento:** A camada de negócio pode ser testada sem mocks de Elasticsearch, SMTP ou storage — apenas verificando que o evento correto foi emitido com o payload correto.
 
-* **Escalabilidade independente por tipo de trabalho:** Workers de indexação, Workers de email e Workers de compressão de imagem podem ser escalados horizontalmente de forma independente, conforme o volume de cada tipo de operação.
+- **Escalabilidade independente por tipo de trabalho:** Workers de indexação, Workers de email e Workers de compressão de imagem podem ser escalados horizontalmente de forma independente, conforme o volume de cada tipo de operação.
 
-* **Observabilidade das filas:** O BullMQ expõe o estado de cada Job (ativo, aguardando, com falha, concluído) permitindo monitoramento, alertas e reprocessamento manual de Jobs que falharam definitivamente.
+- **Observabilidade das filas:** O BullMQ expõe o estado de cada Job (ativo, aguardando, com falha, concluído) permitindo monitoramento, alertas e reprocessamento manual de Jobs que falharam definitivamente.
 
 ### Negativas / Riscos
 
-* **Consistência eventual entre PostgreSQL e Elasticsearch:** O índice de busca é uma projeção assíncrona dos dados relacionais. Entre o momento em que o missionário é criado no PostgreSQL e o momento em que o Job de indexação é processado pelo Worker, existe uma janela (tipicamente de milissegundos a poucos segundos) em que o missionário não aparece nos resultados de busca. Para o caso de uso de busca do MissionApp (Req. 11), essa janela é aceitável — buscas não precisam de consistência de leitura pós-escrita imediata.
+- **Consistência eventual entre PostgreSQL e Elasticsearch:** O índice de busca é uma projeção assíncrona dos dados relacionais. Entre o momento em que o missionário é criado no PostgreSQL e o momento em que o Job de indexação é processado pelo Worker, existe uma janela (tipicamente de milissegundos a poucos segundos) em que o missionário não aparece nos resultados de busca. Para o caso de uso de busca do MissionApp (Req. 11), essa janela é aceitável — buscas não precisam de consistência de leitura pós-escrita imediata.
 
-* **Complexidade de debugging em fluxos assíncronos:** Rastrear um bug que envolve Service → Listener → Job → Worker requer correlação de logs entre processos diferentes. Sem uma estratégia de tracing distribuído e IDs de correlação nos logs, diagnosticar falhas em produção pode ser mais difícil do que em fluxos síncronos.
+- **Complexidade de debugging em fluxos assíncronos:** Rastrear um bug que envolve Service → Listener → Job → Worker requer correlação de logs entre processos diferentes. Sem uma estratégia de tracing distribuído e IDs de correlação nos logs, diagnosticar falhas em produção pode ser mais difícil do que em fluxos síncronos.
 
-* **Dependência do DragonflyDB para operações assíncronas:** Se o DragonflyDB estiver indisponível, os Listeners não conseguem enfileirar Jobs — as operações assíncronas ficam pendentes até o DragonflyDB se recuperar. Eventos emitidos durante a indisponibilidade do DragonflyDB são perdidos, pois o emitter nativo é in-memory. Esse cenário deve ser monitorado com alertas de saúde do DragonflyDB.
+- **Dependência do DragonflyDB para operações assíncronas:** Se o DragonflyDB estiver indisponível, os Listeners não conseguem enfileirar Jobs — as operações assíncronas ficam pendentes até o DragonflyDB se recuperar. Eventos emitidos durante a indisponibilidade do DragonflyDB são perdidos, pois o emitter nativo é in-memory. Esse cenário deve ser monitorado com alertas de saúde do DragonflyDB.
 
-* **Curva de aprendizado para contribuidores novos:** O padrão de dois estágios (emitter → Listener → BullMQ → Worker) é menos intuitivo do que uma chamada direta. Contribuidores que não conhecem o padrão podem tentar implementar efeitos colaterais diretamente no service — a documentação deste ADR e os exemplos no código existente são a principal barreira contra regressões ao padrão acoplado.
+- **Curva de aprendizado para contribuidores novos:** O padrão de dois estágios (emitter → Listener → BullMQ → Worker) é menos intuitivo do que uma chamada direta. Contribuidores que não conhecem o padrão podem tentar implementar efeitos colaterais diretamente no service — a documentação deste ADR e os exemplos no código existente são a principal barreira contra regressões ao padrão acoplado.
 
-* **Overhead operacional de Workers em produção:** Workers são processos separados que precisam ser iniciados, monitorados e reiniciados em caso de crash. Em produção, isso requer configuração de process manager (PM2, systemd ou orquestração via Docker Compose / Kubernetes) para garantir que Workers estejam sempre rodando.
+- **Overhead operacional de Workers em produção:** Workers são processos separados que precisam ser iniciados, monitorados e reiniciados em caso de crash. Em produção, isso requer configuração de process manager (PM2, systemd ou orquestração via Docker Compose / Kubernetes) para garantir que Workers estejam sempre rodando.
 
 ## Referências
 
-* [BullMQ — Introdução e arquitetura](https://docs.bullmq.io/guide/introduction)
-* [BullMQ — Workers](https://docs.bullmq.io/guide/workers)
-* [BullMQ — Retries e backoff exponencial](https://docs.bullmq.io/guide/jobs/retrying-job)
-* [AdonisJS — Emitter: eventos tipados com module augmentation](https://docs.adonisjs.com/guides/digging-deeper/emitter#string-based-events)
-* [AdonisJS — Emitter: Listener classes](https://docs.adonisjs.com/guides/digging-deeper/emitter#listener-classes)
-* [ADR-0003 — DragonflyDB como Cache, Armazenamento Temporário e Broker de Filas](./0003-adocao-do-redis-como-cache-e-armazenamento-temporario.md)
-* [ADR-0005 — Elasticsearch como Mecanismo de Busca](./0005-adocao-do-elasticsearch-como-mecanismo-de-busca.md)
+- [BullMQ — Introdução e arquitetura](https://docs.bullmq.io/guide/introduction)
+- [BullMQ — Workers](https://docs.bullmq.io/guide/workers)
+- [BullMQ — Retries e backoff exponencial](https://docs.bullmq.io/guide/jobs/retrying-job)
+- [AdonisJS — Emitter: eventos tipados com module augmentation](https://docs.adonisjs.com/guides/digging-deeper/emitter#string-based-events)
+- [AdonisJS — Emitter: Listener classes](https://docs.adonisjs.com/guides/digging-deeper/emitter#listener-classes)
+- [ADR-0003 — DragonflyDB como Cache, Armazenamento Temporário e Broker de Filas](./0003-adocao-do-redis-como-cache-e-armazenamento-temporario.md)
+- [ADR-0005 — Elasticsearch como Mecanismo de Busca](./0005-adocao-do-elasticsearch-como-mecanismo-de-busca.md)

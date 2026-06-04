@@ -1,9 +1,10 @@
 # [ADR-0015]: Adoção do Bruno como Cliente HTTP Oficial do Repositório
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-06-04
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-06-04
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -34,6 +35,7 @@ O Bruno é um cliente HTTP de código aberto, lançado em 2022, criado como alte
 O Bruno armazena cada requisição em um arquivo de texto plano com extensão `.bru`. O formato é legível por humanos, produz diffs limpos e é revisável diretamente na interface do GitHub sem nenhuma ferramenta adicional. Qualquer mudança em um endpoint — path, método, body, headers — resulta em um diff de texto que aparece junto ao diff do código TypeScript no mesmo Pull Request.
 
 **Estrutura de pastas da coleção:**
+
 ```
 bruno/
   environments/
@@ -97,44 +99,44 @@ O Bruno foi escolhido por ser a única ferramenta do mercado que atende simultan
 
 ## Alternativas Consideradas
 
-* **Postman:** Ferramenta mais difundida do mercado, com grande comunidade e recursos avançados de testes automatizados. Descartado porque: (1) coleções vivem em servidor próprio do Postman por padrão — colaboração requer sincronização com nuvem externa, desacoplando a evolução das coleções do ciclo de vida do repositório; (2) funcionalidades de colaboração em equipe e execução via CLI (`newman`) são progressivamente migradas para planos pagos, introduzindo risco de restrição de acesso conforme o projeto cresce; (3) o formato de exportação (`collection.json`) é um arquivo grande e monolítico com diffs ilegíveis — uma mudança em uma única requisição gera diff de centenas de linhas de JSON, impossibilitando revisão efetiva no GitHub.
+- **Postman:** Ferramenta mais difundida do mercado, com grande comunidade e recursos avançados de testes automatizados. Descartado porque: (1) coleções vivem em servidor próprio do Postman por padrão — colaboração requer sincronização com nuvem externa, desacoplando a evolução das coleções do ciclo de vida do repositório; (2) funcionalidades de colaboração em equipe e execução via CLI (`newman`) são progressivamente migradas para planos pagos, introduzindo risco de restrição de acesso conforme o projeto cresce; (3) o formato de exportação (`collection.json`) é um arquivo grande e monolítico com diffs ilegíveis — uma mudança em uma única requisição gera diff de centenas de linhas de JSON, impossibilitando revisão efetiva no GitHub.
 
-* **Insomnia:** Cliente HTTP open-source com boa experiência de uso e suporte a plugins. Descartado porque: (1) após a aquisição pela Kong, passou por mudanças de modelo de negócio que forçaram sincronização obrigatória com conta na nuvem em versões recentes, revertida depois com atrito — o histórico de instabilidade na política de dados cria risco de lock-in similar ao Postman; (2) o formato de armazenamento local é JSON compactado — revisão de diffs no GitHub é inviável; (3) a CLI para execução automatizada tem maturidade inferior ao `@usebruno/cli`.
+- **Insomnia:** Cliente HTTP open-source com boa experiência de uso e suporte a plugins. Descartado porque: (1) após a aquisição pela Kong, passou por mudanças de modelo de negócio que forçaram sincronização obrigatória com conta na nuvem em versões recentes, revertida depois com atrito — o histórico de instabilidade na política de dados cria risco de lock-in similar ao Postman; (2) o formato de armazenamento local é JSON compactado — revisão de diffs no GitHub é inviável; (3) a CLI para execução automatizada tem maturidade inferior ao `@usebruno/cli`.
 
-* **Thunder Client (extensão VS Code):** Cliente HTTP integrado diretamente ao VS Code, com suporte a exportação de coleções como JSON. Descartado porque: (1) armazenamento padrão é fora do repositório (pasta global do VS Code) — exige configuração explícita para versionar as coleções no Git; (2) acopla o fluxo de teste de API ao VS Code — colaboradores que usam outros editores (Neovim, JetBrains) ficam sem suporte nativo; (3) desenvolvido por empresa privada com histórico de mudanças de modelo de licenciamento.
+- **Thunder Client (extensão VS Code):** Cliente HTTP integrado diretamente ao VS Code, com suporte a exportação de coleções como JSON. Descartado porque: (1) armazenamento padrão é fora do repositório (pasta global do VS Code) — exige configuração explícita para versionar as coleções no Git; (2) acopla o fluxo de teste de API ao VS Code — colaboradores que usam outros editores (Neovim, JetBrains) ficam sem suporte nativo; (3) desenvolvido por empresa privada com histórico de mudanças de modelo de licenciamento.
 
-* **REST Client (extensão VS Code com arquivos `.http`):** Extensão que executa requisições escritas em arquivos `.http` — Git-native por design, já que os arquivos ficam no repositório. Descartado porque: (1) não tem interface gráfica de gerenciamento de coleções — requisições são arquivos `.http` dispersos sem organização hierárquica nativa; (2) sem suporte a ambientes com troca contextual (local → staging → produção) além de variáveis globais simples; (3) sem CLI para execução em CI/CD; (4) sem suporte a scripts de pre-request ou asserções pós-resposta para smoke tests.
+- **REST Client (extensão VS Code com arquivos `.http`):** Extensão que executa requisições escritas em arquivos `.http` — Git-native por design, já que os arquivos ficam no repositório. Descartado porque: (1) não tem interface gráfica de gerenciamento de coleções — requisições são arquivos `.http` dispersos sem organização hierárquica nativa; (2) sem suporte a ambientes com troca contextual (local → staging → produção) além de variáveis globais simples; (3) sem CLI para execução em CI/CD; (4) sem suporte a scripts de pre-request ou asserções pós-resposta para smoke tests.
 
-* **curl / scripts shell:** Chamadas diretas via `curl` documentadas no `README` ou em scripts `.sh`. Descartado porque: (1) sem interface gráfica, a barreira de uso para desenvolvedores menos familiarizados com linha de comando é alta; (2) scripts shell não têm uma estrutura de coleção hierárquica — manutenção de dezenas de endpoints em scripts dispersos é trabalhosa; (3) sem suporte nativo a ambientes com variáveis contextuais, os scripts exigem parametrização manual.
+- **curl / scripts shell:** Chamadas diretas via `curl` documentadas no `README` ou em scripts `.sh`. Descartado porque: (1) sem interface gráfica, a barreira de uso para desenvolvedores menos familiarizados com linha de comando é alta; (2) scripts shell não têm uma estrutura de coleção hierárquica — manutenção de dezenas de endpoints em scripts dispersos é trabalhosa; (3) sem suporte nativo a ambientes com variáveis contextuais, os scripts exigem parametrização manual.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Coleções e código sempre sincronizados:** A convenção de atualizar `.bru` no mesmo commit que altera a rota garante que nenhuma branch pode divergir silenciosamente entre código e exemplos de API.
+- **Coleções e código sempre sincronizados:** A convenção de atualizar `.bru` no mesmo commit que altera a rota garante que nenhuma branch pode divergir silenciosamente entre código e exemplos de API.
 
-* **Revisão de contrato integrada ao fluxo de PR:** Revisores veem mudanças de payload, path e headers como diff de texto limpo, sem precisar abrir nenhuma ferramenta externa.
+- **Revisão de contrato integrada ao fluxo de PR:** Revisores veem mudanças de payload, path e headers como diff de texto limpo, sem precisar abrir nenhuma ferramenta externa.
 
-* **Onboarding sem setup adicional de coleções:** `git clone` + abrir Bruno = coleção pronta. Tempo de configuração de ferramentas de teste de API reduzido a zero para novos colaboradores.
+- **Onboarding sem setup adicional de coleções:** `git clone` + abrir Bruno = coleção pronta. Tempo de configuração de ferramentas de teste de API reduzido a zero para novos colaboradores.
 
-* **Smoke tests pós-deploy gratuitos:** `@usebruno/cli` transforma a coleção em automação de CI sem framework adicional.
+- **Smoke tests pós-deploy gratuitos:** `@usebruno/cli` transforma a coleção em automação de CI sem framework adicional.
 
-* **Sem custo e sem limite de colaboradores:** MIT, dados no repositório, sem conta obrigatória.
+- **Sem custo e sem limite de colaboradores:** MIT, dados no repositório, sem conta obrigatória.
 
 ### Negativas / Riscos
 
-* **Adoção de mercado menor que Postman:** Bruno tem comunidade menor e ecossistema de plugins menos maduro. Recursos avançados de mocking, documentação automática de API e integrações com ferramentas enterprise disponíveis no Postman podem não estar disponíveis ou ter maturidade inferior.
+- **Adoção de mercado menor que Postman:** Bruno tem comunidade menor e ecossistema de plugins menos maduro. Recursos avançados de mocking, documentação automática de API e integrações com ferramentas enterprise disponíveis no Postman podem não estar disponíveis ou ter maturidade inferior.
 
-* **Curva de aprendizado da convenção de commits:** A disciplina de atualizar `.bru` no mesmo commit que altera o código precisa ser comunicada e revisada ativamente. Um revisor que não verifica a pasta `bruno/` no PR pode deixar a coleção desatualizar. A solução é incluir essa verificação explicitamente no checklist de revisão.
+- **Curva de aprendizado da convenção de commits:** A disciplina de atualizar `.bru` no mesmo commit que altera o código precisa ser comunicada e revisada ativamente. Um revisor que não verifica a pasta `bruno/` no PR pode deixar a coleção desatualizar. A solução é incluir essa verificação explicitamente no checklist de revisão.
 
-* **Formato `.bru` é proprietário do Bruno:** Embora seja texto legível, o formato não é um padrão aberto (como OpenAPI). Se o projeto migrar para outro cliente HTTP no futuro, será necessário converter os arquivos — conversão existe, mas com possível perda de metadados específicos do Bruno.
+- **Formato `.bru` é proprietário do Bruno:** Embora seja texto legível, o formato não é um padrão aberto (como OpenAPI). Se o projeto migrar para outro cliente HTTP no futuro, será necessário converter os arquivos — conversão existe, mas com possível perda de metadados específicos do Bruno.
 
-* **Segredos exigem disciplina adicional:** A separação entre variáveis de ambiente versionadas (nomes, valores não sensíveis) e valores reais (no `.env` gitignored) precisa ser comunicada no onboarding. Um colaborador que insere um token real diretamente no arquivo `.bru` versionado expõe a credencial no repositório público.
+- **Segredos exigem disciplina adicional:** A separação entre variáveis de ambiente versionadas (nomes, valores não sensíveis) e valores reais (no `.env` gitignored) precisa ser comunicada no onboarding. Um colaborador que insere um token real diretamente no arquivo `.bru` versionado expõe a credencial no repositório público.
 
 ## Referências
 
-* [Bruno — Site oficial e repositório open-source](https://www.usebruno.com/)
-* [Bruno — Documentação de ambientes e variáveis](https://docs.usebruno.com/secrets-management/overview)
-* [Bruno — CLI (`@usebruno/cli`)](https://docs.usebruno.com/cli/overview)
-* [Bruno — Formato de arquivo `.bru`](https://docs.usebruno.com/bru-lang/overview)
-* [ADR-0006 — Docker para Padronização de Ambiente de Desenvolvimento e Deploy](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
+- [Bruno — Site oficial e repositório open-source](https://www.usebruno.com/)
+- [Bruno — Documentação de ambientes e variáveis](https://docs.usebruno.com/secrets-management/overview)
+- [Bruno — CLI (`@usebruno/cli`)](https://docs.usebruno.com/cli/overview)
+- [Bruno — Formato de arquivo `.bru`](https://docs.usebruno.com/bru-lang/overview)
+- [ADR-0006 — Docker para Padronização de Ambiente de Desenvolvimento e Deploy](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)

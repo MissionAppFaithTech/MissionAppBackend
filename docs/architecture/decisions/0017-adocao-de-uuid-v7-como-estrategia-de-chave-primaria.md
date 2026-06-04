@@ -1,9 +1,10 @@
 # [ADR-0017]: Adoção de UUID v7 como Estratégia de Chave Primária
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-06-04
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-06-04
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -71,40 +72,40 @@ Mais objetivamente: o custo de aplicar UUID v7 a uma tabela interna é zero (o m
 
 ## Alternativas Consideradas
 
-* **`SERIAL` / `BIGSERIAL` (inteiro auto-incremental):** Gerado pelo banco, sequencial, eficiente em B-tree. Descartado porque: (1) enumerável — qualquer cliente externo pode inferir volume de registros e iterar sobre todos os IDs válidos; (2) vaza informação de negócio — o ID `42` revela que existem exatamente 41 registros anteriores; (3) pressupor que certas tabelas "nunca serão expostas" é uma aposta contra a evolução natural do sistema; (4) cria heterogeneidade de tipo no schema quando misturado com UUIDs em outras tabelas.
+- **`SERIAL` / `BIGSERIAL` (inteiro auto-incremental):** Gerado pelo banco, sequencial, eficiente em B-tree. Descartado porque: (1) enumerável — qualquer cliente externo pode inferir volume de registros e iterar sobre todos os IDs válidos; (2) vaza informação de negócio — o ID `42` revela que existem exatamente 41 registros anteriores; (3) pressupor que certas tabelas "nunca serão expostas" é uma aposta contra a evolução natural do sistema; (4) cria heterogeneidade de tipo no schema quando misturado com UUIDs em outras tabelas.
 
-* **UUID v4 (aleatório):** Padrão amplamente adotado, sem enumeração. Descartado porque: (1) geração completamente aleatória causa inserções em posições arbitrárias do índice B-tree, forçando page splits e fragmentação progressiva — efeito mensurável em tabelas que crescem acima de milhões de registros; (2) sem ordenação temporal, impossível reconstruir sequência de criação a partir do ID.
+- **UUID v4 (aleatório):** Padrão amplamente adotado, sem enumeração. Descartado porque: (1) geração completamente aleatória causa inserções em posições arbitrárias do índice B-tree, forçando page splits e fragmentação progressiva — efeito mensurável em tabelas que crescem acima de milhões de registros; (2) sem ordenação temporal, impossível reconstruir sequência de criação a partir do ID.
 
-* **ULID (Universally Unique Lexicographically Sortable Identifier):** Sortável por tempo, sem fragmentação de índice, não enumerável. Descartado porque: (1) não é um padrão RFC — menor adoção em ecossistema de ferramentas, drivers e ORMs; (2) formato de string diferente do UUID (`01ARZ3NDEKTSV4RRFFQ69G5FAV`) quebra a expectativa de formato UUID em ferramentas e APIs; (3) PostgreSQL não tem tipo nativo `ulid` — armazenado como `text` ou `bytea`, perde validação de formato em nível de banco; (4) UUID v7 oferece os mesmos benefícios com suporte nativo do tipo `uuid` do PostgreSQL.
+- **ULID (Universally Unique Lexicographically Sortable Identifier):** Sortável por tempo, sem fragmentação de índice, não enumerável. Descartado porque: (1) não é um padrão RFC — menor adoção em ecossistema de ferramentas, drivers e ORMs; (2) formato de string diferente do UUID (`01ARZ3NDEKTSV4RRFFQ69G5FAV`) quebra a expectativa de formato UUID em ferramentas e APIs; (3) PostgreSQL não tem tipo nativo `ulid` — armazenado como `text` ou `bytea`, perde validação de formato em nível de banco; (4) UUID v7 oferece os mesmos benefícios com suporte nativo do tipo `uuid` do PostgreSQL.
 
-* **CUID2:** Similar ao ULID em benefícios, com foco em segurança contra colisão. Descartado pelos mesmos motivos de falta de padronização e suporte de tipo nativo no PostgreSQL.
+- **CUID2:** Similar ao ULID em benefícios, com foco em segurança contra colisão. Descartado pelos mesmos motivos de falta de padronização e suporte de tipo nativo no PostgreSQL.
 
-* **Snowflake ID (Twitter):** Inteiro de 64 bits composto por timestamp em milissegundos (41 bits), identificador de máquina/datacenter (10 bits) e número de sequência por milissegundo (12 bits). Sortável por tempo, compacto (8 bytes vs 16 bytes do UUID), armazenado nativamente como `BIGINT`. Descartado porque: (1) exige atribuição e gerenciamento de identificadores únicos de máquina para cada instância da aplicação — em ambientes de auto-scaling (containers efêmeros, Kubernetes pods), garantir que cada instância receba um machine ID único sem colisão introduz exatamente o tipo de coordenação que se busca evitar; (2) dois processos com o mesmo machine ID geram IDs idênticos para o mesmo milissegundo e posição de sequência — falha silenciosa, sem mecanismo de detecção em tempo de execução; (3) o espaço de machine IDs é limitado a 1.024 valores (2¹⁰) — em deploys com muitos workers ou microserviços, este limite pode se tornar um gargalo; (4) é um inteiro de 64 bits — embora não sequencial como `SERIAL`, o padrão temporal nos bits mais significativos permite estimar a janela de tempo em que um ID foi gerado, o que pode ser indesejável em contextos de auditoria; (5) não é um padrão aberto (sem RFC), dependente da implementação de cada biblioteca.
+- **Snowflake ID (Twitter):** Inteiro de 64 bits composto por timestamp em milissegundos (41 bits), identificador de máquina/datacenter (10 bits) e número de sequência por milissegundo (12 bits). Sortável por tempo, compacto (8 bytes vs 16 bytes do UUID), armazenado nativamente como `BIGINT`. Descartado porque: (1) exige atribuição e gerenciamento de identificadores únicos de máquina para cada instância da aplicação — em ambientes de auto-scaling (containers efêmeros, Kubernetes pods), garantir que cada instância receba um machine ID único sem colisão introduz exatamente o tipo de coordenação que se busca evitar; (2) dois processos com o mesmo machine ID geram IDs idênticos para o mesmo milissegundo e posição de sequência — falha silenciosa, sem mecanismo de detecção em tempo de execução; (3) o espaço de machine IDs é limitado a 1.024 valores (2¹⁰) — em deploys com muitos workers ou microserviços, este limite pode se tornar um gargalo; (4) é um inteiro de 64 bits — embora não sequencial como `SERIAL`, o padrão temporal nos bits mais significativos permite estimar a janela de tempo em que um ID foi gerado, o que pode ser indesejável em contextos de auditoria; (5) não é um padrão aberto (sem RFC), dependente da implementação de cada biblioteca.
 
-* **UUID v7 apenas para tabelas externas, SERIAL para internas:** Estratégia híbrida. Descartado porque: (1) a linha entre "interna" e "externa" é móvel e subjetiva; (2) cria dois padrões para raciocinar — aumenta carga cognitiva e superfície de erro; (3) o custo de aplicar UUID v7 universalmente é zero dado o mixin existente.
+- **UUID v7 apenas para tabelas externas, SERIAL para internas:** Estratégia híbrida. Descartado porque: (1) a linha entre "interna" e "externa" é móvel e subjetiva; (2) cria dois padrões para raciocinar — aumenta carga cognitiva e superfície de erro; (3) o custo de aplicar UUID v7 universalmente é zero dado o mixin existente.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* Performance de inserção previsível em qualquer tabela, independentemente do volume.
-* IDs não enumeráveis por padrão — sem vazamento de volume de registros em nenhuma tabela.
-* Tipo uniforme no schema: todo PK e FK é `uuid`, sem coerção em joins.
-* Timestamp de criação extraível do ID para diagnóstico sem depender de `created_at`.
-* Geração na aplicação sem roundtrip ao banco — ID conhecido antes da inserção.
+- Performance de inserção previsível em qualquer tabela, independentemente do volume.
+- IDs não enumeráveis por padrão — sem vazamento de volume de registros em nenhuma tabela.
+- Tipo uniforme no schema: todo PK e FK é `uuid`, sem coerção em joins.
+- Timestamp de criação extraível do ID para diagnóstico sem depender de `created_at`.
+- Geração na aplicação sem roundtrip ao banco — ID conhecido antes da inserção.
 
 ### Negativas / Riscos
 
-* **UUID v7 ainda não é suportado nativamente pelo pacote `uuid` em versões antigas:** O projeto usa o pacote `uuid` versão 14+, que suporta `v7`. Fixar a versão mínima do pacote no `package.json` é necessário para garantir disponibilidade da função.
+- **UUID v7 ainda não é suportado nativamente pelo pacote `uuid` em versões antigas:** O projeto usa o pacote `uuid` versão 14+, que suporta `v7`. Fixar a versão mínima do pacote no `package.json` é necessário para garantir disponibilidade da função.
 
-* **Tamanho de armazenamento maior que integer:** UUID ocupa 16 bytes como tipo nativo `uuid` do PostgreSQL versus 4 bytes para `INTEGER` ou 8 bytes para `BIGINT`. Em tabelas de altíssimo volume isso pode ser relevante; para o perfil de dados do MissionApp, o impacto é desprezível.
+- **Tamanho de armazenamento maior que integer:** UUID ocupa 16 bytes como tipo nativo `uuid` do PostgreSQL versus 4 bytes para `INTEGER` ou 8 bytes para `BIGINT`. Em tabelas de altíssimo volume isso pode ser relevante; para o perfil de dados do MissionApp, o impacto é desprezível.
 
-* **Precisão de milissegundo não garante unicidade em geração distribuída de alta frequência:** UUID v7 adiciona bits aleatórios nos bits restantes do timestamp, o que torna colisões extremamente improváveis mesmo em geração simultânea. O mixin usa `??=` — se o ID já foi atribuído externamente, é preservado, evitando sobrescrita acidental.
+- **Precisão de milissegundo não garante unicidade em geração distribuída de alta frequência:** UUID v7 adiciona bits aleatórios nos bits restantes do timestamp, o que torna colisões extremamente improváveis mesmo em geração simultânea. O mixin usa `??=` — se o ID já foi atribuído externamente, é preservado, evitando sobrescrita acidental.
 
 ## Referências
 
-* [RFC 9562 — Universally Unique IDentifiers (UUIDs), Section 5.7: UUID Version 7](https://www.rfc-editor.org/rfc/rfc9562#section-5.7)
-* [PostgreSQL — UUID type](https://www.postgresql.org/docs/current/datatype-uuid.html)
-* [uuid (npm) — v7 support](https://github.com/uuidjs/uuid)
-* [ADR-0002 — PostgreSQL como Banco de Dados Relacional](./0002-adocao-do-postgresql-como-banco-de-dados.md)
-* [ADR-0016 — Convenções de Escrita de Migrações de Banco de Dados](./0016-convencoes-de-escrita-de-migracoes.md)
+- [RFC 9562 — Universally Unique IDentifiers (UUIDs), Section 5.7: UUID Version 7](https://www.rfc-editor.org/rfc/rfc9562#section-5.7)
+- [PostgreSQL — UUID type](https://www.postgresql.org/docs/current/datatype-uuid.html)
+- [uuid (npm) — v7 support](https://github.com/uuidjs/uuid)
+- [ADR-0002 — PostgreSQL como Banco de Dados Relacional](./0002-adocao-do-postgresql-como-banco-de-dados.md)
+- [ADR-0016 — Convenções de Escrita de Migrações de Banco de Dados](./0016-convencoes-de-escrita-de-migracoes.md)

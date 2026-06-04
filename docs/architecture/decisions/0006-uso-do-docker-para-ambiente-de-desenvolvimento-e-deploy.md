@@ -1,9 +1,10 @@
 # [ADR-0006]: Uso do Docker para Padronização de Ambiente de Desenvolvimento e Deploy
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-31
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-31
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -63,40 +64,40 @@ Docker foi escolhido por ser a solução que resolve simultaneamente os problema
 
 ## Alternativas Consideradas
 
-* **Instalação nativa de cada serviço:** Instalar PostgreSQL, DragonflyDB, MinIO e Elasticsearch diretamente no sistema operacional do desenvolvedor. Descartado porque: (1) os procedimentos de instalação diferem por SO (Linux, macOS, Windows), tornando o guia de setup complexo e difícil de manter; (2) versões instaladas via gerenciadores de pacotes (`apt`, `brew`, `winget`) variam e podem divergir da versão de produção; (3) sem isolamento, conflitos de porta e versão com outros projetos são inevitáveis; (4) o custo de onboarding é proibitivo para um projeto open-source que precisa absorver contribuidores voluntários com agilidade.
+- **Instalação nativa de cada serviço:** Instalar PostgreSQL, DragonflyDB, MinIO e Elasticsearch diretamente no sistema operacional do desenvolvedor. Descartado porque: (1) os procedimentos de instalação diferem por SO (Linux, macOS, Windows), tornando o guia de setup complexo e difícil de manter; (2) versões instaladas via gerenciadores de pacotes (`apt`, `brew`, `winget`) variam e podem divergir da versão de produção; (3) sem isolamento, conflitos de porta e versão com outros projetos são inevitáveis; (4) o custo de onboarding é proibitivo para um projeto open-source que precisa absorver contribuidores voluntários com agilidade.
 
-* **Podman + Podman Compose:** Alternativa open-source ao Docker, sem daemon root e com melhor postura de segurança em alguns contextos. Descartado porque: (1) a adoção é significativamente menor que a do Docker — a maioria dos contribuidores open-source não tem Podman instalado por padrão; (2) a compatibilidade com `docker-compose.yaml` via `podman-compose` é parcial — alguns comportamentos de rede e volume diferem do Docker Compose, o que poderia introduzir inconsistências sutis; (3) o benefício de segurança do modo rootless não é relevante para o ambiente de desenvolvimento local do MissionApp.
+- **Podman + Podman Compose:** Alternativa open-source ao Docker, sem daemon root e com melhor postura de segurança em alguns contextos. Descartado porque: (1) a adoção é significativamente menor que a do Docker — a maioria dos contribuidores open-source não tem Podman instalado por padrão; (2) a compatibilidade com `docker-compose.yaml` via `podman-compose` é parcial — alguns comportamentos de rede e volume diferem do Docker Compose, o que poderia introduzir inconsistências sutis; (3) o benefício de segurança do modo rootless não é relevante para o ambiente de desenvolvimento local do MissionApp.
 
-* **Nix / Dev Containers (VS Code):** Ferramentas de ambiente reproduzível baseadas em declaração de dependências do sistema. Descartadas porque: (1) a curva de aprendizado do Nix é significativa — requer que contribuidores aprendam uma linguagem de configuração específica antes de contribuir com código; (2) Dev Containers acoplam o ambiente de desenvolvimento ao VS Code, excluindo contribuidores que usam outros editores; (3) ambas as soluções têm adoção menor que Docker em projetos Node.js open-source, reduzindo o pool de colaboradores capazes de contribuir com a infraestrutura de ambiente.
+- **Nix / Dev Containers (VS Code):** Ferramentas de ambiente reproduzível baseadas em declaração de dependências do sistema. Descartadas porque: (1) a curva de aprendizado do Nix é significativa — requer que contribuidores aprendam uma linguagem de configuração específica antes de contribuir com código; (2) Dev Containers acoplam o ambiente de desenvolvimento ao VS Code, excluindo contribuidores que usam outros editores; (3) ambas as soluções têm adoção menor que Docker em projetos Node.js open-source, reduzindo o pool de colaboradores capazes de contribuir com a infraestrutura de ambiente.
 
-* **Máquinas Virtuais (Vagrant + VirtualBox):** Ambiente de desenvolvimento completamente isolado via VM. Descartado porque: (1) VMs consomem recursos de CPU e memória significativamente maiores que containers — um stack com quatro serviços em VM tornaria o ambiente de desenvolvimento pesado para máquinas com recursos limitados; (2) o ciclo de inicialização de uma VM é substancialmente mais lento que o de containers; (3) o overhead de manutenção da imagem base da VM (atualizações, snapshots) é desproporcional ao benefício para o escopo do projeto.
+- **Máquinas Virtuais (Vagrant + VirtualBox):** Ambiente de desenvolvimento completamente isolado via VM. Descartado porque: (1) VMs consomem recursos de CPU e memória significativamente maiores que containers — um stack com quatro serviços em VM tornaria o ambiente de desenvolvimento pesado para máquinas com recursos limitados; (2) o ciclo de inicialização de uma VM é substancialmente mais lento que o de containers; (3) o overhead de manutenção da imagem base da VM (atualizações, snapshots) é desproporcional ao benefício para o escopo do projeto.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Onboarding reduzido a um comando:** `docker compose up -d` provisiona o stack completo. Novos colaboradores eliminam o tempo de setup de ambiente e iniciam contribuindo com código imediatamente.
+- **Onboarding reduzido a um comando:** `docker compose up -d` provisiona o stack completo. Novos colaboradores eliminam o tempo de setup de ambiente e iniciam contribuindo com código imediatamente.
 
-* **Reprodutibilidade total:** Tags de imagem fixas garantem que dev, CI/CD e produção executem exatamente os mesmos binários — eliminando a categoria de bugs específicos de ambiente.
+- **Reprodutibilidade total:** Tags de imagem fixas garantem que dev, CI/CD e produção executem exatamente os mesmos binários — eliminando a categoria de bugs específicos de ambiente.
 
-* **Isolamento sem conflitos:** Cada projeto tem seu próprio stack isolado. Múltiplos projetos com PostgreSQL em versões diferentes coexistem no mesmo host sem conflito.
+- **Isolamento sem conflitos:** Cada projeto tem seu próprio stack isolado. Múltiplos projetos com PostgreSQL em versões diferentes coexistem no mesmo host sem conflito.
 
-* **CI/CD simplificado:** Pipelines de integração contínua levantam os mesmos containers do `docker-compose.yaml` para testes de integração — sem scripts de setup específicos por plataforma.
+- **CI/CD simplificado:** Pipelines de integração contínua levantam os mesmos containers do `docker-compose.yaml` para testes de integração — sem scripts de setup específicos por plataforma.
 
 ### Negativas / Riscos
 
-* **Docker como pré-requisito obrigatório:** Colaboradores precisam ter Docker instalado e rodando. Em sistemas corporativos com restrições de instalação de software ou em ambientes Linux sem root, isso pode ser um obstáculo.
+- **Docker como pré-requisito obrigatório:** Colaboradores precisam ter Docker instalado e rodando. Em sistemas corporativos com restrições de instalação de software ou em ambientes Linux sem root, isso pode ser um obstáculo.
 
-* **Consumo de recursos em máquinas limitadas:** O stack completo (PostgreSQL + DragonflyDB + MinIO + Elasticsearch) consome memória RAM considerável. Máquinas com menos de 8GB de RAM disponível podem ter dificuldades para rodar todos os serviços simultaneamente.
+- **Consumo de recursos em máquinas limitadas:** O stack completo (PostgreSQL + DragonflyDB + MinIO + Elasticsearch) consome memória RAM considerável. Máquinas com menos de 8GB de RAM disponível podem ter dificuldades para rodar todos os serviços simultaneamente.
 
-* **Latência de I/O em volumes Docker no macOS e Windows:** Volumes Docker com bind mounts têm latência de I/O significativamente maior em macOS e Windows comparado a Linux, devido à camada de virtualização. O uso de volumes nomeados (conforme definido neste ADR) mitiga grande parte desse impacto para os serviços de banco de dados.
+- **Latência de I/O em volumes Docker no macOS e Windows:** Volumes Docker com bind mounts têm latência de I/O significativamente maior em macOS e Windows comparado a Linux, devido à camada de virtualização. O uso de volumes nomeados (conforme definido neste ADR) mitiga grande parte desse impacto para os serviços de banco de dados.
 
-* **Gestão de imagens desatualizadas:** Tags fixas garantem reprodutibilidade, mas exigem atualização manual deliberada quando uma versão mais recente de um serviço é adotada. Sem processo de revisão periódica das versões, o stack pode acumular imagens com vulnerabilidades conhecidas.
+- **Gestão de imagens desatualizadas:** Tags fixas garantem reprodutibilidade, mas exigem atualização manual deliberada quando uma versão mais recente de um serviço é adotada. Sem processo de revisão periódica das versões, o stack pode acumular imagens com vulnerabilidades conhecidas.
 
 ## Referências
 
-* [Documentação oficial do Docker](https://docs.docker.com/)
-* [Documentação do Docker Compose](https://docs.docker.com/compose/)
-* [ADR-0003 — DragonflyDB como Cache e Broker de Filas](./0003-adocao-do-redis-como-cache-e-armazenamento-temporario.md)
-* [ADR-0004 — MinIO como Emulador de Storage em Desenvolvimento](./0004-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md)
-* [ADR-0005 — Elasticsearch como Mecanismo de Busca](./0005-adocao-do-elasticsearch-como-mecanismo-de-busca.md)
+- [Documentação oficial do Docker](https://docs.docker.com/)
+- [Documentação do Docker Compose](https://docs.docker.com/compose/)
+- [ADR-0003 — DragonflyDB como Cache e Broker de Filas](./0003-adocao-do-redis-como-cache-e-armazenamento-temporario.md)
+- [ADR-0004 — MinIO como Emulador de Storage em Desenvolvimento](./0004-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md)
+- [ADR-0005 — Elasticsearch como Mecanismo de Busca](./0005-adocao-do-elasticsearch-como-mecanismo-de-busca.md)

@@ -1,9 +1,10 @@
 # [ADR-0016]: Convenções de Escrita de Migrações de Banco de Dados
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-06-04
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-06-04
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -46,6 +47,7 @@ As colunas de dados devem ser agrupadas semanticamente (ex: dados de identidade 
 **Toda tabela** deve ter `table.comment('...')` como primeira instrução dentro de `createTable`, descrevendo o propósito da tabela no sistema.
 
 **Toda coluna** deve ter `.comment('...')` descrevendo o que ela representa. O comentário deve responder ao menos uma das perguntas:
+
 - O que este campo armazena?
 - Por que existe (qual regra ou comportamento suporta)?
 - Qual o significado de null?
@@ -84,12 +86,12 @@ Strings de comentário longas devem ser quebradas com formatação multiline par
 
 Todo índice, constraint e chave estrangeira deve receber um nome explícito seguindo o padrão abaixo. Nunca confiar no nome gerado automaticamente pelo Knex ou pelo PostgreSQL — nomes automáticos são não-determinísticos entre ambientes e impossíveis de referenciar com precisão em scripts de manutenção, logs de erro e ferramentas de DBA.
 
-| Objeto | Padrão | Exemplo |
-|---|---|---|
-| Chave estrangeira | `fk_<tabela>_<coluna>` | `fk_posts_missionary_id` |
-| Unique constraint | `uq_<tabela>_<colunas>` | `uq_posts_slug`, `uq_likes_user_id_post_id` |
-| Índice de leitura | `idx_<tabela>_<colunas>` | `idx_posts_missionary_id_created_at` |
-| Check constraint | `chk_<tabela>_<descricao>` | `chk_users_followers_count_non_negative` |
+| Objeto            | Padrão                     | Exemplo                                     |
+| ----------------- | -------------------------- | ------------------------------------------- |
+| Chave estrangeira | `fk_<tabela>_<coluna>`     | `fk_posts_missionary_id`                    |
+| Unique constraint | `uq_<tabela>_<colunas>`    | `uq_posts_slug`, `uq_likes_user_id_post_id` |
+| Índice de leitura | `idx_<tabela>_<colunas>`   | `idx_posts_missionary_id_created_at`        |
+| Check constraint  | `chk_<tabela>_<descricao>` | `chk_users_followers_count_non_negative`    |
 
 Para objetos com múltiplas colunas, concatenar os nomes com `_`: `uq_campaign_projects_campaign_id_project_id`.
 
@@ -119,38 +121,38 @@ table.foreign('missionary_id').references('id').inTable('missionaries')
 
 ## Alternativas Consideradas
 
-* **Sem convenção de ordenação (freestyle):** Cada colaborador organiza como preferir. Descartado porque o projeto tem muitas migrações e a ausência de convenção resulta em inconsistências durante o desenvolvimento.
+- **Sem convenção de ordenação (freestyle):** Cada colaborador organiza como preferir. Descartado porque o projeto tem muitas migrações e a ausência de convenção resulta em inconsistências durante o desenvolvimento.
 
-* **Comentários apenas como comentários de código TypeScript (`//`):** Não persiste no banco de dados — invisível para ferramentas de introspectação. Descartado em favor do `.comment()` que gera SQL `COMMENT ON` real.
+- **Comentários apenas como comentários de código TypeScript (`//`):** Não persiste no banco de dados — invisível para ferramentas de introspectação. Descartado em favor do `.comment()` que gera SQL `COMMENT ON` real.
 
-* **Documentação de schema em arquivo separado (markdown, wiki):** Cria documentação fora de sincronia com o código. Descartado porque `.comment()` é co-localizado com a definição da coluna e atualizado no mesmo commit que a migração.
+- **Documentação de schema em arquivo separado (markdown, wiki):** Cria documentação fora de sincronia com o código. Descartado porque `.comment()` é co-localizado com a definição da coluna e atualizado no mesmo commit que a migração.
 
-* **Geração automática de comentários via ferramenta externa:** Adicionaria dependência de tooling para um problema resolvível com uma convenção de código. Descartado pelo princípio de não introduzir dependências sem necessidade proporcional.
+- **Geração automática de comentários via ferramenta externa:** Adicionaria dependência de tooling para um problema resolvível com uma convenção de código. Descartado pelo princípio de não introduzir dependências sem necessidade proporcional.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* Schema autodocumentado: qualquer ferramenta conectada ao PostgreSQL exibe descrições de tabelas e colunas sem acesso ao repositório.
+- Schema autodocumentado: qualquer ferramenta conectada ao PostgreSQL exibe descrições de tabelas e colunas sem acesso ao repositório.
 
-* Reviews de migração mais rápidos: estrutura previsível permite verificação sistemática em vez de leitura completa.
+- Reviews de migração mais rápidos: estrutura previsível permite verificação sistemática em vez de leitura completa.
 
-* Rastreabilidade completa de arquivos: toda referência a asset passa por `media_assets`, garantindo que deleções sejam controladas por FK.
+- Rastreabilidade completa de arquivos: toda referência a asset passa por `media_assets`, garantindo que deleções sejam controladas por FK.
 
-* Onboarding: novo colaborador entende o modelo de dados lendo o catálogo do banco, não apenas o código TypeScript.
+- Onboarding: novo colaborador entende o modelo de dados lendo o catálogo do banco, não apenas o código TypeScript.
 
 ### Negativas / Riscos
 
-* Custo por migração: escrever comentários significativos para cada coluna adiciona tempo de escrita. O benefício de documentação persistente justifica o custo.
+- Custo por migração: escrever comentários significativos para cada coluna adiciona tempo de escrita. O benefício de documentação persistente justifica o custo.
 
-* Comentários podem ficar desatualizados: se uma coluna muda de propósito e o comentário não é atualizado junto, o banco documenta algo incorreto. A revisão de PRs é a principal salvaguarda — qualquer alteração de coluna deve incluir revisão do `.comment()`.
+- Comentários podem ficar desatualizados: se uma coluna muda de propósito e o comentário não é atualizado junto, o banco documenta algo incorreto. A revisão de PRs é a principal salvaguarda — qualquer alteração de coluna deve incluir revisão do `.comment()`.
 
-* Prettier pode rejeitar strings longas sem quebra de linha: mitigado pela regra de formatação multiline definida neste ADR.
+- Prettier pode rejeitar strings longas sem quebra de linha: mitigado pela regra de formatação multiline definida neste ADR.
 
 ## Referências
 
-* [PostgreSQL — `COMMENT` command](https://www.postgresql.org/docs/current/sql-comment.html)
-* [Knex.js — `table.comment()` e `column.comment()`](https://knexjs.org/guide/schema-builder.html#comment)
-* [ITU-T E.164 — The international public telecommunication numbering plan](https://www.itu.int/rec/T-REC-E.164)
-* [ADR-0002 — PostgreSQL como Banco de Dados Relacional](./0002-adocao-do-postgresql-como-banco-de-dados.md)
-* [ADR-0007 — pnpm como Gerenciador de Pacotes](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)
+- [PostgreSQL — `COMMENT` command](https://www.postgresql.org/docs/current/sql-comment.html)
+- [Knex.js — `table.comment()` e `column.comment()`](https://knexjs.org/guide/schema-builder.html#comment)
+- [ITU-T E.164 — The international public telecommunication numbering plan](https://www.itu.int/rec/T-REC-E.164)
+- [ADR-0002 — PostgreSQL como Banco de Dados Relacional](./0002-adocao-do-postgresql-como-banco-de-dados.md)
+- [ADR-0007 — pnpm como Gerenciador de Pacotes](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)

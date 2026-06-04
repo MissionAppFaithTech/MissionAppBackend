@@ -1,9 +1,10 @@
 # [ADR-0005]: Adoção do Elasticsearch como Mecanismo de Busca
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-30
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-30
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -59,39 +60,39 @@ O Elasticsearch foi escolhido por ser a ferramenta que atende diretamente ao con
 
 ## Alternativas Consideradas
 
-* **PostgreSQL full-text search (`tsvector` + `pg_trgm`):** Solução sem serviço adicional, usando capacidades nativas do banco já adotado. Descartado porque: (1) `tsvector` não tolera erros de digitação — viola diretamente o NF.4; (2) `pg_trgm` produz busca fuzzy imprecisa para termos curtos e com erros nas primeiras letras, sem controle por posição do erro; (3) mistura carga de busca com carga transacional no mesmo banco, criando competição por recursos com operações financeiras e relacionais; (4) ausência de scoring de relevância configurável por campo — a experiência de busca seria inferior à esperada pelos usuários.
+- **PostgreSQL full-text search (`tsvector` + `pg_trgm`):** Solução sem serviço adicional, usando capacidades nativas do banco já adotado. Descartado porque: (1) `tsvector` não tolera erros de digitação — viola diretamente o NF.4; (2) `pg_trgm` produz busca fuzzy imprecisa para termos curtos e com erros nas primeiras letras, sem controle por posição do erro; (3) mistura carga de busca com carga transacional no mesmo banco, criando competição por recursos com operações financeiras e relacionais; (4) ausência de scoring de relevância configurável por campo — a experiência de busca seria inferior à esperada pelos usuários.
 
-* **Typesense:** Motor de busca moderno, focado em simplicidade operacional, com busca tolerante a erros por padrão e configuração mínima. Descartado porque: (1) o suporte ao idioma Português é menos maduro que o do Elasticsearch — o analyzer `portuguese` do Elasticsearch possui stemming e tratamento de acentuação superiores; (2) o ecossistema de clientes Node.js e documentação de casos de uso avançados é menor; (3) a comunidade open-source e a adoção em produção são significativamente menores, o que reduz a disponibilidade de contribuidores familiarizados com a ferramenta.
+- **Typesense:** Motor de busca moderno, focado em simplicidade operacional, com busca tolerante a erros por padrão e configuração mínima. Descartado porque: (1) o suporte ao idioma Português é menos maduro que o do Elasticsearch — o analyzer `portuguese` do Elasticsearch possui stemming e tratamento de acentuação superiores; (2) o ecossistema de clientes Node.js e documentação de casos de uso avançados é menor; (3) a comunidade open-source e a adoção em produção são significativamente menores, o que reduz a disponibilidade de contribuidores familiarizados com a ferramenta.
 
-* **Meilisearch:** Motor de busca open-source com excelente DX, busca fuzzy por padrão e setup trivial. Descartado porque: (1) a configuração de analyzers por idioma é menos granular — não oferece stemming morfológico para Português comparável ao do Elasticsearch; (2) os recursos de relevância customizada (boosting por campo, scoring composto) são mais limitados; (3) foi projetado para buscas instantâneas em datasets menores — o Elasticsearch oferece mais controle para os requisitos de busca específicos por entidade (missionários vs. projetos) do MissionApp.
+- **Meilisearch:** Motor de busca open-source com excelente DX, busca fuzzy por padrão e setup trivial. Descartado porque: (1) a configuração de analyzers por idioma é menos granular — não oferece stemming morfológico para Português comparável ao do Elasticsearch; (2) os recursos de relevância customizada (boosting por campo, scoring composto) são mais limitados; (3) foi projetado para buscas instantâneas em datasets menores — o Elasticsearch oferece mais controle para os requisitos de busca específicos por entidade (missionários vs. projetos) do MissionApp.
 
-* **Algolia:** SaaS de busca com excelente performance, DX e suporte a múltiplos idiomas. Descartado porque: (1) é um serviço pago com custo baseado em volume de buscas e registros indexados — incompatível com o modelo open-source do MissionApp, que não pode impor dependência de serviço pago a colaboradores e deployments; (2) cria vendor lock-in a uma plataforma externa sem alternativa de auto-hospedagem.
+- **Algolia:** SaaS de busca com excelente performance, DX e suporte a múltiplos idiomas. Descartado porque: (1) é um serviço pago com custo baseado em volume de buscas e registros indexados — incompatível com o modelo open-source do MissionApp, que não pode impor dependência de serviço pago a colaboradores e deployments; (2) cria vendor lock-in a uma plataforma externa sem alternativa de auto-hospedagem.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Atendimento direto ao NF.4:** Busca tolerante a erros de digitação implementada com distância de edição de Levenshtein — comportamento consistente para qualquer variação ortográfica nos campos indexados.
+- **Atendimento direto ao NF.4:** Busca tolerante a erros de digitação implementada com distância de edição de Levenshtein — comportamento consistente para qualquer variação ortográfica nos campos indexados.
 
-* **Isolamento da carga de busca:** Queries de busca não competem com transações financeiras, escritas relacionais ou operações de auditoria no PostgreSQL — cada sistema opera no seu perfil de carga ideal.
+- **Isolamento da carga de busca:** Queries de busca não competem com transações financeiras, escritas relacionais ou operações de auditoria no PostgreSQL — cada sistema opera no seu perfil de carga ideal.
 
-* **Experiência de busca mais relevante:** Scoring configurável por campo (nome > username > bio) produz resultados mais intuitivos sem lógica adicional na camada de aplicação.
+- **Experiência de busca mais relevante:** Scoring configurável por campo (nome > username > bio) produz resultados mais intuitivos sem lógica adicional na camada de aplicação.
 
-* **Escalabilidade independente:** O volume de buscas pode crescer sem impacto no banco transacional — a camada de busca escala separadamente conforme a plataforma cresce.
+- **Escalabilidade independente:** O volume de buscas pode crescer sem impacto no banco transacional — a camada de busca escala separadamente conforme a plataforma cresce.
 
 ### Negativas / Riscos
 
-* **Consistência eventual entre PostgreSQL e Elasticsearch:** O índice é uma projeção assíncrona dos dados do PostgreSQL. Mesmo com retries via BullMQ, falhas prolongadas no Elasticsearch ou perda de jobs na fila podem resultar em índice desatualizado. Uma estratégia de re-indexação periódica completa e monitoramento de divergência entre banco e índice precisa ser implementada.
+- **Consistência eventual entre PostgreSQL e Elasticsearch:** O índice é uma projeção assíncrona dos dados do PostgreSQL. Mesmo com retries via BullMQ, falhas prolongadas no Elasticsearch ou perda de jobs na fila podem resultar em índice desatualizado. Uma estratégia de re-indexação periódica completa e monitoramento de divergência entre banco e índice precisa ser implementada.
 
-* **Novo serviço no stack de desenvolvimento:** Elasticsearch tem footprint de memória significativo — recomenda-se mínimo de 1GB de heap em modo single-node. Em máquinas com recursos limitados, o stack completo (PostgreSQL + DragonflyDB + MinIO + Elasticsearch) pode impactar a experiência de desenvolvimento local.
+- **Novo serviço no stack de desenvolvimento:** Elasticsearch tem footprint de memória significativo — recomenda-se mínimo de 1GB de heap em modo single-node. Em máquinas com recursos limitados, o stack completo (PostgreSQL + DragonflyDB + MinIO + Elasticsearch) pode impactar a experiência de desenvolvimento local.
 
-* **Complexidade operacional em produção:** Em produção, o Elasticsearch requer monitoramento de índices, gestão de shards, alertas de saúde do cluster e estratégia de backup de índices — responsabilidades operacionais adicionais em relação ao stack atual.
+- **Complexidade operacional em produção:** Em produção, o Elasticsearch requer monitoramento de índices, gestão de shards, alertas de saúde do cluster e estratégia de backup de índices — responsabilidades operacionais adicionais em relação ao stack atual.
 
-* **Curva de aprendizado para mapeamentos e analyzers:** Configurar mapeamentos de índice, analyzers de idioma e estratégias de busca requer conhecimento específico do Elasticsearch. Erros de configuração no mapeamento inicial são difíceis de corrigir sem re-indexação completa.
+- **Curva de aprendizado para mapeamentos e analyzers:** Configurar mapeamentos de índice, analyzers de idioma e estratégias de busca requer conhecimento específico do Elasticsearch. Erros de configuração no mapeamento inicial são difíceis de corrigir sem re-indexação completa.
 
 ## Referências
 
-* [Documentação oficial do Elasticsearch](https://www.elastic.co/docs)
-* [Elasticsearch — Language Analyzers (Portuguese)](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html#portuguese-analyzer)
-* [Elasticsearch — Fuzzy Query (Levenshtein)](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-fuzzy-query.html)
-* [ADR-0002 — Adoção do PostgreSQL como Banco de Dados Relacional](./0002-adocao-do-postgresql-como-banco-de-dados.md)
+- [Documentação oficial do Elasticsearch](https://www.elastic.co/docs)
+- [Elasticsearch — Language Analyzers (Portuguese)](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html#portuguese-analyzer)
+- [Elasticsearch — Fuzzy Query (Levenshtein)](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-fuzzy-query.html)
+- [ADR-0002 — Adoção do PostgreSQL como Banco de Dados Relacional](./0002-adocao-do-postgresql-como-banco-de-dados.md)

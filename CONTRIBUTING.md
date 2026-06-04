@@ -24,14 +24,14 @@ Obrigado pelo interesse em contribuir. Este guia cobre tudo que você precisa sa
 
 Antes de começar, recomenda-se ter instalado:
 
-| Ferramenta                                                          | Versão mínima           | Obrigatório | Finalidade                                                                                                                             |
-| ------------------------------------------------------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [Node.js](https://nodejs.org/)                                      | 24.x                    | Sim         | Runtime da aplicação                                                                                                                   |
-| [pnpm](https://pnpm.io/)                                            | 11.x                    | Sim         | Gerenciador de pacotes ([ADR-0007](./docs/architecture/decisions/0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md))                  |
-| [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) | Qualquer versão estável | Sim | Serviços de infraestrutura ([ADR-0006](./docs/architecture/decisions/0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)) |
-| [Git](https://git-scm.com/)                                         | 2.x                     | Sim         | Controle de versão                                                                                                                     |
-| [Bruno](https://www.usebruno.com/)                                  | Última estável          | Sim         | Cliente HTTP oficial para testar a API ([ADR-0015](./docs/architecture/decisions/0015-adocao-do-bruno-como-cliente-http-oficial.md))   |
-| [just](https://just.systems/)                                       | 1.17+                   | Não         | Runner de comandos — atalhos para os comandos mais usados                                                                              |
+| Ferramenta                                                                                         | Versão mínima           | Obrigatório | Finalidade                                                                                                                             |
+| -------------------------------------------------------------------------------------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [Node.js](https://nodejs.org/)                                                                     | 24.x                    | Sim         | Runtime da aplicação                                                                                                                   |
+| [pnpm](https://pnpm.io/)                                                                           | 11.x                    | Sim         | Gerenciador de pacotes ([ADR-0007](./docs/architecture/decisions/0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md))                  |
+| [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) | Qualquer versão estável | Sim         | Serviços de infraestrutura ([ADR-0006](./docs/architecture/decisions/0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)) |
+| [Git](https://git-scm.com/)                                                                        | 2.x                     | Sim         | Controle de versão                                                                                                                     |
+| [Bruno](https://www.usebruno.com/)                                                                 | Última estável          | Sim         | Cliente HTTP oficial para testar a API ([ADR-0015](./docs/architecture/decisions/0015-adocao-do-bruno-como-cliente-http-oficial.md))   |
+| [just](https://just.systems/)                                                                      | 1.17+                   | Não         | Runner de comandos — atalhos para os comandos mais usados                                                                              |
 
 ### Gerenciando a versão do Node.js
 

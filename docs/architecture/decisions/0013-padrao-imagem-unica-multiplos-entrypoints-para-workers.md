@@ -1,9 +1,10 @@
 # [ADR-0013]: Padrão de Imagem Única com Múltiplos Entrypoints para Workers BullMQ
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-06-04
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-06-04
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -35,7 +36,7 @@ services:
     build: .
     command: node build/bin/server.js
     ports:
-      - "3333:3333"
+      - '3333:3333'
 
   worker:
     build: .
@@ -109,46 +110,46 @@ O padrão foi escolhido por resolver os três problemas identificados no context
 
 ## Alternativas Consideradas
 
-* **`Dockerfiles` separados por processo (`Dockerfile.api`, `Dockerfile.worker`):** Criar imagens distintas para a API e para cada Worker. Descartado porque: (1) ambos os `Dockerfiles` executariam `pnpm install` e copiariam o mesmo código-fonte — o registry armazenaria dois objetos com IDs diferentes, consumindo o dobro de banda no pull durante o deploy; (2) qualquer atualização de segurança em uma dependência (como apontado pelo Snyk, [ADR-0012](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)) precisa ser aplicada em todos os `Dockerfiles` — esquecer um deles resulta em Worker rodando com versão vulnerável em produção enquanto a API já está atualizada; (3) não há ganho real de tamanho de imagem para o perfil de trabalho do Worker (I/O-bound — email, indexação de texto) — a economia teórica de bytes por não incluir dependências HTTP é insignificante comparada ao custo de manutenção da duplicação.
+- **`Dockerfiles` separados por processo (`Dockerfile.api`, `Dockerfile.worker`):** Criar imagens distintas para a API e para cada Worker. Descartado porque: (1) ambos os `Dockerfiles` executariam `pnpm install` e copiariam o mesmo código-fonte — o registry armazenaria dois objetos com IDs diferentes, consumindo o dobro de banda no pull durante o deploy; (2) qualquer atualização de segurança em uma dependência (como apontado pelo Snyk, [ADR-0012](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)) precisa ser aplicada em todos os `Dockerfiles` — esquecer um deles resulta em Worker rodando com versão vulnerável em produção enquanto a API já está atualizada; (3) não há ganho real de tamanho de imagem para o perfil de trabalho do Worker (I/O-bound — email, indexação de texto) — a economia teórica de bytes por não incluir dependências HTTP é insignificante comparada ao custo de manutenção da duplicação.
 
-* **Workers como scripts Node.js soltos (`workers/elasticsearch.js`):** Criar arquivos JavaScript ou TypeScript avulsos na pasta `workers/` que instanciam diretamente os clientes do BullMQ e do banco de dados. Descartado porque: (1) exige reimplementar manualmente a inicialização do AdonisJS — conexão com banco, leitura de variáveis de ambiente, setup de providers — duplicando lógica de bootstrap já gerenciada pelo framework; (2) a reimplementação cria uma segunda superfície de manutenção: mudanças no ciclo de vida da aplicação precisam ser propagadas manualmente para cada script de Worker; (3) sem o sistema de módulos do AdonisJS (`#models/*`, `#services/*`), os imports relativos nos scripts tornam-se frágeis e difíceis de resolver; (4) sem convenção de localização (`commands/`), Workers ficam dispersos no repositório; (5) scripts soltos executam como JavaScript puro em runtime — sem acesso aos contratos de tipo de `contracts/events.ts` nem às definições dos Models do Lucid, incompatibilidades entre o payload enfileirado pelo Listener e o payload consumido pelo Worker só são descobertas em produção, não em tempo de compilação.
+- **Workers como scripts Node.js soltos (`workers/elasticsearch.js`):** Criar arquivos JavaScript ou TypeScript avulsos na pasta `workers/` que instanciam diretamente os clientes do BullMQ e do banco de dados. Descartado porque: (1) exige reimplementar manualmente a inicialização do AdonisJS — conexão com banco, leitura de variáveis de ambiente, setup de providers — duplicando lógica de bootstrap já gerenciada pelo framework; (2) a reimplementação cria uma segunda superfície de manutenção: mudanças no ciclo de vida da aplicação precisam ser propagadas manualmente para cada script de Worker; (3) sem o sistema de módulos do AdonisJS (`#models/*`, `#services/*`), os imports relativos nos scripts tornam-se frágeis e difíceis de resolver; (4) sem convenção de localização (`commands/`), Workers ficam dispersos no repositório; (5) scripts soltos executam como JavaScript puro em runtime — sem acesso aos contratos de tipo de `contracts/events.ts` nem às definições dos Models do Lucid, incompatibilidades entre o payload enfileirado pelo Listener e o payload consumido pelo Worker só são descobertas em produção, não em tempo de compilação.
 
-* **Workers em linguagem poliglota (Go, Rust):** Implementar Workers em uma linguagem compilada de alta performance para maximizar throughput de processamento de filas. Descartado porque: (1) Workers que precisam acessar o PostgreSQL precisariam recriar toda a modelagem de tabelas e conexões na linguagem-alvo — uma mudança de schema no AdonisJS que não fosse replicada quebraria o Worker em produção silenciosamente; (2) as operações que os Workers executam (envio de email, indexação de texto no Elasticsearch) são I/O-bound, não CPU-bound — Node.js com sua event loop não bloqueante é a ferramenta ideal para esse perfil; linguagens compiladas oferecem vantagem mensurável apenas em tarefas CPU-bound (manipulação de vídeo, criptografia em massa, processamento numérico); (3) a rotatividade de membros em projetos open-source é alta — exigir domínio de uma segunda linguagem apenas para manutenção de Workers cria uma barreira de contribuição desproporcional ao benefício técnico no escopo atual.
+- **Workers em linguagem poliglota (Go, Rust):** Implementar Workers em uma linguagem compilada de alta performance para maximizar throughput de processamento de filas. Descartado porque: (1) Workers que precisam acessar o PostgreSQL precisariam recriar toda a modelagem de tabelas e conexões na linguagem-alvo — uma mudança de schema no AdonisJS que não fosse replicada quebraria o Worker em produção silenciosamente; (2) as operações que os Workers executam (envio de email, indexação de texto no Elasticsearch) são I/O-bound, não CPU-bound — Node.js com sua event loop não bloqueante é a ferramenta ideal para esse perfil; linguagens compiladas oferecem vantagem mensurável apenas em tarefas CPU-bound (manipulação de vídeo, criptografia em massa, processamento numérico); (3) a rotatividade de membros em projetos open-source é alta — exigir domínio de uma segunda linguagem apenas para manutenção de Workers cria uma barreira de contribuição desproporcional ao benefício técnico no escopo atual.
 
-* **Processos Workers gerenciados por PM2 ou systemd (sem Docker):** Iniciar os Workers diretamente no sistema operacional do servidor, fora de containers. Descartado porque: (1) quebra a paridade entre ambiente de desenvolvimento e produção — o `docker-compose.yaml` descreve o ambiente completo incluindo Workers, garantindo que qualquer desenvolvedor possa reproduzir a topologia de produção localmente com `docker compose up`; (2) dificulta o isolamento de falhas — um Worker que consuma memória excessiva pode afetar o sistema operacional inteiro, não apenas o container; (3) inconsistente com a decisão de usar Docker como padrão de ambiente ([ADR-0006](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)).
+- **Processos Workers gerenciados por PM2 ou systemd (sem Docker):** Iniciar os Workers diretamente no sistema operacional do servidor, fora de containers. Descartado porque: (1) quebra a paridade entre ambiente de desenvolvimento e produção — o `docker-compose.yaml` descreve o ambiente completo incluindo Workers, garantindo que qualquer desenvolvedor possa reproduzir a topologia de produção localmente com `docker compose up`; (2) dificulta o isolamento de falhas — um Worker que consuma memória excessiva pode afetar o sistema operacional inteiro, não apenas o container; (3) inconsistente com a decisão de usar Docker como padrão de ambiente ([ADR-0006](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)).
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Imagem Docker única:** Um único pipeline de build, um único objeto no registry, um único `Dockerfile` para manter. Toda atualização de dependência ou mudança de configuração Docker se propaga automaticamente para API e Workers.
+- **Imagem Docker única:** Um único pipeline de build, um único objeto no registry, um único `Dockerfile` para manter. Toda atualização de dependência ou mudança de configuração Docker se propaga automaticamente para API e Workers.
 
-* **Reutilização de cache máxima:** Workers e API compartilham todas as camadas Docker. O overhead de disco de subir um segundo container a partir da mesma imagem é próximo de zero bytes.
+- **Reutilização de cache máxima:** Workers e API compartilham todas as camadas Docker. O overhead de disco de subir um segundo container a partir da mesma imagem é próximo de zero bytes.
 
-* **Acesso completo ao AdonisJS sem bootstrap manual:** `loadApp: true` entrega Lucid ORM, `Env`, injeção de dependências e providers ao Worker de forma automática e sempre sincronizada com a versão da API.
+- **Acesso completo ao AdonisJS sem bootstrap manual:** `loadApp: true` entrega Lucid ORM, `Env`, injeção de dependências e providers ao Worker de forma automática e sempre sincronizada com a versão da API.
 
-* **Isolamento de carga entre API e Workers:** Picos de volume nas filas não competem com a CPU ou o pool de conexões do servidor HTTP. Cada processo escala de forma independente conforme o perfil de carga.
+- **Isolamento de carga entre API e Workers:** Picos de volume nas filas não competem com a CPU ou o pool de conexões do servidor HTTP. Cada processo escala de forma independente conforme o perfil de carga.
 
-* **Segurança por default no Worker:** Workers não têm portas abertas. Sem servidor HTTP, a superfície de ataque via rede é eliminada. O único vetor de entrada é a fila interna do DragonflyDB.
+- **Segurança por default no Worker:** Workers não têm portas abertas. Sem servidor HTTP, a superfície de ataque via rede é eliminada. O único vetor de entrada é a fila interna do DragonflyDB.
 
-* **Convenção única e descoberta:** `node ace list` enumera todos os Workers. `node ace make:command` gera o esqueleto padronizado. Novos contribuidores encontram e criam Workers sem consultar documentação adicional.
+- **Convenção única e descoberta:** `node ace list` enumera todos os Workers. `node ace make:command` gera o esqueleto padronizado. Novos contribuidores encontram e criam Workers sem consultar documentação adicional.
 
 ### Negativas / Riscos
 
-* **Imagem inclui dependências HTTP não utilizadas pelos Workers:** A imagem única contém o servidor HTTP (`@adonisjs/core` com servidor Hono/uWS) e seus middlewares — código que o Worker nunca executa. O tamanho da imagem é ligeiramente maior do que uma hipotética imagem mínima do Worker. Esse custo é aceito como desprezível dado o benefício de cache e manutenção.
+- **Imagem inclui dependências HTTP não utilizadas pelos Workers:** A imagem única contém o servidor HTTP (`@adonisjs/core` com servidor Hono/uWS) e seus middlewares — código que o Worker nunca executa. O tamanho da imagem é ligeiramente maior do que uma hipotética imagem mínima do Worker. Esse custo é aceito como desprezível dado o benefício de cache e manutenção.
 
-* **Gerenciamento de processos em produção:** Workers são processos de longa duração que precisam ser iniciados, monitorados e reiniciados em caso de crash. Em produção, o Docker Compose com `restart: unless-stopped` ou um orquestrador (ECS, Kubernetes) é responsável por garantir que os Workers estejam sempre rodando — isso não é configurado automaticamente.
+- **Gerenciamento de processos em produção:** Workers são processos de longa duração que precisam ser iniciados, monitorados e reiniciados em caso de crash. Em produção, o Docker Compose com `restart: unless-stopped` ou um orquestrador (ECS, Kubernetes) é responsável por garantir que os Workers estejam sempre rodando — isso não é configurado automaticamente.
 
-* **`node ace build` precisa incluir os comandos:** A compilação deve processar os arquivos em `commands/` além dos arquivos em `app/`, `bin/` e `start/`. Se um novo Worker for criado em um local fora do diretório convencional, o `tsconfig.json` precisa incluí-lo explicitamente para que o comando de produção `node build/ace.js` encontre o Worker compilado.
+- **`node ace build` precisa incluir os comandos:** A compilação deve processar os arquivos em `commands/` além dos arquivos em `app/`, `bin/` e `start/`. Se um novo Worker for criado em um local fora do diretório convencional, o `tsconfig.json` precisa incluí-lo explicitamente para que o comando de produção `node build/ace.js` encontre o Worker compilado.
 
-* **Curva de aprendizado do Ace CLI para contribuidores novos:** Desenvolvedores sem experiência em AdonisJS podem não conhecer o padrão de comandos Ace. A tendência natural é criar scripts Node.js avulsos — a documentação deste ADR e o `CONTRIBUTING.md` são a principal barreira contra essa regressão.
+- **Curva de aprendizado do Ace CLI para contribuidores novos:** Desenvolvedores sem experiência em AdonisJS podem não conhecer o padrão de comandos Ace. A tendência natural é criar scripts Node.js avulsos — a documentação deste ADR e o `CONTRIBUTING.md` são a principal barreira contra essa regressão.
 
 ## Referências
 
-* [AdonisJS — Ace CLI: criando comandos customizados](https://docs.adonisjs.com/guides/ace/creating-commands)
-* [AdonisJS — Ace CLI: a flag `loadApp`](https://docs.adonisjs.com/guides/ace/creating-commands#loadapp)
-* [Docker — Understanding image layers and the UnionFS](https://docs.docker.com/storage/storagedriver/)
-* [BullMQ — Workers](https://docs.bullmq.io/guide/workers)
-* [ADR-0006 — Docker para Padronização de Ambiente de Desenvolvimento e Deploy](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
-* [ADR-0008 — Arquitetura Orientada a Eventos com BullMQ](./0008-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md)
-* [ADR-0012 — Snyk para Detecção e Correção de Vulnerabilidades](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)
+- [AdonisJS — Ace CLI: criando comandos customizados](https://docs.adonisjs.com/guides/ace/creating-commands)
+- [AdonisJS — Ace CLI: a flag `loadApp`](https://docs.adonisjs.com/guides/ace/creating-commands#loadapp)
+- [Docker — Understanding image layers and the UnionFS](https://docs.docker.com/storage/storagedriver/)
+- [BullMQ — Workers](https://docs.bullmq.io/guide/workers)
+- [ADR-0006 — Docker para Padronização de Ambiente de Desenvolvimento e Deploy](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
+- [ADR-0008 — Arquitetura Orientada a Eventos com BullMQ](./0008-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md)
+- [ADR-0012 — Snyk para Detecção e Correção de Vulnerabilidades](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)

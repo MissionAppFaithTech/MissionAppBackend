@@ -116,12 +116,17 @@ lint:
 # ESLint com autofix
 [group('qualidade')]
 lint-fix:
-    pnpm lint --fix
+    pnpm lint:fix
 
-# Prettier (formata in-place)
+# Prettier (verifica formatação)
 [group('qualidade')]
 format:
     pnpm format
+
+# Prettier (formata in-place)
+[group('qualidade')]
+format-fix:
+    pnpm format:fix
 
 # TypeScript sem emit
 [group('qualidade')]

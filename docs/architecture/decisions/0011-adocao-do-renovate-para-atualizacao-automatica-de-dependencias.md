@@ -1,9 +1,10 @@
 # [ADR-0011]: Adoção do Renovate para Atualização Automática de Dependências
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-31
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-31
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -14,7 +15,7 @@ O MissionApp Backend opera sobre um stack com múltiplas camadas de dependência
 Dois problemas estruturais motivam a adoção de uma ferramenta de automação:
 
 **Dependências desatualizadas como superfície de ataque silenciosa:**
-O [ADR-0006](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md) explicitamente identificou como risco a acumulação de imagens Docker desatualizadas: *"Tags fixas garantem reprodutibilidade, mas exigem atualização manual deliberada quando uma versão mais recente de um serviço é adotada. Sem processo de revisão periódica das versões, o stack pode acumular imagens com vulnerabilidades conhecidas."* O mesmo vale para pacotes Node.js — vulnerabilidades em dependências transitivas são anunciadas continuamente e requerem atualização ativa do `pnpm-lock.yaml` para serem corrigidas.
+O [ADR-0006](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md) explicitamente identificou como risco a acumulação de imagens Docker desatualizadas: _"Tags fixas garantem reprodutibilidade, mas exigem atualização manual deliberada quando uma versão mais recente de um serviço é adotada. Sem processo de revisão periódica das versões, o stack pode acumular imagens com vulnerabilidades conhecidas."_ O mesmo vale para pacotes Node.js — vulnerabilidades em dependências transitivas são anunciadas continuamente e requerem atualização ativa do `pnpm-lock.yaml` para serem corrigidas.
 
 **Processos manuais são incompatíveis com o modelo open-source:**
 Em um projeto com contribuidores voluntários e rotatividade alta, um processo de atualização de dependências que depende de iniciativa humana periódica é, na prática, um processo que não acontece. Sem automação, o repositório acumula defasagem de versões silenciosamente — a equipe só percebe quando uma vulnerabilidade crítica é publicada e a atualização exige resolver conflitos acumulados de dezenas de versões em conjunto.
@@ -30,12 +31,14 @@ O Renovate é uma ferramenta de código aberto para automação de atualizaçõe
 O Renovate será configurado através de um arquivo `renovate.json` na raiz do repositório, versionado junto ao código. A configuração definirá o comportamento de atualização para cada camada do stack:
 
 **Escopo de atualizações gerenciadas:**
+
 - Pacotes Node.js declarados em `package.json` — com regeneração automática do `pnpm-lock.yaml`
 - Tags de imagens Docker em `docker-compose.yaml` (ex: `postgres:18.3-alpine` → `postgres:18.4-alpine`)
 - Imagem base no `Dockerfile` de produção
 
 **Estratégia de agrupamento de PRs:**
 Para reduzir ruído de notificações, atualizações relacionadas serão agrupadas em um único PR por grupo:
+
 - Pacotes do ecossistema AdonisJS (`@adonisjs/*`, `@vinejs/*`, `@edge-js/*`) em um único PR
 - Dependências de desenvolvimento (ESLint, Prettier, TypeScript, tipagens `@types/*`) em um único PR
 - Imagens Docker agrupadas por serviço
@@ -80,43 +83,43 @@ O Renovate foi escolhido por cobrir todas as camadas de dependências versionada
 
 ## Alternativas Consideradas
 
-* **Dependabot (GitHub nativo):** Ferramenta de atualização de dependências integrada ao GitHub, com configuração zero para repositórios públicos. Considerado como alternativa principal por não exigir instalação de app externo. Descartado porque: (1) o suporte ao pnpm é limitado em relação ao Renovate — especificamente para dependências transitivas e regeneração do `pnpm-lock.yaml`, o Dependabot tem limitações documentadas que podem gerar lockfiles inconsistentes; (2) não possui manager nativo para Docker Compose com update de image tags — atualizar `postgres:18.3-alpine` para `postgres:18.4-alpine` no `docker-compose.yaml` não é coberto nativamente; (3) agrupamento de PRs no Dependabot é limitado — não permite a granularidade de configuração do Renovate para definir grupos arbitrários por ecossistema ou padrão de nome de pacote; (4) automerge requer uma GitHub Actions workflow adicional (`dependabot/fetch-metadata`), enquanto o Renovate gerencia isso nativamente via configuração no `renovate.json`.
+- **Dependabot (GitHub nativo):** Ferramenta de atualização de dependências integrada ao GitHub, com configuração zero para repositórios públicos. Considerado como alternativa principal por não exigir instalação de app externo. Descartado porque: (1) o suporte ao pnpm é limitado em relação ao Renovate — especificamente para dependências transitivas e regeneração do `pnpm-lock.yaml`, o Dependabot tem limitações documentadas que podem gerar lockfiles inconsistentes; (2) não possui manager nativo para Docker Compose com update de image tags — atualizar `postgres:18.3-alpine` para `postgres:18.4-alpine` no `docker-compose.yaml` não é coberto nativamente; (3) agrupamento de PRs no Dependabot é limitado — não permite a granularidade de configuração do Renovate para definir grupos arbitrários por ecossistema ou padrão de nome de pacote; (4) automerge requer uma GitHub Actions workflow adicional (`dependabot/fetch-metadata`), enquanto o Renovate gerencia isso nativamente via configuração no `renovate.json`.
 
-* **Atualizações manuais periódicas pelos mantenedores:** Executar `pnpm update` e atualizar tags Docker manualmente em sprints de manutenção programados. Descartado porque: (1) em um projeto open-source com contribuidores voluntários, "processos que dependem de memória humana" equivalem a "processos que não acontecem" — a evidência de projetos similares é que atualizações manuais são postergadas indefinidamente até que uma vulnerabilidade crítica force uma atualização emergencial; (2) atualizações acumuladas são mais difíceis de revisar — um PR que atualiza 15 pacotes simultaneamente torna impossível isolar qual mudança introduziu uma regressão; (3) a janela de exposição a vulnerabilidades de segurança é proporcional ao intervalo entre as rodadas manuais — sem automação, essa janela é indefinida.
+- **Atualizações manuais periódicas pelos mantenedores:** Executar `pnpm update` e atualizar tags Docker manualmente em sprints de manutenção programados. Descartado porque: (1) em um projeto open-source com contribuidores voluntários, "processos que dependem de memória humana" equivalem a "processos que não acontecem" — a evidência de projetos similares é que atualizações manuais são postergadas indefinidamente até que uma vulnerabilidade crítica force uma atualização emergencial; (2) atualizações acumuladas são mais difíceis de revisar — um PR que atualiza 15 pacotes simultaneamente torna impossível isolar qual mudança introduziu uma regressão; (3) a janela de exposição a vulnerabilidades de segurança é proporcional ao intervalo entre as rodadas manuais — sem automação, essa janela é indefinida.
 
-* **`pnpm outdated` + script de CI para alertas:** Configurar uma GitHub Action que executa `pnpm outdated` periodicamente e cria issues quando dependências desatualizadas são detectadas. Descartado porque: (1) alertas sem ação automatizada transferem o trabalho de atualização para os mantenedores — reduz a janela de descoberta mas não resolve o problema de execução; (2) não cobre imagens Docker; (3) não gera PRs com changelogs integrados, tornando a avaliação de impacto de cada atualização mais trabalhosa; (4) scripts de CI customizados para esse fim são código de manutenção que o Renovate substitui completamente.
+- **`pnpm outdated` + script de CI para alertas:** Configurar uma GitHub Action que executa `pnpm outdated` periodicamente e cria issues quando dependências desatualizadas são detectadas. Descartado porque: (1) alertas sem ação automatizada transferem o trabalho de atualização para os mantenedores — reduz a janela de descoberta mas não resolve o problema de execução; (2) não cobre imagens Docker; (3) não gera PRs com changelogs integrados, tornando a avaliação de impacto de cada atualização mais trabalhosa; (4) scripts de CI customizados para esse fim são código de manutenção que o Renovate substitui completamente.
 
-* **Snyk:** Plataforma de segurança para dependências com detecção de CVEs, patches automáticos e monitoramento de vulnerabilidades. Descartado para esse caso de uso específico porque: (1) o Snyk é primariamente uma ferramenta de segurança — seu foco é em vulnerabilidades conhecidas (CVEs), não em manter dependências na versão mais recente por razões de DX ou performance; (2) para o escopo de atualização de imagens Docker e lockfile maintenance, o Snyk não substitui o Renovate; (3) o plano gratuito do Snyk tem limitações de projetos e testes privados. O Snyk pode coexistir com o Renovate como camada complementar de scanning de vulnerabilidades, mas não é uma alternativa direta para automação de atualizações.
+- **Snyk:** Plataforma de segurança para dependências com detecção de CVEs, patches automáticos e monitoramento de vulnerabilidades. Descartado para esse caso de uso específico porque: (1) o Snyk é primariamente uma ferramenta de segurança — seu foco é em vulnerabilidades conhecidas (CVEs), não em manter dependências na versão mais recente por razões de DX ou performance; (2) para o escopo de atualização de imagens Docker e lockfile maintenance, o Snyk não substitui o Renovate; (3) o plano gratuito do Snyk tem limitações de projetos e testes privados. O Snyk pode coexistir com o Renovate como camada complementar de scanning de vulnerabilidades, mas não é uma alternativa direta para automação de atualizações.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Eliminação do risco de imagens Docker desatualizadas:** O manager do Renovate para Docker Compose cobre diretamente o risco identificado no [ADR-0006](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md) — tags de imagem são atualizadas via PR antes de acumularem vulnerabilidades, com changelog do release incluído na descrição do PR.
+- **Eliminação do risco de imagens Docker desatualizadas:** O manager do Renovate para Docker Compose cobre diretamente o risco identificado no [ADR-0006](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md) — tags de imagem são atualizadas via PR antes de acumularem vulnerabilidades, com changelog do release incluído na descrição do PR.
 
-* **`pnpm-lock.yaml` sempre consistente com `package.json`:** Atualizações de pacotes regeneram o lockfile corretamente, mantendo a garantia de reprodutibilidade do [ADR-0007](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md) sem intervenção manual.
+- **`pnpm-lock.yaml` sempre consistente com `package.json`:** Atualizações de pacotes regeneram o lockfile corretamente, mantendo a garantia de reprodutibilidade do [ADR-0007](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md) sem intervenção manual.
 
-* **Janela de exposição a vulnerabilidades minimizada:** Com atualizações propostas automaticamente em dias úteis, o tempo entre a publicação de um patch de segurança e a disponibilidade de um PR para merge é reduzido de semanas/meses para horas/dias.
+- **Janela de exposição a vulnerabilidades minimizada:** Com atualizações propostas automaticamente em dias úteis, o tempo entre a publicação de um patch de segurança e a disponibilidade de um PR para merge é reduzido de semanas/meses para horas/dias.
 
-* **Revisão focada em mudanças de alto impacto:** Automerge para patches de dev dependencies e lockfile maintenance libera o tempo dos mantenedores para revisar apenas atualizações minor e major — que podem conter breaking changes relevantes.
+- **Revisão focada em mudanças de alto impacto:** Automerge para patches de dev dependencies e lockfile maintenance libera o tempo dos mantenedores para revisar apenas atualizações minor e major — que podem conter breaking changes relevantes.
 
-* **Changelogs integrados nos PRs:** Cada PR do Renovate inclui o link para o changelog da versão atualizada, reduzindo o esforço de avaliação de impacto de cada atualização.
+- **Changelogs integrados nos PRs:** Cada PR do Renovate inclui o link para o changelog da versão atualizada, reduzindo o esforço de avaliação de impacto de cada atualização.
 
 ### Negativas / Riscos
 
-* **Volume de PRs sem configuração adequada:** Sem agrupamento configurado, o Renovate pode gerar dezenas de PRs simultâneos em repositórios com muitas dependências — especialmente após um período inativo. A configuração de grupos no `renovate.json` é obrigatória para manter o volume gerenciável.
+- **Volume de PRs sem configuração adequada:** Sem agrupamento configurado, o Renovate pode gerar dezenas de PRs simultâneos em repositórios com muitas dependências — especialmente após um período inativo. A configuração de grupos no `renovate.json` é obrigatória para manter o volume gerenciável.
 
-* **Automerge pode introduzir regressões em CI com cobertura incompleta:** A segurança do automerge é proporcional à cobertura dos testes automatizados. Se a suite de testes não cobrir um comportamento que foi alterado por um patch, o automerge pode introduzir uma regressão não detectada. A expansão da cobertura de testes é pré-requisito para ampliar o escopo do automerge além de dev dependencies.
+- **Automerge pode introduzir regressões em CI com cobertura incompleta:** A segurança do automerge é proporcional à cobertura dos testes automatizados. Se a suite de testes não cobrir um comportamento que foi alterado por um patch, o automerge pode introduzir uma regressão não detectada. A expansão da cobertura de testes é pré-requisito para ampliar o escopo do automerge além de dev dependencies.
 
-* **Major bumps requerem avaliação manual cuidadosa:** Atualizações de versões major (ex: AdonisJS v7 → v8, Node.js 22 → 24) frequentemente incluem breaking changes que exigem migração de código. O Renovate abrirá o PR, mas a revisão e o trabalho de migração são responsabilidade dos mantenedores. PRs de major updates não devem ser mergeados sem leitura do guia de migração da biblioteca.
+- **Major bumps requerem avaliação manual cuidadosa:** Atualizações de versões major (ex: AdonisJS v7 → v8, Node.js 22 → 24) frequentemente incluem breaking changes que exigem migração de código. O Renovate abrirá o PR, mas a revisão e o trabalho de migração são responsabilidade dos mantenedores. PRs de major updates não devem ser mergeados sem leitura do guia de migração da biblioteca.
 
-* **Dependência do GitHub App externo:** O Renovate é um serviço de terceiro (Mend). Indisponibilidade do serviço resulta em ausência de PRs de atualização durante o período de queda — sem impacto na aplicação em produção, mas com potencial aumento temporário da janela de exposição a vulnerabilidades.
+- **Dependência do GitHub App externo:** O Renovate é um serviço de terceiro (Mend). Indisponibilidade do serviço resulta em ausência de PRs de atualização durante o período de queda — sem impacto na aplicação em produção, mas com potencial aumento temporário da janela de exposição a vulnerabilidades.
 
 ## Referências
 
-* [Renovate — Documentação oficial](https://docs.renovatebot.com/)
-* [Renovate — Manager Docker Compose](https://docs.renovatebot.com/modules/manager/docker-compose/)
-* [Renovate — Opções de configuração](https://docs.renovatebot.com/configuration-options/)
-* [Renovate — Casos de uso](https://docs.renovatebot.com/getting-started/use-cases/)
-* [ADR-0006 — Docker para Padronização de Ambiente](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
-* [ADR-0007 — pnpm como Gerenciador de Pacotes](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)
+- [Renovate — Documentação oficial](https://docs.renovatebot.com/)
+- [Renovate — Manager Docker Compose](https://docs.renovatebot.com/modules/manager/docker-compose/)
+- [Renovate — Opções de configuração](https://docs.renovatebot.com/configuration-options/)
+- [Renovate — Casos de uso](https://docs.renovatebot.com/getting-started/use-cases/)
+- [ADR-0006 — Docker para Padronização de Ambiente](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
+- [ADR-0007 — pnpm como Gerenciador de Pacotes](./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)

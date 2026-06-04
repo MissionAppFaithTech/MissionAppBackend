@@ -78,7 +78,6 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 
 A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um perfil diferente de colaborador:
 
-
 <table width="100%">
   <thead>
     <tr>
@@ -116,7 +115,6 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
   </tbody>
 </table>
 
-
 > [!IMPORTANT]
 > Antes de implementar qualquer mudança arquitetural de alto impacto — troca de ORM, novo serviço de infraestrutura, alteração de fluxo de negócio crítico — consulte os ADRs existentes e avalie se a mudança exige um novo registro.
 
@@ -127,7 +125,6 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
 ## 👤 Tipos de Usuários
 
 A plataforma reconhece **três perfis principais**, cada um com privilégios e responsabilidades específicas alinhadas com o fluxo de negócio da MissionApp:
-
 
 <table width="100%">
   <colgroup>
@@ -161,10 +158,10 @@ A plataforma reconhece **três perfis principais**, cada um com privilégios e r
   </tbody>
 </table>
 
-
 ### Contexto de Comunidade de Fé
 
 Usuários **SUPPORTER** e **MISSIONARY** podem estar vinculados a uma **Comunidade de Fé (igreja)** durante o cadastro:
+
 - Os dados eclesiásticos podem ser atualizados pelo próprio usuário dentro de **30 dias** após cadastro
 - Após 30 dias, alterações requerem aprovação formal do administrador (Req 13.3)
 - Pastores são implementados como usuários **SUPPORTER** com vinculação à comunidade de fé, sem role separada

@@ -1,9 +1,10 @@
 # [ADR-0018]: Padrão de Composição de Mixins para Comportamentos Compartilhados em Models
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-06-04
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-06-04
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -44,11 +45,7 @@ export class PostSchema extends BaseModel {
 // WithSoftDelete   → deletedAt + escopo de query para filtrar excluídos (futuro)
 
 // 3. Model (domínio — lógica, relacionamentos, scopes específicos da entidade)
-export default class Post extends compose(
-  PostSchema,
-  WithPrimaryUuid,
-  WithTimestamps
-) {
+export default class Post extends compose(PostSchema, WithPrimaryUuid, WithTimestamps) {
   // relacionamentos, scopes, métodos de domínio
 }
 ```
@@ -69,20 +66,20 @@ export default class Post extends compose(
 
 A ordem dos argumentos em `compose()` não é arbitrária. O TypeScript resolve a cascata de tipagem da esquerda para a direita — um mixin que depende de propriedades definidas por um mixin anterior (ex: `withAuthFinder` precisa que `id` e `password_hash` já existam no tipo) falha silenciosamente ou produz erros de tipo difíceis de rastrear se a ordem estiver errada. A convenção adotada é do mais fundamental ao mais abstrato:
 
-| Posição | Camada | O que vai aqui | Exemplos |
-|---|---|---|---|
-| 1º | **Schema (base)** | Sempre o Schema gerado — define as colunas e o tipo estrutural do Model | `UserSchema`, `PostSchema` |
-| 2º | **Mixins estruturais** | Comportamentos que afetam o banco em nível baixo — geração de PK, soft delete, timestamps | `WithPrimaryUuid`, `WithTimestamps`, `WithSoftDelete` |
-| 3º | **Mixins de domínio** | Lógica da aplicação que depende da estrutura já estabelecida pelas camadas anteriores | `withAuthFinder(hash)`, `WithAuditableActor` |
-| 4º | **Mixins de utilidade** | Formatadores, serializadores e modificadores de leitura que não alteram o schema | `WithAvatarFormatter` |
+| Posição | Camada                  | O que vai aqui                                                                            | Exemplos                                              |
+| ------- | ----------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 1º      | **Schema (base)**       | Sempre o Schema gerado — define as colunas e o tipo estrutural do Model                   | `UserSchema`, `PostSchema`                            |
+| 2º      | **Mixins estruturais**  | Comportamentos que afetam o banco em nível baixo — geração de PK, soft delete, timestamps | `WithPrimaryUuid`, `WithTimestamps`, `WithSoftDelete` |
+| 3º      | **Mixins de domínio**   | Lógica da aplicação que depende da estrutura já estabelecida pelas camadas anteriores     | `withAuthFinder(hash)`, `WithAuditableActor`          |
+| 4º      | **Mixins de utilidade** | Formatadores, serializadores e modificadores de leitura que não alteram o schema          | `WithAvatarFormatter`                                 |
 
 ```typescript
 export default class User extends compose(
-  UserSchema,           // 1º — estrutura base (colunas)
-  WithPrimaryUuid,      // 2º — infraestrutura (PK)
-  WithTimestamps,       // 2º — infraestrutura (timestamps)
-  WithSoftDelete,       // 2º — infraestrutura (exclusão lógica)
-  withAuthFinder(hash), // 3º — domínio (autenticação depende de id + password_hash)
+  UserSchema, // 1º — estrutura base (colunas)
+  WithPrimaryUuid, // 2º — infraestrutura (PK)
+  WithTimestamps, // 2º — infraestrutura (timestamps)
+  WithSoftDelete, // 2º — infraestrutura (exclusão lógica)
+  withAuthFinder(hash) // 3º — domínio (autenticação depende de id + password_hash)
 ) {}
 ```
 
@@ -102,32 +99,32 @@ A regra prática: se mixin B depende de uma propriedade introduzida por mixin A,
 
 ## Alternativas Consideradas
 
-* **Classe base `AppModel extends BaseModel`:** Centraliza comportamentos compartilhados em um ancestral comum. Descartado porque: (1) herança única do JavaScript impede que um Model componha subconjuntos de comportamentos — todos os Models herdariam tudo de `AppModel`, incluindo comportamentos que não precisam; (2) `AppModel` tende a crescer indefinidamente, tornando-se um "god object" de comportamentos implícitos; (3) não é o idioma que o AdonisJS usa internamente, criando inconsistência com o ecossistema.
+- **Classe base `AppModel extends BaseModel`:** Centraliza comportamentos compartilhados em um ancestral comum. Descartado porque: (1) herança única do JavaScript impede que um Model componha subconjuntos de comportamentos — todos os Models herdariam tudo de `AppModel`, incluindo comportamentos que não precisam; (2) `AppModel` tende a crescer indefinidamente, tornando-se um "god object" de comportamentos implícitos; (3) não é o idioma que o AdonisJS usa internamente, criando inconsistência com o ecossistema.
 
-* **Copy-paste de declarações por Model:** Duplicar `@column({ isPrimary: true }) declare id: string` e o hook `@beforeCreate()` em cada Model. Descartado porque qualquer mudança precisa ser propagada manualmente para todos os Models — inconsistências são inevitáveis em projetos com múltiplos colaboradores.
+- **Copy-paste de declarações por Model:** Duplicar `@column({ isPrimary: true }) declare id: string` e o hook `@beforeCreate()` em cada Model. Descartado porque qualquer mudança precisa ser propagada manualmente para todos os Models — inconsistências são inevitáveis em projetos com múltiplos colaboradores.
 
-* **Decoradores customizados (ex: `@withUUID()`):** Implementar o comportamento via decorador TypeScript. Descartado porque decoradores em TypeScript têm semântica de execução diferente de mixins e interagem de forma imprevisível com os decoradores do Lucid (`@column`, `@beforeCreate`). O `compose()` do AdonisJS é especificamente projetado para essa composição segura com o sistema de decoradores do Lucid.
+- **Decoradores customizados (ex: `@withUUID()`):** Implementar o comportamento via decorador TypeScript. Descartado porque decoradores em TypeScript têm semântica de execução diferente de mixins e interagem de forma imprevisível com os decoradores do Lucid (`@column`, `@beforeCreate`). O `compose()` do AdonisJS é especificamente projetado para essa composição segura com o sistema de decoradores do Lucid.
 
-* **Comportamento implementado diretamente no Model:** Cada Model implementa sua própria lógica de geração de UUID. Descartado pelas mesmas razões do copy-paste — sem centralização, sem garantia de consistência.
+- **Comportamento implementado diretamente no Model:** Cada Model implementa sua própria lógica de geração de UUID. Descartado pelas mesmas razões do copy-paste — sem centralização, sem garantia de consistência.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* Comportamentos compartilhados têm uma única implementação, testável em isolamento.
-* Composição seletiva: cada Model declara explicitamente apenas os comportamentos que precisa.
-* Alinhado com o idioma do AdonisJS — curva de aprendizado menor para contribuidores com experiência no framework.
-* Extensível: novos comportamentos transversais (`WithSoftDelete`, `WithAuditableActor`) seguem o mesmo padrão sem alterar Models existentes.
+- Comportamentos compartilhados têm uma única implementação, testável em isolamento.
+- Composição seletiva: cada Model declara explicitamente apenas os comportamentos que precisa.
+- Alinhado com o idioma do AdonisJS — curva de aprendizado menor para contribuidores com experiência no framework.
+- Extensível: novos comportamentos transversais (`WithSoftDelete`, `WithAuditableActor`) seguem o mesmo padrão sem alterar Models existentes.
 
 ### Negativas / Riscos
 
-* **Curva de aprendizado do padrão `compose()`:** Contribuidores sem experiência com mixins TypeScript podem achar a assinatura de tipo complexa. A regra "nunca declare `@column` no Model" é contraintuitiva para quem está acostumado com ORMs que declaram colunas diretamente na classe. A documentação deste ADR é a principal salvaguarda.
+- **Curva de aprendizado do padrão `compose()`:** Contribuidores sem experiência com mixins TypeScript podem achar a assinatura de tipo complexa. A regra "nunca declare `@column` no Model" é contraintuitiva para quem está acostumado com ORMs que declaram colunas diretamente na classe. A documentação deste ADR é a principal salvaguarda.
 
-* **Ordem de composição importa:** Se dois mixins declararem o mesmo nome de propriedade ou método, o comportamento depende da ordem em `compose()`. Atualmente não há conflito, mas mixins futuros devem ser escritos com atenção a colisões de nomes com o Schema gerado e entre si.
+- **Ordem de composição importa:** Se dois mixins declararem o mesmo nome de propriedade ou método, o comportamento depende da ordem em `compose()`. Atualmente não há conflito, mas mixins futuros devem ser escritos com atenção a colisões de nomes com o Schema gerado e entre si.
 
 ## Referências
 
-* [AdonisJS — Model mixins (`compose()`)](https://lucid.adonisjs.com/docs/model-factories#using-model-mixins)
-* [TypeScript — Mixin pattern](https://www.typescriptlang.org/docs/handbook/mixins.html)
-* [ADR-0017 — UUID v7 como Estratégia de Chave Primária](./0017-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md)
-* [ADR-0016 — Convenções de Escrita de Migrações de Banco de Dados](./0016-convencoes-de-escrita-de-migracoes.md)
+- [AdonisJS — Model mixins (`compose()`)](https://lucid.adonisjs.com/docs/model-factories#using-model-mixins)
+- [TypeScript — Mixin pattern](https://www.typescriptlang.org/docs/handbook/mixins.html)
+- [ADR-0017 — UUID v7 como Estratégia de Chave Primária](./0017-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md)
+- [ADR-0016 — Convenções de Escrita de Migrações de Banco de Dados](./0016-convencoes-de-escrita-de-migracoes.md)

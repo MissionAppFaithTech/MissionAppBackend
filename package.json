@@ -19,8 +19,10 @@
     "build": "node ace build",
     "dev": "node ace serve --hmr",
     "test": "node ace test",
-    "lint": "eslint --fix .",
-    "format": "prettier --write .",
+    "lint": "eslint .",
+    "format": "prettier .",
+    "lint:fix": "eslint --fix .",
+    "format:fix": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "prepare": "husky install"
   },

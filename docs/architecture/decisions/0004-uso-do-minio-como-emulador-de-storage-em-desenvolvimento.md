@@ -1,9 +1,10 @@
 # [ADR-0004]: Uso do MinIO como Emulador de Storage em Ambiente de Desenvolvimento
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-05-30
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-05-30
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -51,35 +52,35 @@ O MinIO foi escolhido por ser a solução que melhor atende ao conjunto de restr
 
 ## Alternativas Consideradas
 
-* **AWS S3 real em ambiente de desenvolvimento:** Usar buckets S3 reais com prefixo `dev` para desenvolvimento. Descartado porque: (1) gera custo por operação — inviável em projeto open-source com contribuidores desconhecidos; (2) exige conta AWS e credenciais IAM por contribuidor, criando obstáculo de onboarding e risco de vazamento; (3) cria dependência de conectividade com a internet para operações de storage; (4) dificulta pipelines de CI/CD, que precisariam de credenciais AWS injetadas como secrets.
+- **AWS S3 real em ambiente de desenvolvimento:** Usar buckets S3 reais com prefixo `dev` para desenvolvimento. Descartado porque: (1) gera custo por operação — inviável em projeto open-source com contribuidores desconhecidos; (2) exige conta AWS e credenciais IAM por contribuidor, criando obstáculo de onboarding e risco de vazamento; (3) cria dependência de conectividade com a internet para operações de storage; (4) dificulta pipelines de CI/CD, que precisariam de credenciais AWS injetadas como secrets.
 
-* **Driver de filesystem local (`@adonisjs/drive` com `fs`):** Armazenar arquivos diretamente no sistema de arquivos do servidor via driver local do `@adonisjs/drive`. Descartado porque: (1) não exercita o caminho de código S3 — erros de configuração de bucket, presigned URLs, políticas de CORS e comportamentos específicos do S3 só seriam descobertos em produção; (2) não valida a estrutura de buckets do [ADR-0009](./0009-padronizacao-de-nomenclatura-de-buckets.md); (3) a troca entre driver `fs` e driver `s3` exige mudança de configuração não trivial e pode mascarar incompatibilidades que surgem apenas em produção; (4) não reproduz o comportamento de storage distribuído nem o modelo de URLs públicas/privadas por bucket.
+- **Driver de filesystem local (`@adonisjs/drive` com `fs`):** Armazenar arquivos diretamente no sistema de arquivos do servidor via driver local do `@adonisjs/drive`. Descartado porque: (1) não exercita o caminho de código S3 — erros de configuração de bucket, presigned URLs, políticas de CORS e comportamentos específicos do S3 só seriam descobertos em produção; (2) não valida a estrutura de buckets do [ADR-0009](./0009-padronizacao-de-nomenclatura-de-buckets.md); (3) a troca entre driver `fs` e driver `s3` exige mudança de configuração não trivial e pode mascarar incompatibilidades que surgem apenas em produção; (4) não reproduz o comportamento de storage distribuído nem o modelo de URLs públicas/privadas por bucket.
 
-* **LocalStack:** Emulador completo da AWS que cobre S3, SQS, SNS, Lambda, DynamoDB e dezenas de outros serviços. Descartado porque: (1) o MissionApp usa exclusivamente S3 como serviço AWS — emular o ecossistema completo é desproporcional ao escopo; (2) o LocalStack na modalidade gratuita tem limitações que requerem a versão Pro para alguns comportamentos avançados do S3; (3) footprint significativamente maior que o MinIO em memória e tempo de inicialização; (4) para o caso de uso exclusivo de S3, o MinIO oferece maior fidelidade com menor complexidade operacional.
+- **LocalStack:** Emulador completo da AWS que cobre S3, SQS, SNS, Lambda, DynamoDB e dezenas de outros serviços. Descartado porque: (1) o MissionApp usa exclusivamente S3 como serviço AWS — emular o ecossistema completo é desproporcional ao escopo; (2) o LocalStack na modalidade gratuita tem limitações que requerem a versão Pro para alguns comportamentos avançados do S3; (3) footprint significativamente maior que o MinIO em memória e tempo de inicialização; (4) para o caso de uso exclusivo de S3, o MinIO oferece maior fidelidade com menor complexidade operacional.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Onboarding sem fricção:** Nenhum pré-requisito externo para storage — `docker compose up -d` provisiona MinIO junto com PostgreSQL e DragonflyDB. Novos contribuidores têm o ambiente de storage funcional em segundos.
+- **Onboarding sem fricção:** Nenhum pré-requisito externo para storage — `docker compose up -d` provisiona MinIO junto com PostgreSQL e DragonflyDB. Novos contribuidores têm o ambiente de storage funcional em segundos.
 
-* **Paridade de código entre dev e produção:** O mesmo driver S3 do `@adonisjs/drive` opera contra MinIO em dev e AWS S3 em produção. Bugs de integração com storage são detectados localmente, não em produção.
+- **Paridade de código entre dev e produção:** O mesmo driver S3 do `@adonisjs/drive` opera contra MinIO em dev e AWS S3 em produção. Bugs de integração com storage são detectados localmente, não em produção.
 
-* **Validação antecipada da estrutura de buckets:** A convenção do [ADR-0009](./0009-padronizacao-de-nomenclatura-de-buckets.md) pode ser testada e verificada localmente antes de qualquer deploy, reduzindo o risco de erros de nomenclatura ou permissão em produção.
+- **Validação antecipada da estrutura de buckets:** A convenção do [ADR-0009](./0009-padronizacao-de-nomenclatura-de-buckets.md) pode ser testada e verificada localmente antes de qualquer deploy, reduzindo o risco de erros de nomenclatura ou permissão em produção.
 
-* **Desenvolvimento offline:** Funcionalidades de upload e download funcionam sem internet, sem latência de rede pública e sem dependência de disponibilidade da AWS.
+- **Desenvolvimento offline:** Funcionalidades de upload e download funcionam sem internet, sem latência de rede pública e sem dependência de disponibilidade da AWS.
 
 ### Negativas / Riscos
 
-* **Fidelidade parcial com S3:** O MinIO implementa o núcleo da API S3, mas algumas funcionalidades avançadas e comportamentos específicos da AWS (S3 Select, Object Lambda, certos comportamentos de IAM Policies) podem diferir. Funcionalidades que dependem dessas APIs avançadas precisam ser validadas diretamente em S3.
+- **Fidelidade parcial com S3:** O MinIO implementa o núcleo da API S3, mas algumas funcionalidades avançadas e comportamentos específicos da AWS (S3 Select, Object Lambda, certos comportamentos de IAM Policies) podem diferir. Funcionalidades que dependem dessas APIs avançadas precisam ser validadas diretamente em S3.
 
-* **Persistência requer configuração explícita de volume:** Sem volume Docker configurado, objetos armazenados no MinIO são perdidos ao reiniciar o container. A configuração de volume precisa estar documentada no `docker-compose.yaml` e no guia de setup para evitar confusão entre desenvolvedores.
+- **Persistência requer configuração explícita de volume:** Sem volume Docker configurado, objetos armazenados no MinIO são perdidos ao reiniciar o container. A configuração de volume precisa estar documentada no `docker-compose.yaml` e no guia de setup para evitar confusão entre desenvolvedores.
 
-* **Mais um serviço no Docker Compose:** MinIO adiciona memória e CPU ao ambiente de desenvolvimento local. Em máquinas com recursos limitados, o stack completo (PostgreSQL + DragonflyDB + MinIO) pode impactar a experiência de desenvolvimento.
+- **Mais um serviço no Docker Compose:** MinIO adiciona memória e CPU ao ambiente de desenvolvimento local. Em máquinas com recursos limitados, o stack completo (PostgreSQL + DragonflyDB + MinIO) pode impactar a experiência de desenvolvimento.
 
 ## Referências
 
-* [Documentação oficial do MinIO](https://min.io/docs/minio/container/index.html)
-* [Compatibilidade MinIO com API S3 da AWS](https://min.io/product/s3-compatibility)
-* [ADR-0001 — Adoção do AdonisJS como Framework Web Backend](./0001-adocao-do-adonisjs-como-framework-backend.md)
-* [ADR-0009 — Padronização de Nomenclatura de Buckets S3](./0009-padronizacao-de-nomenclatura-de-buckets.md)
+- [Documentação oficial do MinIO](https://min.io/docs/minio/container/index.html)
+- [Compatibilidade MinIO com API S3 da AWS](https://min.io/product/s3-compatibility)
+- [ADR-0001 — Adoção do AdonisJS como Framework Web Backend](./0001-adocao-do-adonisjs-como-framework-backend.md)
+- [ADR-0009 — Padronização de Nomenclatura de Buckets S3](./0009-padronizacao-de-nomenclatura-de-buckets.md)

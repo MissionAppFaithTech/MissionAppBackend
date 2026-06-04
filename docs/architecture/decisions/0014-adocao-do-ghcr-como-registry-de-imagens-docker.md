@@ -1,9 +1,10 @@
 # [ADR-0014]: Adoção do GitHub Container Registry (GHCR) como Registry de Imagens Docker
 
 ## Dados
-* **Status:** Proposto
-* **Data:** 2026-06-04
-* **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
+
+- **Status:** Proposto
+- **Data:** 2026-06-04
+- **Proponentes:** [Allber Ferreira](https://github.com/AFSFerreira)
 
 ---
 
@@ -103,44 +104,44 @@ O GHCR foi escolhido por eliminar a principal classe de falhas de pipelines de b
 
 ## Alternativas Consideradas
 
-* **Docker Hub:** Registry público mais utilizado, com ampla documentação e suporte nativo em ferramentas de CI. Descartado porque: (1) requer criação de conta de serviço separada e geração de Access Token para autenticação em CI — credencial externa que precisa ser rotacionada e gerenciada fora do repositório; (2) impõe rate limiting de 100 pulls por 6 horas para usuários anônimos, com risco de falhas intermitentes em pipelines com alto volume de builds; (3) a gestão de acesso ao namespace do Docker Hub é completamente desacoplada do repositório GitHub — revogar acesso de um colaborador ao repositório não revoga acesso ao registry.
+- **Docker Hub:** Registry público mais utilizado, com ampla documentação e suporte nativo em ferramentas de CI. Descartado porque: (1) requer criação de conta de serviço separada e geração de Access Token para autenticação em CI — credencial externa que precisa ser rotacionada e gerenciada fora do repositório; (2) impõe rate limiting de 100 pulls por 6 horas para usuários anônimos, com risco de falhas intermitentes em pipelines com alto volume de builds; (3) a gestão de acesso ao namespace do Docker Hub é completamente desacoplada do repositório GitHub — revogar acesso de um colaborador ao repositório não revoga acesso ao registry.
 
-* **Amazon Elastic Container Registry (ECR):** Registry gerenciado pela AWS, com alta disponibilidade e integração nativa com ECS e EKS. Descartado porque: (1) requer criação de IAM Role ou Access Keys da AWS para autenticação no GitHub Actions — introduz dependência de credenciais AWS no pipeline antes de qualquer decisão de cloud provider ter sido tomada; (2) cria acoplamento entre a esteira de CI/CD e uma conta AWS específica — migrar de provedor de nuvem ou trocar de conta AWS exige reconfiguração do pipeline; (3) adiciona custo por armazenamento e transferência de dados — o GHCR é gratuito para repositórios públicos; (4) a rastreabilidade imagem ↔ commit requer instrumentação manual (tags, labels) — não é nativa como no GHCR.
+- **Amazon Elastic Container Registry (ECR):** Registry gerenciado pela AWS, com alta disponibilidade e integração nativa com ECS e EKS. Descartado porque: (1) requer criação de IAM Role ou Access Keys da AWS para autenticação no GitHub Actions — introduz dependência de credenciais AWS no pipeline antes de qualquer decisão de cloud provider ter sido tomada; (2) cria acoplamento entre a esteira de CI/CD e uma conta AWS específica — migrar de provedor de nuvem ou trocar de conta AWS exige reconfiguração do pipeline; (3) adiciona custo por armazenamento e transferência de dados — o GHCR é gratuito para repositórios públicos; (4) a rastreabilidade imagem ↔ commit requer instrumentação manual (tags, labels) — não é nativa como no GHCR.
 
-* **Google Artifact Registry / Container Registry:** Equivalente ao ECR no ecossistema GCP. Descartado pelos mesmos motivos do ECR: credenciais externas (Service Account Key ou Workload Identity Federation), acoplamento com conta GCP específica, custo variável por uso.
+- **Google Artifact Registry / Container Registry:** Equivalente ao ECR no ecossistema GCP. Descartado pelos mesmos motivos do ECR: credenciais externas (Service Account Key ou Workload Identity Federation), acoplamento com conta GCP específica, custo variável por uso.
 
-* **Registry auto-hospedado (Harbor, Zot):** Hospedar um registry privado na infraestrutura do projeto. Descartado porque: (1) exige infraestrutura adicional para operar (servidor, TLS, backups, monitoramento) — overhead operacional desproporcional para o escopo atual; (2) elimina a garantia de disponibilidade gerenciada que registries hospedados oferecem; (3) cria mais um serviço com credenciais para gerenciar.
+- **Registry auto-hospedado (Harbor, Zot):** Hospedar um registry privado na infraestrutura do projeto. Descartado porque: (1) exige infraestrutura adicional para operar (servidor, TLS, backups, monitoramento) — overhead operacional desproporcional para o escopo atual; (2) elimina a garantia de disponibilidade gerenciada que registries hospedados oferecem; (3) cria mais um serviço com credenciais para gerenciar.
 
 ## Consequências (Trade-offs)
 
 ### Positivas / Benefícios
 
-* **Pipeline de build e push sem credenciais externas:** `GITHUB_TOKEN` é suficiente. Nenhum secret precisa ser criado, rotacionado ou auditado para a etapa de publicação de imagens.
+- **Pipeline de build e push sem credenciais externas:** `GITHUB_TOKEN` é suficiente. Nenhum secret precisa ser criado, rotacionado ou auditado para a etapa de publicação de imagens.
 
-* **Governança de acesso centralizada:** Acesso ao registry = acesso ao repositório. Uma única política de permissões cobre código-fonte e imagens Docker.
+- **Governança de acesso centralizada:** Acesso ao registry = acesso ao repositório. Uma única política de permissões cobre código-fonte e imagens Docker.
 
-* **Rastreabilidade imagem ↔ commit por design:** Tags de SHA imutáveis e links nativos entre pacotes e workflow runs no GitHub eliminam a necessidade de instrumentação manual de rastreabilidade.
+- **Rastreabilidade imagem ↔ commit por design:** Tags de SHA imutáveis e links nativos entre pacotes e workflow runs no GitHub eliminam a necessidade de instrumentação manual de rastreabilidade.
 
-* **Builds mais rápidos via cache de camadas:** Camadas pesadas reutilizadas entre builds reduzem o tempo de compilação na maioria dos commits.
+- **Builds mais rápidos via cache de camadas:** Camadas pesadas reutilizadas entre builds reduzem o tempo de compilação na maioria dos commits.
 
-* **Sem custo e sem rate limiting para repositórios públicos:** Ilimitado para projetos open-source.
+- **Sem custo e sem rate limiting para repositórios públicos:** Ilimitado para projetos open-source.
 
 ### Negativas / Riscos
 
-* **Acoplamento ao ecossistema GitHub:** O GHCR é específico da plataforma GitHub. Se o repositório migrar para GitLab, Gitea ou Bitbucket, o registry precisará ser trocado e o pipeline reconfigurado. Para um projeto open-source já hospedado no GitHub, esse risco é baixo e aceito.
+- **Acoplamento ao ecossistema GitHub:** O GHCR é específico da plataforma GitHub. Se o repositório migrar para GitLab, Gitea ou Bitbucket, o registry precisará ser trocado e o pipeline reconfigurado. Para um projeto open-source já hospedado no GitHub, esse risco é baixo e aceito.
 
-* **Disponibilidade dependente do GitHub:** Uma indisponibilidade do GitHub afeta simultaneamente o repositório, as GitHub Actions e o GHCR. Em caso de outage da plataforma, não é possível fazer pull de novas imagens nem publicar builds. O risco é mitigado pelo histórico de alta disponibilidade do GitHub e pela possibilidade de referenciar a última imagem estável em cache no servidor de produção durante incidentes pontuais.
+- **Disponibilidade dependente do GitHub:** Uma indisponibilidade do GitHub afeta simultaneamente o repositório, as GitHub Actions e o GHCR. Em caso de outage da plataforma, não é possível fazer pull de novas imagens nem publicar builds. O risco é mitigado pelo histórico de alta disponibilidade do GitHub e pela possibilidade de referenciar a última imagem estável em cache no servidor de produção durante incidentes pontuais.
 
-* **Imagens públicas são acessíveis a qualquer pessoa:** Para um projeto open-source isso é intencional, mas exige atenção para que nenhum secret ou dado sensível seja incluído nas camadas da imagem durante o build. A validação de ausência de secrets nas imagens pode ser incorporada à esteira via ferramentas como o Snyk Container ([ADR-0012](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)).
+- **Imagens públicas são acessíveis a qualquer pessoa:** Para um projeto open-source isso é intencional, mas exige atenção para que nenhum secret ou dado sensível seja incluído nas camadas da imagem durante o build. A validação de ausência de secrets nas imagens pode ser incorporada à esteira via ferramentas como o Snyk Container ([ADR-0012](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)).
 
 ## Referências
 
-* [GitHub Docs — Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
-* [GitHub Docs — Automatic token authentication](https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication)
-* [docker/login-action — GHCR authentication](https://github.com/docker/login-action#github-container-registry)
-* [docker/metadata-action — Image tagging strategies](https://github.com/docker/metadata-action)
-* [docker/build-push-action — Registry cache](https://docs.docker.com/build/cache/backends/registry/)
-* [ADR-0006 — Docker para Padronização de Ambiente de Desenvolvimento e Deploy](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
-* [ADR-0011 — Renovate para Atualização Automática de Dependências](./0011-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md)
-* [ADR-0012 — Snyk para Detecção e Correção de Vulnerabilidades](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)
-* [ADR-0013 — Padrão de Imagem Única com Múltiplos Entrypoints para Workers BullMQ](./0013-padrao-imagem-unica-multiplos-entrypoints-para-workers.md)
+- [GitHub Docs — Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+- [GitHub Docs — Automatic token authentication](https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication)
+- [docker/login-action — GHCR authentication](https://github.com/docker/login-action#github-container-registry)
+- [docker/metadata-action — Image tagging strategies](https://github.com/docker/metadata-action)
+- [docker/build-push-action — Registry cache](https://docs.docker.com/build/cache/backends/registry/)
+- [ADR-0006 — Docker para Padronização de Ambiente de Desenvolvimento e Deploy](./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)
+- [ADR-0011 — Renovate para Atualização Automática de Dependências](./0011-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md)
+- [ADR-0012 — Snyk para Detecção e Correção de Vulnerabilidades](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)
+- [ADR-0013 — Padrão de Imagem Única com Múltiplos Entrypoints para Workers BullMQ](./0013-padrao-imagem-unica-multiplos-entrypoints-para-workers.md)

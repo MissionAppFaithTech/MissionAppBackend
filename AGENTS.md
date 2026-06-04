@@ -146,10 +146,14 @@ export default class IndexPostWorker extends BaseCommand {
   static options = { loadApp: true }
 
   async run() {
-    new Worker('index-post', async (job) => {
-      const post = await Post.findOrFail(job.data.postId)
-      // heavy work here
-    }, { connection })
+    new Worker(
+      'index-post',
+      async (job) => {
+        const post = await Post.findOrFail(job.data.postId)
+        // heavy work here
+      },
+      { connection }
+    )
     await new Promise(() => {}) // keep process alive
   }
 }
@@ -163,9 +167,9 @@ export default class IndexPostWorker extends BaseCommand {
 
 ```typescript
 export default class Post extends compose(
-  PostSchema,      // auto-generated — columns and types
+  PostSchema, // auto-generated — columns and types
   WithPrimaryUuid, // UUID v7 PK, auto-generated on beforeCreate
-  WithTimestamps   // createdAt / updatedAt
+  WithTimestamps // createdAt / updatedAt
 ) {}
 ```
 
@@ -252,31 +256,31 @@ Every migration must follow this exact declaration order inside `createTable`:
 
 Additional rules — violations block merge:
 
-| Rule | Example |
-|---|---|
-| Every column has `.comment('...')` | `.comment('Hash Argon2id da senha; nunca armazenada em texto plano')` |
-| Every table has `table.comment('...')` as first statement | describes the table's role in the system |
-| Phone columns document E.164 format | `.comment('... formato internacional E.164 (ex: +5511912345678)')` |
-| File references use `uuid` FK → `media_assets`, never `string` URL | `uuid('cover_image_asset_id')` not `string('cover_image_url')` |
-| Comments never reference requirement numbers (`req. X`) | write self-contained descriptions |
-| Long comment strings use multiline format | `.comment(\n  'long string'\n)` |
+| Rule                                                               | Example                                                               |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Every column has `.comment('...')`                                 | `.comment('Hash Argon2id da senha; nunca armazenada em texto plano')` |
+| Every table has `table.comment('...')` as first statement          | describes the table's role in the system                              |
+| Phone columns document E.164 format                                | `.comment('... formato internacional E.164 (ex: +5511912345678)')`    |
+| File references use `uuid` FK → `media_assets`, never `string` URL | `uuid('cover_image_asset_id')` not `string('cover_image_url')`        |
+| Comments never reference requirement numbers (`req. X`)            | write self-contained descriptions                                     |
+| Long comment strings use multiline format                          | `.comment(\n  'long string'\n)`                                       |
 
 ---
 
 ## Prohibited patterns
 
-| Pattern | Why |
-|---|---|
-| Edit `database/schema.ts` manually | Auto-generated, changes are lost on next migration run |
-| Business logic or DB queries in Listeners | Listeners are routers; latency must stay < 1ms |
-| Side effects in Lucid hooks (`@afterCreate` etc.) | Couples persistence layer to infrastructure; breaks transaction isolation |
-| Direct calls to Elasticsearch/SMTP/storage in Services | Must go through emitter → Listener → Job pipeline |
-| Separate `Dockerfile` per worker | Breaks Docker layer cache reuse; creates maintenance duplication |
-| Standalone `.ts`/`.js` worker scripts | Workers must be Ace commands to access AdonisJS lifecycle |
-| `npm install` or `yarn` | pnpm-only repo; `package-lock.json`/`yarn.lock` in PRs are rejected |
-| `process.env` access | Use `env` service from `#start/env` |
-| Committing secrets or tokens in `.bru` files | Bruno collection is public; use `{{variavel}}` referencing `.env` |
-| New high-coupling dependency without ADR | Every external service or framework-level dependency requires an ADR first |
+| Pattern                                                | Why                                                                        |
+| ------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Edit `database/schema.ts` manually                     | Auto-generated, changes are lost on next migration run                     |
+| Business logic or DB queries in Listeners              | Listeners are routers; latency must stay < 1ms                             |
+| Side effects in Lucid hooks (`@afterCreate` etc.)      | Couples persistence layer to infrastructure; breaks transaction isolation  |
+| Direct calls to Elasticsearch/SMTP/storage in Services | Must go through emitter → Listener → Job pipeline                          |
+| Separate `Dockerfile` per worker                       | Breaks Docker layer cache reuse; creates maintenance duplication           |
+| Standalone `.ts`/`.js` worker scripts                  | Workers must be Ace commands to access AdonisJS lifecycle                  |
+| `npm install` or `yarn`                                | pnpm-only repo; `package-lock.json`/`yarn.lock` in PRs are rejected        |
+| `process.env` access                                   | Use `env` service from `#start/env`                                        |
+| Committing secrets or tokens in `.bru` files           | Bruno collection is public; use `{{variavel}}` referencing `.env`          |
+| New high-coupling dependency without ADR               | Every external service or framework-level dependency requires an ADR first |
 
 ---
 
@@ -293,25 +297,25 @@ Additional rules — violations block merge:
 
 All major technology and pattern choices are documented in `docs/architecture/decisions/`. Read the relevant ADR before changing or replacing any of the following:
 
-| Area | ADR |
-|---|---|
-| Framework | ADR-0001 (AdonisJS) |
-| Database | ADR-0002 (PostgreSQL) |
-| Cache / queue broker | ADR-0003 (DragonflyDB) |
-| Object storage (dev) | ADR-0004 (MinIO) |
-| Full-text search | ADR-0005 (Elasticsearch) |
-| Containerization | ADR-0006 (Docker) |
-| Package manager | ADR-0007 (pnpm) |
-| Async operations | ADR-0008 (EDA + BullMQ) |
-| Email | ADR-0010 (Resend) |
-| Dependency updates | ADR-0011 (Renovate) |
-| Vulnerability scanning | ADR-0012 (Snyk) |
-| Worker packaging | ADR-0013 (single image, multiple entrypoints) |
-| Container registry | ADR-0014 (GHCR) |
-| HTTP client / collection | ADR-0015 (Bruno) |
-| Migration conventions | ADR-0016 (ordering, comments, types) |
-| Primary key strategy | ADR-0017 (UUID v7, all tables without exception) |
-| Model mixin pattern | ADR-0018 (compose(), never @column on Model) |
+| Area                     | ADR                                              |
+| ------------------------ | ------------------------------------------------ |
+| Framework                | ADR-0001 (AdonisJS)                              |
+| Database                 | ADR-0002 (PostgreSQL)                            |
+| Cache / queue broker     | ADR-0003 (DragonflyDB)                           |
+| Object storage (dev)     | ADR-0004 (MinIO)                                 |
+| Full-text search         | ADR-0005 (Elasticsearch)                         |
+| Containerization         | ADR-0006 (Docker)                                |
+| Package manager          | ADR-0007 (pnpm)                                  |
+| Async operations         | ADR-0008 (EDA + BullMQ)                          |
+| Email                    | ADR-0010 (Resend)                                |
+| Dependency updates       | ADR-0011 (Renovate)                              |
+| Vulnerability scanning   | ADR-0012 (Snyk)                                  |
+| Worker packaging         | ADR-0013 (single image, multiple entrypoints)    |
+| Container registry       | ADR-0014 (GHCR)                                  |
+| HTTP client / collection | ADR-0015 (Bruno)                                 |
+| Migration conventions    | ADR-0016 (ordering, comments, types)             |
+| Primary key strategy     | ADR-0017 (UUID v7, all tables without exception) |
+| Model mixin pattern      | ADR-0018 (compose(), never @column on Model)     |
 
 Index at `docs/architecture/decisions/README.md`.
 
