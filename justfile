@@ -7,6 +7,8 @@ COMPOSE_FILE_DEV := "docker-compose.yaml"
 
 COMPOSE_FILE_DEV_COMMAND := COMPOSE_COMMAND + " -f " + COMPOSE_FILE_DEV
 
+POSTGRES_CONTAINER := env_var_or_default('POSTGRES_CONTAINER_NAME', 'missionapp-pg')
+
 # Lista todos os comandos disponíveis
 default:
     @just --list
@@ -69,10 +71,32 @@ db-shell:
 db-logs:
     {{COMPOSE_FILE_DEV_COMMAND}} logs -f --tail=200 postgres
 
+# Aguarda o PostgreSQL estar saudável (timeout: 60s)
+[group('infra')]
+wait-db:
+    @echo "Aguardando PostgreSQL ficar saudável..."
+    @timeout=60; elapsed=0; \
+    until [ "$(docker inspect -f '{{{{.State.Health.Status}}}}' {{POSTGRES_CONTAINER}})" = "healthy" ]; do \
+        if [ "$elapsed" -ge "$timeout" ]; then \
+            echo "Erro: PostgreSQL não ficou saudável após ${timeout}s." >&2; exit 1; \
+        fi; \
+        sleep 2; elapsed=$((elapsed + 2)); \
+    done; \
+    echo "PostgreSQL pronto."
+
+# Aguarda toda a infraestrutura estar pronta
+[group('infra')]
+wait-infra: wait-db
+
 # Instala dependências
 [group('dev')]
 install:
     pnpm install
+
+# Sobe a infraestrutura, aguarda, migra e inicia o servidor de desenvolvimento
+[group('dev')]
+start: up wait-infra migrate
+    pnpm dev
 
 # Inicia servidor de desenvolvimento com HMR
 [group('dev')]
