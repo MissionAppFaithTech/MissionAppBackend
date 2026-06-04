@@ -12,6 +12,8 @@ export default class extends BaseSchema {
       table.integer('status_code').notNullable().defaultTo(301)
 
       table.timestamp('created_at', { precision: 3, useTz: true }).notNullable()
+
+      table.index(['source_path', 'destination_path'], 'idx_redirects_source_path_destination_path')
     })
   }
 
