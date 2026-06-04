@@ -35,7 +35,6 @@ missionapp-{ambiente}-{visibilidade}-{proposito-ou-ciclo}
 
 ### Segmentos da fórmula
 
-<div align="center">
 
 <table width="100%">
    <colgroup>
@@ -45,9 +44,9 @@ missionapp-{ambiente}-{visibilidade}-{proposito-ou-ciclo}
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Segmento</th>
-         <th align="center">Valores válidos</th>
-         <th align="center">Significado</th>
+         <th>Segmento</th>
+         <th>Valores válidos</th>
+         <th>Significado</th>
       </tr>
    </thead>
    <tbody>
@@ -74,7 +73,6 @@ missionapp-{ambiente}-{visibilidade}-{proposito-ou-ciclo}
    </tbody>
 </table>
 
-</div>
 
 ---
 
@@ -82,7 +80,6 @@ missionapp-{ambiente}-{visibilidade}-{proposito-ou-ciclo}
 
 Use quando os arquivos **não têm data de expiração** e devem ser gerenciados manualmente:
 
-<div align="center">
 
 <table width="100%">
    <colgroup>
@@ -91,8 +88,8 @@ Use quando os arquivos **não têm data de expiração** e devem ser gerenciados
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Sufixo</th>
-         <th align="center">O que armazena no contexto do MissionApp</th>
+         <th>Sufixo</th>
+         <th>O que armazena no contexto do MissionApp</th>
       </tr>
    </thead>
    <tbody>
@@ -115,13 +112,11 @@ Use quando os arquivos **não têm data de expiração** e devem ser gerenciados
    </tbody>
 </table>
 
-</div>
 
 ### Sufixos por ciclo de vida — dados temporários
 
 Use quando os arquivos **têm data de validade** e devem ser apagados automaticamente via AWS Lifecycle Rules:
 
-<div align="center">
 
 <table width="100%">
    <colgroup>
@@ -131,9 +126,9 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Sufixo</th>
-         <th align="center">TTL sugerido</th>
-         <th align="center">O que armazena no contexto do MissionApp</th>
+         <th>Sufixo</th>
+         <th>TTL sugerido</th>
+         <th>O que armazena no contexto do MissionApp</th>
       </tr>
    </thead>
    <tbody>
@@ -155,13 +150,11 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
    </tbody>
 </table>
 
-</div>
 
 ---
 
 ### Matriz de infraestrutura do MissionApp
 
-<div align="center">
 
 <table width="100%">
    <colgroup>
@@ -173,11 +166,11 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Bucket</th>
-         <th align="center">Ambiente</th>
-         <th align="center">Visibilidade</th>
-         <th align="center">Ciclo</th>
-         <th align="center">O que guarda</th>
+         <th>Bucket</th>
+         <th>Ambiente</th>
+         <th>Visibilidade</th>
+         <th>Ciclo</th>
+         <th>O que guarda</th>
       </tr>
    </thead>
    <tbody>
@@ -240,7 +233,6 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
    </tbody>
 </table>
 
-</div>
 
 ---
 

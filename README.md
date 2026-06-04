@@ -28,7 +28,6 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 
 ## 📂 Estrutura do Projeto
 
-<!-- START_TREE -->
 ```text
 .
 ├── .adonisjs/
@@ -72,7 +71,6 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ├── start/
 └── tests/
 ```
-<!-- END_TREE -->
 
 <a name="estrutura-da-documentacao"></a>
 
@@ -80,14 +78,13 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 
 A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um perfil diferente de colaborador:
 
-<div align="center">
 
 <table width="100%">
   <thead>
     <tr>
-      <th align="center">Pasta</th>
-      <th align="center">Audiência</th>
-      <th align="center">O que contém</th>
+      <th>Pasta</th>
+      <th>Audiência</th>
+      <th>O que contém</th>
     </tr>
   </thead>
   <tbody>
@@ -119,7 +116,6 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
   </tbody>
 </table>
 
-</div>
 
 > [!IMPORTANT]
 > Antes de implementar qualquer mudança arquitetural de alto impacto — troca de ORM, novo serviço de infraestrutura, alteração de fluxo de negócio crítico — consulte os ADRs existentes e avalie se a mudança exige um novo registro.
@@ -132,7 +128,6 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
 
 A plataforma reconhece **três perfis principais**, cada um com privilégios e responsabilidades específicas alinhadas com o fluxo de negócio da MissionApp:
 
-<div align="center">
 
 <table width="100%">
   <colgroup>
@@ -142,9 +137,9 @@ A plataforma reconhece **três perfis principais**, cada um com privilégios e r
   </colgroup>
   <thead>
     <tr>
-      <th align="center">Role</th>
-      <th align="center">Criação de Conta</th>
-      <th align="center">Permissões Principais</th>
+      <th>Role</th>
+      <th>Criação de Conta</th>
+      <th>Permissões Principais</th>
     </tr>
   </thead>
   <tbody>
@@ -166,7 +161,6 @@ A plataforma reconhece **três perfis principais**, cada um com privilégios e r
   </tbody>
 </table>
 
-</div>
 
 ### Contexto de Comunidade de Fé
 
