@@ -26,7 +26,11 @@ A pergunta central é: **como garantir que efeitos colaterais assíncronos (inde
 
 ## Decisão
 
-Adotaremos uma **Arquitetura Orientada a Eventos (EDA) em dois estágios** como padrão para todas as operações assíncronas do MissionApp Backend:
+Adotaremos uma **Arquitetura Orientada a Eventos (EDA) em dois estágios** como padrão para todas as operações assíncronas do MissionApp Backend.
+
+O **BullMQ** é uma biblioteca Node.js de código aberto para gerenciamento de filas de mensagens e processamento em background, construída sobre Redis (ou compatíveis, como DragonflyDB). Reescrita inteiramente em TypeScript a partir da popular biblioteca Bull, implementa o padrão produtor-consumidor com suporte a filas prioritárias, retries configuráveis com backoff exponencial, jobs agendados (*delayed jobs*), jobs recorrentes (cron), concorrência configurável por worker e tipagem de payloads — sendo a escolha padrão do ecossistema Node.js para processamento assíncrono robusto.
+
+A arquitetura divide as operações assíncronas em dois estágios:
 
 1. **Estágio 1 — Roteamento em memória (AdonisJS Emitter):** O Service emite um evento tipado imediatamente após concluir a transação relacional. O emitter nativo do AdonisJS funciona exclusivamente como roteador em processo — rápido, síncrono e com tipagem garantida via contrato de eventos.
 

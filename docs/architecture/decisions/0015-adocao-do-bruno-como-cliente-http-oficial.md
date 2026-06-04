@@ -28,6 +28,8 @@ A pergunta central é: **como garantir que as coleções de requisições HTTP e
 
 Adotaremos o **Bruno** como cliente HTTP oficial do repositório. A coleção de requisições será armazenada na pasta `bruno/` na raiz do projeto e versionada no Git como parte do repositório.
 
+O Bruno é um cliente HTTP de código aberto, lançado em 2022, criado como alternativa ao Postman e ao Insomnia com foco em eliminar vendor lock-in e sincronização via serviços de terceiros. Sua principal característica é armazenar coleções diretamente no sistema de arquivos em formato de texto plano (`.bru`) — sem banco de dados proprietário, sem conta obrigatória e sem sincronização via nuvem. As coleções são arquivos regulares, versionáveis em Git, revisáveis em Pull Requests e acessíveis offline.
+
 **Formato de arquivo Git-native (`.bru`):**
 O Bruno armazena cada requisição em um arquivo de texto plano com extensão `.bru`. O formato é legível por humanos, produz diffs limpos e é revisável diretamente na interface do GitHub sem nenhuma ferramenta adicional. Qualquer mudança em um endpoint — path, método, body, headers — resulta em um diff de texto que aparece junto ao diff do código TypeScript no mesmo Pull Request.
 

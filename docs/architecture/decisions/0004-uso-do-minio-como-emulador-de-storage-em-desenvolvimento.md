@@ -27,6 +27,8 @@ O `@adonisjs/drive` — adotado no [ADR-0001](./0001-adocao-do-adonisjs-como-fra
 
 Adotaremos o **MinIO** como serviço de storage em ambiente de desenvolvimento, provisionado via Docker Compose na mesma rede do PostgreSQL e do DragonflyDB.
 
+O MinIO é um servidor de armazenamento de objetos de código aberto e alto desempenho, compatível com a API S3 da Amazon Web Services. Projetado para ser executado on-premises ou em containers, permite replicar localmente o comportamento de um bucket S3 de produção com fidelidade total — mesmas operações (`PutObject`, `GetObject`, `DeleteObject`, presigned URLs) e mesma interface de políticas de acesso — sem depender de conectividade com a AWS durante o desenvolvimento.
+
 O MinIO implementa a API S3 da AWS integralmente, o que significa que o `@adonisjs/drive` com driver S3 aponta para `http://localhost:9000` em desenvolvimento e para `https://s3.amazonaws.com` em produção — sem nenhuma alteração de código entre os ambientes. A estrutura de buckets definida no [ADR-0009](./0009-padronizacao-de-nomenclatura-de-buckets.md) será replicada localmente no MinIO durante o setup inicial via script de seed de buckets.
 
 O MinIO Console (interface web) estará disponível em `http://localhost:9001` para inspeção visual de buckets e objetos durante o desenvolvimento.

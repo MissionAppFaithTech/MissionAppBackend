@@ -25,6 +25,8 @@ A questão central é: **qual banco de dados oferece o modelo relacional, as gar
 
 Adotaremos o **PostgreSQL** (versão 18.x, imagem Alpine) como único banco de dados relacional do MissionApp Backend.
 
+O PostgreSQL é um sistema de gerenciamento de banco de dados objeto-relacional de código aberto, desenvolvido e mantido pelo PostgreSQL Global Development Group desde 1996. Reconhecido como o banco de dados relacional open-source mais avançado disponível, combina décadas de desenvolvimento focado em confiabilidade e correção com conformidade completa com o padrão SQL, suporte robusto a transações ACID via MVCC, tipos nativos avançados (`JSONB`, `UUID`, arrays, ranges), extensibilidade via extensões e índices avançados (B-tree, GIN, GiST, BRIN).
+
 Toda a persistência de dados passará pelo PostgreSQL via Lucid ORM, conforme definido no [ADR-0001](./0001-adocao-do-adonisjs-como-framework-backend.md). O banco será provisionado via Docker Compose em ambiente de desenvolvimento e gerenciado por migrations versionadas em `database/migrations/`.
 
 As seguintes capacidades nativas do PostgreSQL serão utilizadas:

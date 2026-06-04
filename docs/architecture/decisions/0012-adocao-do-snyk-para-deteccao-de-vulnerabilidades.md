@@ -29,7 +29,11 @@ A pergunta central é: **como cobrir proativamente as quatro superfícies de ata
 
 ## Decisão
 
-Adotaremos o **Snyk** como plataforma de detecção e correção de vulnerabilidades do MissionApp Backend, cobrindo quatro camadas de scanning integradas ao fluxo de desenvolvimento:
+Adotaremos o **Snyk** como plataforma de detecção e correção de vulnerabilidades do MissionApp Backend.
+
+O Snyk é uma plataforma de segurança para desenvolvedores que combina análise de composição de software (SCA), análise estática de código-fonte (SAST), scanning de imagens de container e análise de configuração de infraestrutura como código em uma única ferramenta integrada. Fundado em 2015 e com integração nativa ao GitHub, é amplamente adotado em projetos open-source e corporativos por detectar vulnerabilidades no fluxo de Pull Request — antes que código inseguro chegue ao branch principal.
+
+A cobertura abrange quatro camadas integradas ao fluxo de desenvolvimento:
 
 **1. Snyk Open Source (SCA — Software Composition Analysis):**
 Scanning de dependências Node.js declaradas em `package.json` e `pnpm-lock.yaml`. O Snyk analisará o grafo completo de dependências — diretas e transitivas — contra sua base de dados de CVEs. Vulnerabilidades encontradas em dependências transitivas (que o `pnpm-lock.yaml` torna rastreáveis) serão sinalizadas com severidade (Critical, High, Medium, Low) e com o caminho de dependência que introduz o risco.

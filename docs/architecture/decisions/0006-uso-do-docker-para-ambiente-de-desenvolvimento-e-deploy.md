@@ -31,6 +31,8 @@ A pergunta central é: **como garantir que todos os contribuidores e ambientes d
 
 Adotaremos **Docker** e **Docker Compose** como estratégia de padronização de ambiente para desenvolvimento, CI/CD e produção.
 
+O Docker é uma plataforma de containerização de código aberto que permite empacotar aplicações e suas dependências em unidades isoladas e portáveis chamadas containers. Resolve o problema clássico de "funciona na minha máquina" ao garantir que o ambiente de execução — sistema operacional base, bibliotecas e configurações — seja idêntico em desenvolvimento, CI/CD e produção. O Docker Compose complementa o Docker ao permitir definir e orquestrar múltiplos containers em conjunto em um único arquivo YAML versionado com o código.
+
 O `docker-compose.yaml` na raiz do repositório definirá todos os serviços do stack de desenvolvimento (PostgreSQL, DragonflyDB, MinIO, Elasticsearch) com versões de imagem explicitamente fixadas via tag — nunca usando `latest`. A aplicação Node.js será executada diretamente no host em desenvolvimento (via `node ace serve --hmr`) e containerizada para produção via `Dockerfile`.
 
 As seguintes premissas regerão o uso de Docker no projeto:

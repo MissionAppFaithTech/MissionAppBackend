@@ -25,6 +25,8 @@ A pergunta central é: **qual gerenciador de pacotes oferece a melhor combinaç�
 
 Adotaremos o **pnpm** (versão 11.x) como único gerenciador de pacotes do MissionApp Backend.
 
+O pnpm é um gerenciador de pacotes Node.js de código aberto, lançado em 2016 como alternativa ao npm e ao Yarn. Sua principal diferença arquitetural é o uso de um store global com hard links: ao invés de copiar pacotes para o `node_modules/` de cada projeto, o pnpm cria links para um store centralizado no disco, eliminando duplicação. Adicionalmente, impõe um modelo de resolução de dependências mais estrito — impedindo que pacotes acessem dependências não declaradas explicitamente (*phantom dependencies*) — o que reduz a superfície de falhas silenciosas em produção.
+
 O arquivo `pnpm-lock.yaml` é o lockfile autoritativo do projeto e deve ser versionado no repositório. O uso de `npm install`, `yarn` ou qualquer outro gerenciador é proibido — qualquer PR que contenha `package-lock.json` ou `yarn.lock` deve ser rejeitado.
 
 O campo `"packageManager"` no `package.json` será definido com a versão exata do pnpm (`"packageManager": "pnpm@11.x.x"`), ativando o Corepack do Node.js para verificação automática da versão do gerenciador ao executar comandos.

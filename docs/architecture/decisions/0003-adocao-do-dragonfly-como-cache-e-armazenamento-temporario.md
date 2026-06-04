@@ -27,7 +27,11 @@ A pergunta central é: **qual solução de armazenamento em memória atende simu
 
 ## Decisão
 
-Adotaremos o **DragonflyDB** como camada complementar ao PostgreSQL para os seguintes casos de uso:
+Adotaremos o **DragonflyDB** como camada complementar ao PostgreSQL.
+
+O DragonflyDB é um servidor de dados em memória de código aberto, projetado como substituto de alta performance para Redis e Memcached. Lançado em 2022, é construído sobre uma arquitetura multi-thread sem locks globais (*shared-nothing*), o que lhe permite explorar todos os núcleos disponíveis e atingir throughput significativamente superior ao Redis em hardware multi-core — mantendo compatibilidade integral com o protocolo Redis e funcionando como drop-in replacement sem alteração no código da aplicação.
+
+Será utilizado nos seguintes casos de uso:
 
 1. **Cache de dados quentes:** Listas de Agências Missionárias, Comunidades de Fé, resultados de curadoria de projetos (Req. 5.4) e resultados de busca frequentes — com TTL configurado por tipo de dado.
 

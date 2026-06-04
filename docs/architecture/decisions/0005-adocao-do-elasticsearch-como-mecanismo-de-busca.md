@@ -30,6 +30,8 @@ A pergunta central é: **qual mecanismo de busca atende ao requisito de busca to
 
 Adotaremos o **Elasticsearch** como mecanismo de busca dedicado do MissionApp.
 
+O Elasticsearch é um mecanismo de busca e análise de dados distribuído de código aberto, desenvolvido e mantido pela Elastic. Construído sobre o Apache Lucene, é especializado em busca de texto completo (full-text search) com suporte a análise linguística por idioma (tokenização, stemming, remoção de stopwords), relevância configurável, fuzzy matching nativo baseado em distância de edição (Levenshtein) e consultas de alta complexidade sobre grandes volumes de dados. Sua API REST com payloads JSON o torna a escolha padrão da indústria para buscas que exigem mais do que um banco relacional oferece via `LIKE` ou `tsvector`.
+
 Os seguintes índices serão mantidos no Elasticsearch:
 
 - **`missionaries`:** campos `full_name`, `username`, `bio`, `missionary_agency_name` — com analyzer `portuguese`.

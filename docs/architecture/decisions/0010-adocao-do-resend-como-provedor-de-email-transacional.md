@@ -25,6 +25,8 @@ A pergunta central é: **qual provedor de email transacional oferece a melhor co
 
 Adotaremos o **Resend** como provedor oficial de emails transacionais do MissionApp Backend.
 
+O Resend é um serviço de infraestrutura de email transacional fundado em 2022, focado na experiência de desenvolvedores. Sua diferenciação está na API REST simples com SDKs TypeScript-first, suporte a templates React via `@react-email/components`, logs e eventos de entregabilidade por email enviado (bounces, complaints, delivery status) e um painel de monitoramento integrado — sem a complexidade de configuração de provedores tradicionais como SendGrid ou Mailgun.
+
 A integração será realizada pelo **transport nativo do Resend disponível no `@adonisjs/mail`**, instalado via:
 
 ```bash

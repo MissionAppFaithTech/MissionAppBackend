@@ -25,6 +25,8 @@ A pergunta central é: **como garantir que dependências Node.js, imagens Docker
 
 Adotaremos o **Renovate** (via GitHub App) como ferramenta de atualização automática de dependências do MissionApp Backend.
 
+O Renovate é uma ferramenta de código aberto para automação de atualizações de dependências, mantida pela Mend e amplamente adotada no ecossistema open-source. Disponível como GitHub App, GitLab bot ou self-hosted, monitora continuamente os arquivos de dependência do repositório — `package.json`, lockfiles, `Dockerfile`, `docker-compose.yaml`, entre outros — e abre Pull Requests automaticamente quando novas versões são publicadas, com changelog incluso no corpo do PR e suporte granular a automerge, agrupamento de PRs e schedules de atualização.
+
 O Renovate será configurado através de um arquivo `renovate.json` na raiz do repositório, versionado junto ao código. A configuração definirá o comportamento de atualização para cada camada do stack:
 
 **Escopo de atualizações gerenciadas:**

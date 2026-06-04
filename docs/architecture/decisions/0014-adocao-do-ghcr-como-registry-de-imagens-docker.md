@@ -26,6 +26,8 @@ A pergunta central é: **qual registry de containers oferece autenticação sem 
 
 Adotaremos o **GitHub Container Registry (GHCR)** como registry exclusivo para armazenamento e distribuição das imagens Docker do MissionApp Backend.
 
+O GHCR é o serviço de armazenamento e distribuição de imagens de container do GitHub, integrado nativamente à plataforma. Lançado em 2020, suporta o formato OCI (Open Container Initiative) e hospeda imagens públicas e privadas compartilhando a mesma autenticação, permissões e visibilidade do repositório — eliminando a necessidade de gerenciar credenciais de registry externo em workflows de CI/CD que já usam GitHub Actions.
+
 **Autenticação via `GITHUB_TOKEN`:**
 O GHCR compartilha a mesma malha de segurança do repositório GitHub. Em workflows do GitHub Actions, o `GITHUB_TOKEN` — injetado automaticamente pelo runner sem configuração manual — é suficiente para autenticar no GHCR com permissão de push e pull. Nenhum secret externo precisa ser criado, rotacionado ou gerenciado:
 
