@@ -13,6 +13,8 @@
 ## Decisão
 [Descreva a solução escolhida de forma clara, objetiva e imperativa. O que exatamente será implementado ou adotado?]
 
+[Se a decisão adotar uma ferramenta dedicada, inclua aqui um parágrafo de apresentação: o que é a ferramenta, quem a mantém, qual seu propósito principal e o que a diferencia no ecossistema. Isso contextualiza o leitor antes de detalhar como ela será usada no projeto.]
+
 ## Justificativa
 [Por que essa foi a escolha vencedora? Quais foram os critérios técnicos (ex: transações ACID, maturidade do mercado, tipagem forte, etc.) que fundamentaram essa direção?]
 
