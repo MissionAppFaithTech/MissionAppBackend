@@ -22,15 +22,16 @@ Obrigado pelo interesse em contribuir. Este guia cobre tudo que você precisa sa
 
 ## Pré-requisitos
 
-Antes de começar, você precisa ter instalado:
+Antes de começar, recomenda-se ter instalado:
 
-| Ferramenta | Versão mínima | Finalidade |
-|---|---|---|
-| Node.js | 24.x | Runtime da aplicação |
-| pnpm | 11.x | Gerenciador de pacotes ([ADR-0007](./docs/architecture/decisions/0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md)) |
-| Docker + Docker Compose | Qualquer versão estável | Serviços de infraestrutura ([ADR-0006](./docs/architecture/decisions/0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)) |
-| Git | 2.x | Controle de versão |
-| [Bruno](https://www.usebruno.com/) | Última estável | Cliente HTTP oficial para testar a API ([ADR-0015](./docs/architecture/decisions/0015-adocao-do-bruno-como-cliente-http-oficial.md)) |
+| Ferramenta                                                          | Versão mínima           | Obrigatório | Finalidade                                                                                                                             |
+| ------------------------------------------------------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [Node.js](https://nodejs.org/)                                      | 24.x                    | Sim         | Runtime da aplicação                                                                                                                   |
+| [pnpm](https://pnpm.io/)                                            | 11.x                    | Sim         | Gerenciador de pacotes ([ADR-0007](./docs/architecture/decisions/0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md))                  |
+| [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) | Qualquer versão estável | Sim | Serviços de infraestrutura ([ADR-0006](./docs/architecture/decisions/0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)) |
+| [Git](https://git-scm.com/)                                         | 2.x                     | Sim         | Controle de versão                                                                                                                     |
+| [Bruno](https://www.usebruno.com/)                                  | Última estável          | Sim         | Cliente HTTP oficial para testar a API ([ADR-0015](./docs/architecture/decisions/0015-adocao-do-bruno-como-cliente-http-oficial.md))   |
+| [just](https://just.systems/)                                       | 1.17+                   | Não         | Runner de comandos — atalhos para os comandos mais usados                                                                              |
 
 ### Gerenciando a versão do Node.js
 
@@ -91,13 +92,21 @@ git clone https://github.com/MissionAppFaithTech/MissionAppBackend
 cd MissionAppBackend
 ```
 
-### 2. Instale as dependências
+### 2. Habilite o Corepack
+
+```bash
+corepack enable
+```
+
+O campo `"packageManager": "pnpm@11.5.0"` no `package.json` ativa a verificação de versão via Corepack. Este passo garante que o Node.js gerencie o pnpm automaticamente na versão correta.
+
+### 3. Instale as dependências
 
 ```bash
 pnpm install
 ```
 
-### 3. Configure as variáveis de ambiente
+### 4. Configure as variáveis de ambiente
 
 ```bash
 cp .env.example .env
@@ -105,7 +114,7 @@ cp .env.example .env
 
 Abra o `.env` e preencha os valores obrigatórios em branco. Os valores padrão do `.env.example` são suficientes para rodar o ambiente de desenvolvimento local sem alterações — as credenciais dos serviços Docker já estão pré-configuradas.
 
-### 4. Suba os serviços de infraestrutura
+### 5. Suba os serviços de infraestrutura
 
 ```bash
 docker compose up -d
@@ -119,13 +128,13 @@ docker compose ps
 
 Todos os serviços devem estar com status `healthy` antes de continuar.
 
-### 5. Execute as migrations
+### 6. Execute as migrations
 
 ```bash
 node ace migration:run
 ```
 
-### 6. Inicie o servidor de desenvolvimento
+### 7. Inicie o servidor de desenvolvimento
 
 ```bash
 pnpm dev
@@ -134,6 +143,25 @@ node ace serve --hmr
 ```
 
 O servidor estará disponível em `http://localhost:3333` por padrão (conforme `PORT` no `.env`). O modo `--hmr` recarrega o servidor automaticamente a cada mudança em arquivos TypeScript.
+
+### Atalhos com just (opcional)
+
+O repositório inclui um `justfile` com atalhos para os comandos mais usados. Se tiver o [just](https://just.systems/) instalado (≥ 1.17), execute `just` para ver todos os comandos disponíveis agrupados por categoria:
+
+```
+infra
+  just up        # Sobe a infraestrutura de desenvolvimento (PostgreSQL)
+  just down      # Derruba a infraestrutura de desenvolvimento
+  just migrate   # Aplica migrações pendentes e regenera database/schema.ts
+  ...
+
+dev
+  just dev       # Inicia servidor de desenvolvimento com HMR
+  just ci        # Lint + typecheck (equivalente ao CI)
+  ...
+```
+
+O `justfile` é uma conveniência local — não é executado em CI e pode ser ignorado sem consequências.
 
 ---
 
@@ -153,14 +181,14 @@ git checkout -b <tipo>/<descricao-curta>
 
 Convenções de prefixo:
 
-| Prefixo | Quando usar |
-|---|---|
-| `feat/` | Nova funcionalidade |
-| `fix/` | Correção de bug |
-| `docs/` | Documentação |
+| Prefixo     | Quando usar                              |
+| ----------- | ---------------------------------------- |
+| `feat/`     | Nova funcionalidade                      |
+| `fix/`      | Correção de bug                          |
+| `docs/`     | Documentação                             |
 | `refactor/` | Refatoração sem mudança de comportamento |
-| `test/` | Adição ou correção de testes |
-| `chore/` | Configuração, CI, dependências |
+| `test/`     | Adição ou correção de testes             |
+| `chore/`    | Configuração, CI, dependências           |
 
 ### Commits
 
@@ -193,6 +221,9 @@ O projeto usa **ESLint** e **Prettier**. Antes de cada commit, execute:
 pnpm lint        # Verificar problemas de lint
 pnpm format      # Formatar o código automaticamente
 pnpm typecheck   # Verificar tipos TypeScript sem compilar
+
+# ou, com just:
+just ci          # lint + typecheck em sequência
 ```
 
 O CI rejeitará PRs com erros de lint ou falhas de typecheck.
@@ -209,7 +240,7 @@ O CI rejeitará PRs com erros de lint ou falhas de typecheck.
 
 ### Comentários no código
 
-Não adicione comentários que expliquem *o que* o código faz — nomes bem escolhidos já fazem isso. Adicione um comentário apenas quando o *porquê* for não-óbvio: uma restrição oculta, uma invariante sutil ou um contorno para um bug específico.
+Não adicione comentários que expliquem _o que_ o código faz — nomes bem escolhidos já fazem isso. Adicione um comentário apenas quando o _porquê_ for não-óbvio: uma restrição oculta, uma invariante sutil ou um contorno para um bug específico.
 
 ---
 
