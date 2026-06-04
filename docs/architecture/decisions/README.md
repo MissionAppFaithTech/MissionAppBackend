@@ -417,6 +417,21 @@ flowchart LR
          <td align="left">Adoção do Bruno como Cliente HTTP Oficial do Repositório</td>
          <td>🟡 Proposto</td>
       </tr>
+      <tr>
+         <td><a href="./0016-convencoes-de-escrita-de-migracoes.md">ADR-0016</a></td>
+         <td align="left">Convenções de Escrita de Migrações de Banco de Dados</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0017-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md">ADR-0017</a></td>
+         <td align="left">Adoção de UUID v7 como Estratégia de Chave Primária</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0018-padrao-de-composicao-de-mixins-para-comportamentos-compartilhados-em-models.md">ADR-0018</a></td>
+         <td align="left">Padrão de Composição de Mixins para Comportamentos Compartilhados em Models</td>
+         <td>🟡 Proposto</td>
+      </tr>
    </tbody>
 </table>
 

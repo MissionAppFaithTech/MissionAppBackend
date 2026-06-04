@@ -235,6 +235,32 @@ const port = env.get('PORT')
 - Timestamps use Luxon `DateTime`, not native `Date`.
 - Soft deletes use a `deletedAt` column (set to `DateTime | null`) — no Lucid soft-delete plugin.
 
+### Migration conventions ([ADR-0016](./docs/architecture/decisions/0016-convencoes-de-escrita-de-migracoes.md))
+
+Every migration must follow this exact declaration order inside `createTable`:
+
+```
+1. table.comment(...)    table-level description
+2. id                    UUID v7 primary key
+3. data columns          grouped by semantic domain, blank line between groups
+4. FK uuid columns       column declarations only, with // FK: <ACTION> — <reason> above each
+5. .foreign()            in the same order as FK column declarations
+6. .unique()             uniqueness constraints
+7. .check()              check constraints
+8. .index()              read indexes
+```
+
+Additional rules — violations block merge:
+
+| Rule | Example |
+|---|---|
+| Every column has `.comment('...')` | `.comment('Hash Argon2id da senha; nunca armazenada em texto plano')` |
+| Every table has `table.comment('...')` as first statement | describes the table's role in the system |
+| Phone columns document E.164 format | `.comment('... formato internacional E.164 (ex: +5511912345678)')` |
+| File references use `uuid` FK → `media_assets`, never `string` URL | `uuid('cover_image_asset_id')` not `string('cover_image_url')` |
+| Comments never reference requirement numbers (`req. X`) | write self-contained descriptions |
+| Long comment strings use multiline format | `.comment(\n  'long string'\n)` |
+
 ---
 
 ## Prohibited patterns
@@ -283,6 +309,9 @@ All major technology and pattern choices are documented in `docs/architecture/de
 | Worker packaging | ADR-0013 (single image, multiple entrypoints) |
 | Container registry | ADR-0014 (GHCR) |
 | HTTP client / collection | ADR-0015 (Bruno) |
+| Migration conventions | ADR-0016 (ordering, comments, types) |
+| Primary key strategy | ADR-0017 (UUID v7, all tables without exception) |
+| Model mixin pattern | ADR-0018 (compose(), never @column on Model) |
 
 Index at `docs/architecture/decisions/README.md`.
 
