@@ -27,6 +27,8 @@ A questão central é: **qual framework Node.js oferece o melhor equilíbrio ent
 
 Adotaremos o **AdonisJS v7** como framework web principal do MissionApp Backend.
 
+O AdonisJS é um framework web Node.js full-stack, construído inteiramente em TypeScript, criado por Harminder Virk e mantido por uma comunidade ativa de colaboradores. Ele segue a filosofia de **framework opinado**[^1] — análogo ao Ruby on Rails no ecossistema Ruby ou ao Laravel no ecossistema PHP — fornecendo convenções fortes, um ecossistema de pacotes oficiais integrados e uma estrutura de diretórios bem definida que reduz o número de decisões que um time precisa tomar para construir e manter uma aplicação em produção. Ao contrário de frameworks minimalistas como Express ou Fastify, que se posicionam como infraestrutura sobre a qual o desenvolvedor monta seu próprio stack, o AdonisJS assume responsabilidade sobre o stack completo: ORM, validação, autenticação, armazenamento de arquivos, sessões, IoC container e CLI de scaffolding convivem no mesmo ecossistema com APIs coesas e documentação centralizada.
+
 Toda a aplicação será estruturada segundo as convenções do AdonisJS: roteamento via `start/routes.ts`, controllers em `app/controllers/`, modelos Lucid em `app/models/`, validadores VineJS em `app/validators/`, middleware em `app/middleware/`, e migrações em `database/migrations/`. O IoC container nativo será utilizado para injeção de dependências onde aplicável.
 
 As seguintes peças do ecossistema AdonisJS serão adotadas em conjunto:
@@ -90,3 +92,7 @@ O AdonisJS foi escolhido por atender de forma direta e integrada ao conjunto de 
 * [Lucid ORM — documentação oficial](https://lucid.adonisjs.com/)
 * [VineJS — documentação oficial](https://vinejs.dev/)
 * [ADR-0009 — Padronização de Nomenclatura de Buckets S3](./0009-padronizacao-de-nomenclatura-de-buckets.md)
+
+---
+
+[^1]: **Framework opinado:** Uma ferramenta é classificada como "opinada" (*opinionated*) quando impõe um conjunto de convenções e decisões de design ao invés de deixá-las abertas ao desenvolvedor. Frameworks opinados como Rails, Laravel e AdonisJS ditam como o projeto deve ser estruturado, como as camadas devem se comunicar e quais bibliotecas devem ser usadas para cada responsabilidade. O oposto — um framework "sem opinião" (*unopinionated*) como Express ou Fastify — oferece flexibilidade máxima ao custo de exigir que o desenvolvedor tome e mantenha todas essas decisões. Em times pequenos ou distribuídos, frameworks opinados tendem a produzir codebases mais coesos porque reduzem a variância entre o que cada contribuidor decide por conta própria.
