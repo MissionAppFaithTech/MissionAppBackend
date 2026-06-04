@@ -7,6 +7,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary()
+
       table.enum('provider', Object.values(Provider)).notNullable().defaultTo(Provider.S3)
       table.string('bucket').notNullable()
       table.string('file_key').notNullable()

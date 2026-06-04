@@ -15,9 +15,9 @@ export default class extends BaseSchema {
       table.string('bank_number').nullable()
       table.string('agency').nullable()
       table.string('account_number').nullable()
-      table.enum('account_type', Object.values(BankAccountType)).nullable()
       table.string('holder_name').nullable()
       table.string('holder_document').nullable()
+      table.enum('account_type', Object.values(BankAccountType)).nullable()
 
       table.timestamp('created_at', { precision: 3, useTz: true }).notNullable()
       table.timestamp('updated_at', { precision: 3, useTz: true }).notNullable()
