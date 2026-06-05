@@ -16,9 +16,9 @@
     },
     {
       "description": "Agrupa todas as dependências do AdonisJS em um único PR",
-      "matchPackagePrefixes": ["@adonisjs/", "adonisjs"],
       "groupName": "AdonisJS",
-      "groupSlug": "adonisjs"
+      "groupSlug": "adonisjs",
+      "matchPackageNames": ["@adonisjs/{/,}**", "adonisjs{/,}**"]
     },
     {
       "description": "Atualiza GitHub Actions",
@@ -40,6 +40,6 @@
 
   "github-actions": {
     "enabled": true,
-    "fileMatch": ["(^|/)\\.github/workflows/[^/]+\\.ya?ml$"]
+    "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"]
   }
 }
