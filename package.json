@@ -20,7 +20,7 @@
     "dev": "node ace serve --hmr",
     "test": "node ace test",
     "lint": "eslint .",
-    "format": "prettier .",
+    "format": "prettier --check .",
     "lint:fix": "eslint --fix .",
     "format:fix": "prettier --write .",
     "typecheck": "tsc --noEmit",
