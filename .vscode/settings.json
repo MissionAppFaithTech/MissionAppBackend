@@ -3,7 +3,22 @@
 
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "text": "Gere as mensagens de commit SEMPRE em Português do Brasil (PT-BR). Siga estritamente o padrão Conventional Commits com os tipos: feat, fix, chore, docs, refactor, test, perf, build, ci, revert. Use o imperativo no presente (ex: 'adicionar', 'corrigir', 'remover'). Seja conciso. Quando houver escopo, use letras minúsculas. Não crie mensagens demasiadamente extensas."
+      "text": "Gere as mensagens de commit SEMPRE em Português do Brasil (PT-BR)."
+    },
+    {
+      "text": "Siga estritamente o padrão Conventional Commits com os tipos: feat, fix, chore, docs, refactor, test, perf, build, ci, revert."
+    },
+    {
+      "text": "Use o imperativo no presente (ex: 'adicionar', 'corrigir', 'remover')."
+    },
+    {
+      "text": "Seja conciso."
+    },
+    {
+      "text": "Quando houver escopo, use letras minúsculas."
+    },
+    {
+      "text": "Não crie mensagens demasiadamente extensas."
     }
   ],
 
