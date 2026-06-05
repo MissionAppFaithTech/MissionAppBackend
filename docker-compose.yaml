@@ -12,19 +12,6 @@ services:
       - postgres_data:/var/lib/postgresql
     stop_grace_period: 1m
     shm_size: 128mb
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 512M
     networks:
       - app-network
     healthcheck:
@@ -54,19 +41,6 @@ services:
         soft: 65536
         hard: 65536
     stop_grace_period: 30s
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 600M
-        reservations:
-          cpus: '0.5'
-          memory: 600M
     networks:
       - app-network
     healthcheck:
@@ -89,19 +63,6 @@ services:
     volumes:
       - minio_data:/data
     stop_grace_period: 1m
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 512M
     networks:
       - app-network
     healthcheck:
@@ -129,19 +90,6 @@ services:
         soft: -1
         hard: -1
     stop_grace_period: 1m
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 1G
     networks:
       - app-network
     healthcheck:
