@@ -1,5 +1,5 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { Provider } from '../../app/enums/media_asset/provider.ts'
+import { Provider } from '../../app/enums/media_asset/provider'
 
 export default class extends BaseSchema {
   protected tableName = 'media_assets'
