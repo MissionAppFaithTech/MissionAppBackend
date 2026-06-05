@@ -41,6 +41,7 @@ Proponho a seguinte mudança ...
 ## 📸 Evidências
 
 <!-- Prints, vídeos ou logs que demonstrem o comportamento. Remova se não aplicável. -->
+
 [Print/Video]
 
 ---
@@ -74,6 +75,7 @@ Proponho a seguinte mudança ...
 ## 🚀 Motivação
 
 <!-- Por que essa mudança é necessária? Qual problema ela resolve ou qual requisito atende? -->
+
 Precisamos fazer essa mudança para ...
 
 ---
@@ -81,6 +83,7 @@ Precisamos fazer essa mudança para ...
 ## 💡 O que foi feito
 
 <!-- Descreva objetivamente as mudanças implementadas. -->
+
 Proponho a seguinte mudança ...
 
 ---
@@ -97,6 +100,7 @@ Proponho a seguinte mudança ...
 ## 📸 Evidências
 
 <!-- Prints, vídeos ou logs que demonstrem o comportamento. Remova se não aplicável. -->
+
 [Print/Video]
 
 ---
@@ -113,4 +117,3 @@ Proponho a seguinte mudança ...
 
 - [link-1](primeira-referencia)
 - [link-2](segunda-referencia)
-

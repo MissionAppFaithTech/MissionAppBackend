@@ -5,5 +5,3 @@
  */
 
 import { BaseModel, column } from '@adonisjs/lucid/orm'
-
-

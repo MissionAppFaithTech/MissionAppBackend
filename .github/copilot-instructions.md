@@ -139,9 +139,9 @@ export default class IndexPostWorker extends BaseCommand {
 
 ```typescript
 export default class Post extends compose(
-  PostSchema,       // AUTO-GENERATED — columns and types
-  WithPrimaryUuid,  // UUID v7 PK, auto-set on beforeCreate
-  WithTimestamps    // createdAt / updatedAt
+  PostSchema, // AUTO-GENERATED — columns and types
+  WithPrimaryUuid, // UUID v7 PK, auto-set on beforeCreate
+  WithTimestamps // createdAt / updatedAt
 ) {}
 ```
 
@@ -241,19 +241,19 @@ Every column and every table must have a `.comment('...')` — no exceptions.
 
 Never suggest any of the following:
 
-| Pattern | Why |
-|---|---|
-| `npm install` / `yarn add` | pnpm-only repo |
-| `process.env.VAR` | Use `env.get('VAR')` from `#start/env` |
-| Edit `database/schema.ts` | Auto-generated, will be overwritten |
-| `@column` on a Model class | Columns come from the generated Schema mixin |
-| Business logic or DB queries in a Listener | Latency must stay < 1ms |
-| Side effects in Lucid hooks (`@afterCreate`, etc.) | Breaks transaction isolation |
-| Direct Elasticsearch/SMTP/storage calls in a Service | Must go through the event pipeline |
-| A separate `Dockerfile` per worker | Breaks layer cache reuse; use single image with multiple entrypoints |
-| Standalone `.ts`/`.js` worker scripts | Workers must be Ace commands |
-| Hard-coding `any` type | Use proper TypeScript types or generics |
-| Secrets or real tokens in `bruno/` files | Collection is public; use `{{variavel}}` backed by `.env` |
+| Pattern                                              | Why                                                                  |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| `npm install` / `yarn add`                           | pnpm-only repo                                                       |
+| `process.env.VAR`                                    | Use `env.get('VAR')` from `#start/env`                               |
+| Edit `database/schema.ts`                            | Auto-generated, will be overwritten                                  |
+| `@column` on a Model class                           | Columns come from the generated Schema mixin                         |
+| Business logic or DB queries in a Listener           | Latency must stay < 1ms                                              |
+| Side effects in Lucid hooks (`@afterCreate`, etc.)   | Breaks transaction isolation                                         |
+| Direct Elasticsearch/SMTP/storage calls in a Service | Must go through the event pipeline                                   |
+| A separate `Dockerfile` per worker                   | Breaks layer cache reuse; use single image with multiple entrypoints |
+| Standalone `.ts`/`.js` worker scripts                | Workers must be Ace commands                                         |
+| Hard-coding `any` type                               | Use proper TypeScript types or generics                              |
+| Secrets or real tokens in `bruno/` files             | Collection is public; use `{{variavel}}` backed by `.env`            |
 
 ---
 
@@ -276,25 +276,25 @@ Use imperative present tense (`adicionar`, `corrigir`, `remover`). Scope in lowe
 
 Before suggesting a new external dependency, service, or architectural pattern, check `docs/architecture/decisions/`. Every framework-level or infrastructure dependency requires a documented ADR.
 
-| Area | ADR |
-|---|---|
-| Framework | ADR-0001 (AdonisJS) |
-| Database | ADR-0002 (PostgreSQL) |
-| Cache / queue broker | ADR-0003 (DragonflyDB) |
-| Object storage | ADR-0004 (MinIO) |
-| Full-text search | ADR-0005 (Elasticsearch) |
-| Containerization | ADR-0006 (Docker) |
-| Package manager | ADR-0007 (pnpm) |
-| Async operations | ADR-0008 (EDA + BullMQ) |
-| Email | ADR-0010 (Resend) |
-| Dependency updates | ADR-0011 (Renovate) |
-| Vulnerability scanning | ADR-0012 (Snyk) |
-| Worker packaging | ADR-0013 (single image, multiple entrypoints) |
-| Container registry | ADR-0014 (GHCR) |
-| HTTP client / collection | ADR-0015 (Bruno) |
-| Migration conventions | ADR-0016 |
-| Primary key strategy | ADR-0017 (UUID v7) |
-| Model mixin pattern | ADR-0018 (compose()) |
+| Area                     | ADR                                           |
+| ------------------------ | --------------------------------------------- |
+| Framework                | ADR-0001 (AdonisJS)                           |
+| Database                 | ADR-0002 (PostgreSQL)                         |
+| Cache / queue broker     | ADR-0003 (DragonflyDB)                        |
+| Object storage           | ADR-0004 (MinIO)                              |
+| Full-text search         | ADR-0005 (Elasticsearch)                      |
+| Containerization         | ADR-0006 (Docker)                             |
+| Package manager          | ADR-0007 (pnpm)                               |
+| Async operations         | ADR-0008 (EDA + BullMQ)                       |
+| Email                    | ADR-0010 (Resend)                             |
+| Dependency updates       | ADR-0011 (Renovate)                           |
+| Vulnerability scanning   | ADR-0012 (Snyk)                               |
+| Worker packaging         | ADR-0013 (single image, multiple entrypoints) |
+| Container registry       | ADR-0014 (GHCR)                               |
+| HTTP client / collection | ADR-0015 (Bruno)                              |
+| Migration conventions    | ADR-0016                                      |
+| Primary key strategy     | ADR-0017 (UUID v7)                            |
+| Model mixin pattern      | ADR-0018 (compose())                          |
 
 ---
 
