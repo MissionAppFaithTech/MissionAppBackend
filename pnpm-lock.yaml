@@ -1142,6 +1142,13 @@ packages:
       }
     engines: { node: '>=18' }
 
+  '@sindresorhus/is@8.1.0':
+    resolution:
+      {
+        integrity: sha512-2SX/1jW6CIMAiebvVv5ZInoCEuWQmMyBoJXXGC6Vjakjp/fpxP5eHs7/V6WKuPEIbuK06+VpjH+vjLQhr98rDQ==,
+      }
+    engines: { node: '>=22' }
+
   '@sindresorhus/merge-streams@4.0.0':
     resolution:
       {
@@ -5514,6 +5521,8 @@ snapshots:
   '@sinclair/typebox@0.34.49': {}
 
   '@sindresorhus/is@7.2.0': {}
+
+  '@sindresorhus/is@8.1.0': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
