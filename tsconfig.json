@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": "./",
     "jsx": "react",
-    "outDir": "./build"
+    "outDir": "./build",
+    "allowImportingTsExtensions": true
   }
 }

@@ -1,6 +1,45 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+  "extends": ["config:recommended"],
+
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
+
+  "packageRules": [
+    {
+      "description": "Agrupa todas as atualizações de patch em um único PR",
+      "matchUpdateTypes": ["patch"],
+      "groupName": "patch updates",
+      "groupSlug": "patch-updates",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "Agrupa todas as dependências do AdonisJS em um único PR",
+      "matchPackagePrefixes": ["@adonisjs/", "adonisjs"],
+      "groupName": "AdonisJS",
+      "groupSlug": "adonisjs"
+    },
+    {
+      "description": "Atualiza GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions",
+      "pinDigests": true
+    },
+    {
+      "description": "Atualiza imagens Docker no docker-compose",
+      "matchManagers": ["docker-compose"],
+      "groupName": "Docker images",
+      "groupSlug": "docker-images"
+    }
+  ],
+
+  "docker-compose": {
+    "enabled": true
+  },
+
+  "github-actions": {
+    "enabled": true,
+    "fileMatch": ["(^|/)\\.github/workflows/[^/]+\\.ya?ml$"]
+  }
 }

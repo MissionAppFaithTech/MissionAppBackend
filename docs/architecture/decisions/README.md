@@ -9,9 +9,7 @@
 
 ## 🧭 O que é um ADR?
 
-Um **Architecture Decision Record** captura uma decisão arquitetural importante em um documento estruturado. Não descreve *como* o código funciona — descreve *por que* ele foi escrito daquela forma.
-
-<div align="center">
+Um **Architecture Decision Record** captura uma decisão arquitetural importante em um documento estruturado. Não descreve _como_ o código funciona — descreve _por que_ ele foi escrito daquela forma.
 
 <table width="100%">
    <colgroup>
@@ -20,8 +18,8 @@ Um **Architecture Decision Record** captura uma decisão arquitetural importante
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Seção</th>
-         <th align="center">O que responde</th>
+         <th>Seção</th>
+         <th>O que responde</th>
       </tr>
    </thead>
    <tbody>
@@ -48,8 +46,6 @@ Um **Architecture Decision Record** captura uma decisão arquitetural importante
    </tbody>
 </table>
 
-</div>
-
 > [!TIP]
 > Leia os ADRs em ordem cronológica (`0000 → 0001 → ...`) para entender a evolução arquitetural do projeto. É a forma mais eficiente de fazer onboarding na arquitetura.
 
@@ -61,8 +57,6 @@ O formato adotado é baseado no modelo de [Michael Nygard (2011)](https://cognit
 
 Crie um ADR quando a decisão...
 
-<div align="center">
-
 <table width="100%">
    <colgroup>
       <col width="45%">
@@ -70,8 +64,8 @@ Crie um ADR quando a decisão...
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Categoria</th>
-         <th align="center">Exemplos</th>
+         <th>Categoria</th>
+         <th>Exemplos</th>
       </tr>
    </thead>
    <tbody>
@@ -155,8 +149,6 @@ Crie um ADR quando a decisão...
    </tbody>
 </table>
 
-</div>
-
 > [!IMPORTANT]
 > **Em caso de dúvida:** se a mudança geraria debate em uma code review ou em uma issue, ela merece um ADR.
 
@@ -166,8 +158,6 @@ Crie um ADR quando a decisão...
 
 Não é necessário um ADR para:
 
-<div align="center">
-
 <table width="100%">
    <colgroup>
       <col width="55%">
@@ -175,8 +165,8 @@ Não é necessário um ADR para:
    </colgroup>
    <thead>
       <tr>
-         <th align="center">❌ Não cria ADR</th>
-         <th align="center">✅ Onde registrar</th>
+         <th>❌ Não cria ADR</th>
+         <th>✅ Onde registrar</th>
       </tr>
    </thead>
    <tbody>
@@ -211,8 +201,6 @@ Não é necessário um ADR para:
    </tbody>
 </table>
 
-</div>
-
 ---
 
 ## 🚀 Como propor uma decisão arquitetural
@@ -239,8 +227,6 @@ Substitua `XXXX` pelo próximo número sequencial (verifique o último arquivo n
 
 ### 3. Preencha o ADR
 
-<div align="center">
-
 <table width="100%">
    <colgroup>
       <col width="35%">
@@ -248,8 +234,8 @@ Substitua `XXXX` pelo próximo número sequencial (verifique o último arquivo n
    </colgroup>
    <thead>
       <tr>
-         <th align="center">Campo</th>
-         <th align="center">Instrução</th>
+         <th>Campo</th>
+         <th>Instrução</th>
       </tr>
    </thead>
    <tbody>
@@ -287,8 +273,6 @@ Substitua `XXXX` pelo próximo número sequencial (verifique o último arquivo n
       </tr>
    </tbody>
 </table>
-
-</div>
 
 ---
 
@@ -335,8 +319,6 @@ flowchart LR
 
 ## 📚 Índice de ADRs
 
-<div align="center">
-
 <table width="100%">
    <colgroup>
       <col width="15%">
@@ -345,18 +327,101 @@ flowchart LR
    </colgroup>
    <thead>
       <tr>
-         <th align="center">#</th>
-         <th align="center">Título</th>
-         <th align="center">Status</th>
+         <th>#</th>
+         <th>Título</th>
+         <th>Status</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td align="center"><a href="./0000-uso-de-architecture-decision-records.md">ADR-0000</a></td>
+         <td><a href="./0000-uso-de-architecture-decision-records.md">ADR-0000</a></td>
          <td align="left">Adoção de Architecture Decision Records como Mecanismo de Documentação Arquitetural</td>
-         <td align="center">🟢 Aceito</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0001-adocao-do-adonisjs-como-framework-backend.md">ADR-0001</a></td>
+         <td align="left">Adoção do AdonisJS como Framework Web Backend</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0002-adocao-do-postgresql-como-banco-de-dados.md">ADR-0002</a></td>
+         <td align="left">Adoção do PostgreSQL como Banco de Dados Relacional</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0003-adocao-do-redis-como-cache-e-armazenamento-temporario.md">ADR-0003</a></td>
+         <td align="left">Adoção do DragonflyDB como Cache, Armazenamento Temporário e Broker de Filas</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0004-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md">ADR-0004</a></td>
+         <td align="left">Uso do MinIO como Emulador de Storage em Ambiente de Desenvolvimento</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0005-adocao-do-elasticsearch-como-mecanismo-de-busca.md">ADR-0005</a></td>
+         <td align="left">Adoção do Elasticsearch como Mecanismo de Busca</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md">ADR-0006</a></td>
+         <td align="left">Uso do Docker para Padronização de Ambiente de Desenvolvimento e Deploy</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md">ADR-0007</a></td>
+         <td align="left">Adoção do pnpm como Gerenciador de Pacotes</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0008-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md">ADR-0008</a></td>
+         <td align="left">Adoção de Arquitetura Orientada a Eventos com BullMQ para Operações Assíncronas</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0010-adocao-do-resend-como-provedor-de-email-transacional.md">ADR-0010</a></td>
+         <td align="left">Adoção do Resend como Provedor de Email Transacional</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0011-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md">ADR-0011</a></td>
+         <td align="left">Adoção do Renovate para Atualização Automática de Dependências</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md">ADR-0012</a></td>
+         <td align="left">Adoção do Snyk para Detecção e Correção de Vulnerabilidades</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0013-padrao-imagem-unica-multiplos-entrypoints-para-workers.md">ADR-0013</a></td>
+         <td align="left">Padrão de Imagem Única com Múltiplos Entrypoints para Workers BullMQ</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0014-adocao-do-ghcr-como-registry-de-imagens-docker.md">ADR-0014</a></td>
+         <td align="left">Adoção do GitHub Container Registry (GHCR) como Registry de Imagens Docker</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0015-adocao-do-bruno-como-cliente-http-oficial.md">ADR-0015</a></td>
+         <td align="left">Adoção do Bruno como Cliente HTTP Oficial do Repositório</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0016-convencoes-de-escrita-de-migracoes.md">ADR-0016</a></td>
+         <td align="left">Convenções de Escrita de Migrações de Banco de Dados</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0017-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md">ADR-0017</a></td>
+         <td align="left">Adoção de UUID v7 como Estratégia de Chave Primária</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0018-padrao-de-composicao-de-mixins-para-comportamentos-compartilhados-em-models.md">ADR-0018</a></td>
+         <td align="left">Padrão de Composição de Mixins para Comportamentos Compartilhados em Models</td>
+         <td>🟡 Proposto</td>
       </tr>
    </tbody>
 </table>
-
-</div>
