@@ -2,7 +2,6 @@ services:
   postgres:
     image: postgres:18.3-alpine3.23
     container_name: ${POSTGRES_CONTAINER_NAME:-missionapp-pg}
-    restart: on-failure:5
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -11,6 +10,8 @@ services:
       - '${DB_HOST:-127.0.0.1}:${DB_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql
+    stop_grace_period: 1m
+    shm_size: 128mb
     deploy:
       restart_policy:
         condition: on-failure
@@ -24,8 +25,8 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
-    # networks:
-    #   - app-network
+    networks:
+      - app-network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 10s
@@ -33,6 +34,133 @@ services:
       retries: 5
       start_period: 15s
 
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.38.1
+    container_name: ${DRAGONFLY_CONTAINER_NAME:-missionapp-dragonfly}
+    command:
+      - "--requirepass=${REDIS_PASSWORD}" 
+      - "--maxmemory=512m"                
+      - "--dir=/data"                     
+      - "--dbfilename=dump"               
+    environment:
+      - DRAGONFLY_NUM_THREADS=1           
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - '${REDIS_HOST:-127.0.0.1}:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - dragonfly_data:/data
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    stop_grace_period: 30s
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 600M
+        reservations:
+          cpus: '0.5'
+          memory: 600M
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+  
+  minio:
+    image: pgsty/minio:RELEASE.2026-04-17T00-00-00Z
+    container_name: ${MINIO_CONTAINER_NAME:-missionapp-minio}
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT:-9001}"
+    environment:
+      - MINIO_ROOT_USER=${S3_ACCESS_KEY:-superadmin}
+      - MINIO_ROOT_PASSWORD=${S3_SECRET_KEY:-supersecretpassword}
+    ports:
+      - '${MINIO_API_HOST:-127.0.0.1}:${MINIO_API_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_HOST:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio_data:/data
+    stop_grace_period: 1m
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  elasticsearch:
+    image: elasticsearch:9.4.2
+    container_name: ${ES_CONTAINER_NAME:-missionapp-elasticsearch}
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - cluster.name=missionapp-dev-cluster
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - '${ES_HOST:-127.0.0.1}:${ES_PORT:-9200}:9200'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    stop_grace_period: 1m
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G 
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://127.0.0.1:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
 volumes:
   postgres_data:
     driver: local
+  dragonfly_data:
+    driver: local
+  minio_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

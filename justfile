@@ -1,4 +1,4 @@
-set shell           := ["bash", "-c"]
+set shell           := ["bash", "-eu", "-o", "pipefail", "-c"]
 set dotenv-load     := true
 set dotenv-filename := ".env"
 

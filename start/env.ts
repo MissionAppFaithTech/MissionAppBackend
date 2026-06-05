@@ -37,4 +37,18 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_DATABASE: Env.schema.string(),
 
   POSTGRES_CONTAINER_NAME: Env.schema.string(),
+
+  REDIS_PASSWORD: Env.schema.string(),
+
+  S_3_ENDPOINT: Env.schema.string(),
+
+  S_3_REGION: Env.schema.string(),
+
+  S_3_BUCKET: Env.schema.string(),
+
+  S_3_ACCESS_KEY: Env.schema.string(),
+
+  S_3_SECRET_KEY: Env.schema.string(),
+
+  ELASTIC_NODE: Env.schema.string()
 })
