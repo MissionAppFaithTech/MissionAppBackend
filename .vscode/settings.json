@@ -13,6 +13,13 @@
   "files.autoSaveDelay": 1000,
   "files.trimTrailingWhitespace": true,
 
+  "json.schemas": [
+    {
+      "fileMatch": ["renovate.json", ".renovaterc", ".renovaterc.json"],
+      "url": "https://docs.renovatebot.com/renovate-schema.json"
+    }
+  ],
+
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
