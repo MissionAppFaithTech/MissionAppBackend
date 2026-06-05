@@ -31,7 +31,7 @@ export default class extends BaseSchema {
           'FK para media_assets; foto de perfil exibida no cabeçalho do perfil; null até primeiro upload'
         )
       table
-        .text('biography')
+        .string('biography', 200)
         .nullable()
         .comment('Minibiografia exibida no cabeçalho do perfil; max 200 chars')
       table.enum('gender', Object.values(Gender)).notNullable().comment('Gênero do usuário')
