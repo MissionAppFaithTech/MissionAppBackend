@@ -191,7 +191,7 @@ packages:
       }
     engines: { node: '>=24.0.0' }
     peerDependencies:
-      '@adonisjs/http-server': ^8.0.0-next.17 || ^8.0.0
+      '@adonisjs/http-server': ^8.0.0-next.17 || ^8.0.0 || ^9.0.0
 
   '@adonisjs/config@6.1.0':
     resolution:
@@ -4869,7 +4869,7 @@ snapshots:
       '@poppinss/multiparty': 3.0.0
       '@poppinss/qs': 6.15.0
       '@poppinss/utils': 7.0.1
-      file-type: 21.3.4
+      file-type: 22.0.1
       inflation: 2.1.0
       media-typer: 1.1.0
       raw-body: 3.0.2
@@ -4989,7 +4989,7 @@ snapshots:
       '@poppinss/middleware': 3.2.7
       '@poppinss/qs': 6.15.0
       '@poppinss/utils': 7.0.1
-      '@sindresorhus/is': 7.2.0
+      '@sindresorhus/is': 8.1.0
       content-disposition: 1.1.0
       cookie-es: 3.1.1
       destroy: 1.2.0
@@ -5000,7 +5000,7 @@ snapshots:
       on-finished: 2.4.1
       proxy-addr: 2.0.7
       tmp-cache: 1.1.0
-      type-is: 2.0.1
+      type-is: 2.1.0
       vary: 1.1.2
     optionalDependencies:
       youch: 4.1.1
@@ -6335,7 +6335,7 @@ snapshots:
     dependencies:
       flat-cache: 4.0.1
 
-  file-type@21.3.4:
+  file-type@22.0.1:
     dependencies:
       '@tokenizer/inflate': 0.4.1
       strtok3: 10.3.5
@@ -6935,7 +6935,7 @@ snapshots:
       real-require: 0.2.0
       safe-stable-stringify: 2.5.0
       sonic-boom: 4.2.1
-      thread-stream: 4.0.0
+      thread-stream: 4.2.0
 
   pkg-dir@8.0.0:
     dependencies:
@@ -6992,7 +6992,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       ansi-styles: 5.2.0
       react-is-18: react-is@18.3.1
-      react-is-19: react-is@19.2.6
+      react-is-19: react-is@19.2.7
 
   pretty-hrtime@1.0.3: {}
 
@@ -7040,7 +7040,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-is@19.2.6: {}
+  react-is@19.2.7: {}
 
   read-package-up@12.0.0:
     dependencies:
@@ -7065,6 +7065,8 @@ snapshots:
   readdirp@5.0.0: {}
 
   real-require@0.2.0: {}
+
+  real-require@1.0.0: {}
 
   rechoir@0.8.0:
     dependencies:
@@ -7295,9 +7297,9 @@ snapshots:
 
   terminal-size@4.0.1: {}
 
-  thread-stream@4.0.0:
+  thread-stream@4.2.0:
     dependencies:
-      real-require: 0.2.0
+      real-require: 1.0.0
 
   tildify@2.0.0: {}
 
@@ -7351,9 +7353,9 @@ snapshots:
     dependencies:
       tagged-tag: 1.0.0
 
-  type-is@2.0.1:
+  type-is@2.1.0:
     dependencies:
-      content-type: 1.0.5
+      content-type: 2.0.0
       media-typer: 1.1.0
       mime-types: 3.0.2
 
