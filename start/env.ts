@@ -50,5 +50,5 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   S_3_SECRET_KEY: Env.schema.string(),
 
-  ELASTIC_NODE: Env.schema.string()
+  ELASTIC_NODE: Env.schema.string(),
 })

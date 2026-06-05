@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /// <reference path="../manifest.d.ts" />
 
 import type {

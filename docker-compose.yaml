@@ -38,12 +38,12 @@ services:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.38.1
     container_name: ${DRAGONFLY_CONTAINER_NAME:-missionapp-dragonfly}
     command:
-      - "--requirepass=${REDIS_PASSWORD}" 
-      - "--maxmemory=512m"                
-      - "--dir=/data"                     
-      - "--dbfilename=dump"               
+      - '--requirepass=${REDIS_PASSWORD}'
+      - '--maxmemory=512m'
+      - '--dir=/data'
+      - '--dbfilename=dump'
     environment:
-      - DRAGONFLY_NUM_THREADS=1           
+      - DRAGONFLY_NUM_THREADS=1
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - '${REDIS_HOST:-127.0.0.1}:${REDIS_PORT:-6379}:6379'
@@ -70,12 +70,12 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping"]
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
-  
+
   minio:
     image: pgsty/minio:RELEASE.2026-04-17T00-00-00Z
     container_name: ${MINIO_CONTAINER_NAME:-missionapp-minio}
@@ -105,7 +105,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -138,14 +138,18 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 1G 
+          memory: 1G
         reservations:
           cpus: '0.5'
           memory: 1G
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://127.0.0.1:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      test:
+        [
+          'CMD-SHELL',
+          'curl -s -f http://127.0.0.1:9200/_cluster/health | grep -vq ''"status":"red"''',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
