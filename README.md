@@ -30,8 +30,63 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 
 <details open> 
   <summary>Mostrar/Ocultar</summary>
-  <!-- readme-tree start -->
-  <!-- readme-tree end -->
+<!-- readme-tree start -->
+```
+.
+├── app
+│   ├── auth
+│   │   ├── guards
+│   │   └── providers
+│   ├── controllers
+│   ├── enums
+│   │   ├── authentication_audit
+│   │   ├── financial_config
+│   │   ├── media_asset
+│   │   ├── missionary
+│   │   ├── user
+│   │   └── user_action_audit
+│   ├── exceptions
+│   ├── jobs
+│   ├── listeners
+│   ├── middleware
+│   ├── models
+│   │   ├── filters
+│   │   └── mixins
+│   ├── services
+│   ├── transformers
+│   ├── utils
+│   └── validators
+├── bin
+├── bruno
+│   └── environments
+├── client
+│   └── registry
+├── commands
+├── config
+├── database
+│   └── migrations
+├── docs
+│   ├── api
+│   │   └── v1
+│   ├── architecture
+│   │   ├── decisions
+│   │   └── templates
+│   ├── business
+│   ├── deployment
+│   └── setup
+├── providers
+├── server
+├── start
+├── stubs
+│   └── make
+│       ├── model
+│       └── util
+├── tests
+└── tmp
+
+51 directories
+```
+<!-- readme-tree end -->
 </details>
 
 <a name="estrutura-da-documentacao"></a>
