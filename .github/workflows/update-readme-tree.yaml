@@ -21,10 +21,10 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "docs: atualizar árvore de diretórios"
+          commit-message: 'docs: atualizar árvore de diretórios'
           branch: chore/update-docs-tree
           delete-branch: true
-          title: "docs: atualização automática da árvore de diretórios"
+          title: 'docs: atualização automática da árvore de diretórios'
           body: |
             # 🤖 **Atualização Automática**
 
