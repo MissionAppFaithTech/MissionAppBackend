@@ -21,12 +21,15 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'chore(docs): atualizar árvore de diretórios no README'
-          title: 'chore(docs): atualizar árvore de diretórios no README'
+          commit-message: "docs: atualizar árvore de diretórios"
+          branch: chore/update-docs-tree
+          delete-branch: true
+          title: "docs: atualização automática da árvore de diretórios"
           body: |
-            Atualização automática da árvore de diretórios no README.
+            # 🤖 **Atualização Automática**
+
+            Este PR foi gerado automaticamente pelo pipeline de CI/CD.
+            Mudanças foram detectadas na estrutura de diretórios e o README foi atualizado para refletir a nova arquitetura.
 
             Gerado por [readme-tree](https://github.com/RavelloH/readme-tree).
-          branch: chore/update-readme-tree
-          delete-branch: true
-          labels: documentation
+          labels: documentation, automated pr
