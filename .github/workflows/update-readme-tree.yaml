@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     name: readme-tree
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Generate tree
         uses: RavelloH/readme-tree@latest
@@ -19,7 +19,7 @@ jobs:
           showdirectoryname: 'yes'
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'docs: atualizar árvore de diretórios'
           branch: chore/update-docs-tree
