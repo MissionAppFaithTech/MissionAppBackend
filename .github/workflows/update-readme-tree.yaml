@@ -1,3 +1,5 @@
+name: Update README Tree
+
 on:
   push:
     branches: [main]
@@ -8,20 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     name: readme-tree
     steps:
-      - uses: actions/checkout@v3
-      - name: Tree
+      - uses: actions/checkout@v4
+
+      - name: Generate tree
         uses: RavelloH/readme-tree@latest
         with:
           showall: 'no'
           showdirectoryname: 'yes'
-      - name: commit
-        continue-on-error: True
-        run: |
-          git init
-          git pull
-          git config --local user.email "actions@github.com"
-          git config --local user.name "github-actions"
-          git add .
-          git commit -m "[Readme-Tree]`date '+%Y-%m-%d %H:%M:%S'`" || exit
-          git status
-          git push -f
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore(docs): atualizar árvore de diretórios no README'
+          title: 'chore(docs): atualizar árvore de diretórios no README'
+          body: |
+            Atualização automática da árvore de diretórios no README.
+
+            Gerado por [readme-tree](https://github.com/RavelloH/readme-tree).
+          branch: chore/update-readme-tree
+          delete-branch: true
+          labels: documentation
