@@ -32,7 +32,6 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
   <summary>Mostrar/Ocultar</summary>
 
 <!-- readme-tree start -->
-
 ```
 .
 ├── app
@@ -88,7 +87,6 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 
 51 directories
 ```
-
 <!-- readme-tree end -->
 
 </details>
