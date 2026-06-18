@@ -22,7 +22,7 @@ services:
       start_period: 15s
 
   dragonfly:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.38.1
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.39.0
     container_name: ${DRAGONFLY_CONTAINER_NAME:-missionapp-dragonfly}
     command:
       - '--requirepass=${REDIS_PASSWORD}'
