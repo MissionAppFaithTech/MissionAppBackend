@@ -1,6 +1,6 @@
 import User from '#models/user'
 import UserTransformer from '#transformers/user_transformer'
-import { loginValidator } from '#validators/user'
+import { loginValidator } from '#validators/user/login'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class AccessTokensController {

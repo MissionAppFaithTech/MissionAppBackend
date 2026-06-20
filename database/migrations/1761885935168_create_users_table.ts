@@ -1,7 +1,7 @@
+import { Gender } from '#enums/user/gender'
+import { MembershipStatus } from '#enums/user/membership_status'
+import { UserRole } from '#enums/user/user_role'
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { Gender } from '../../app/enums/user/gender.ts'
-import { MembershipStatus } from '../../app/enums/user/membership_status.ts'
-import { UserRole } from '../../app/enums/user/user_role.ts'
 
 export default class extends BaseSchema {
   protected tableName = 'users'

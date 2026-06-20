@@ -28,6 +28,7 @@
   },
   "imports": {
     "#controllers/*": "./app/controllers/*.js",
+    "#enums/*": "./app/enums/*.js",
     "#exceptions/*": "./app/exceptions/*.js",
     "#models/*": "./app/models/*.js",
     "#mails/*": "./app/mails/*.js",
@@ -37,7 +38,9 @@
     "#generated/*": "./.adonisjs/server/*.js",
     "#middleware/*": "./app/middleware/*.js",
     "#transformers/*": "./app/transformers/*.js",
-    "#validators/*": "./app/validators/*.js",
+    "#validators/shared/fields/*": "./app/validators/shared/fields/*.js",
+    "#validators/shared/schemas/*": "./app/validators/shared/schemas/*.js",
+    "#validators/user/*": "./app/validators/user/*.js",
     "#providers/*": "./providers/*.js",
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",

@@ -1,6 +1,6 @@
+import { IdentityType } from '#enums/missionary/identity_type'
+import { MissionaryStatus } from '#enums/missionary/missionary_status'
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { IdentityType } from '../../app/enums/missionary/identity_type.ts'
-import { MissionaryStatus } from '../../app/enums/missionary/missionary_status.ts'
 
 export default class extends BaseSchema {
   protected tableName = 'missionaries'

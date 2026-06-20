@@ -1,5 +1,5 @@
+import { BankAccountType } from '#enums/financial_config/bank_account_type'
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { BankAccountType } from '../../app/enums/financial_config/bank_account_type.ts'
 
 export default class extends BaseSchema {
   protected tableName = 'financial_configs'

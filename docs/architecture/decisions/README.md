@@ -499,5 +499,10 @@ flowchart LR
          <td align="left">Documentação de Endpoints com OpenAPI Estático e Scalar</td>
          <td>🔵 Em Uso</td>
       </tr>
+      <tr>
+         <td><a href="./0025-arquitetura-de-validators-reutilizaveis-com-vinejs.md">ADR-0025</a></td>
+         <td align="left">Arquitetura de Validators Reutilizáveis com VineJS</td>
+         <td>🔵 Em Uso</td>
+      </tr>
    </tbody>
 </table>

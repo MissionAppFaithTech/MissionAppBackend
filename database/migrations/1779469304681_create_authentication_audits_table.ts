@@ -1,5 +1,5 @@
+import { AuthenticationStatus } from '#enums/authentication_audit/authentication_status'
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { AuthenticationStatus } from '../../app/enums/authentication_audit/authentication_status.ts'
 
 export default class extends BaseSchema {
   protected tableName = 'authentication_audits'

@@ -1,5 +1,5 @@
+import { SystemAction } from '#enums/user_action_audit/system_action_type'
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { SystemAction } from '../../app/enums/user_action_audit/system_action_type.ts'
 
 export default class extends BaseSchema {
   protected tableName = 'user_action_audits'
