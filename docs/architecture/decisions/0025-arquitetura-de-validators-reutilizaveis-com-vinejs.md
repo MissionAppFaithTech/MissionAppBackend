@@ -82,11 +82,11 @@ app/validators/
 
 O sufixo segue a camada, não o estado de compilação:
 
-| Camada | Sufixo | Critério |
-|--------|--------|----------|
-| `shared/fields/` | nenhum | Campos atômicos — o retorno (`vine.string()`, `vine.number()`) é inequívoco |
-| `shared/schemas/` | `Schema` | `vine.object()` não compilado — sem sufixo, `pagination()` seria indistinguível de um helper de query ou utilitário de paginação, por exemplo |
-| `validators/<domain>/` | `Validator` | Compilado, pronto para `request.validateUsing()` — disambigua de actions do controller com o mesmo nome, por exemplo |
+| Camada                 | Sufixo      | Critério                                                                                                                                      |
+| ---------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared/fields/`       | nenhum      | Campos atômicos — o retorno (`vine.string()`, `vine.number()`) é inequívoco                                                                   |
+| `shared/schemas/`      | `Schema`    | `vine.object()` não compilado — sem sufixo, `pagination()` seria indistinguível de um helper de query ou utilitário de paginação, por exemplo |
+| `validators/<domain>/` | `Validator` | Compilado, pronto para `request.validateUsing()` — disambigua de actions do controller com o mesmo nome, por exemplo                          |
 
 ```ts
 // Camada 1 — sem sufixo

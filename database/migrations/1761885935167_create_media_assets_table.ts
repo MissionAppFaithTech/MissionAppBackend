@@ -1,4 +1,4 @@
-import { Provider } from '#enums/media_asset/provider.ts'
+import { Provider } from '#enums/media_asset/provider'
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
