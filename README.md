@@ -303,7 +303,7 @@ Certifique-se de ter os seguintes softwares instalados antes de continuar:
 1. Abra o terminal em um diretório de sua preferência e clone o repositório:
 
 ```bash
-git clone https://github.com/AFSFerreira/MissionApp_Backend
+git clone https://github.com/MissionAppFaithTech/MissionAppBackend.git
 ```
 
 2. Navegue para dentro do projeto clonado:
