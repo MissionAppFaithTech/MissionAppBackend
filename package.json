@@ -90,7 +90,7 @@
     "better-sqlite3": "12.9.0",
     "jose": "6.2.3",
     "luxon": "3.7.2",
-    "pg": "8.20.0",
+    "pg": "8.22.0",
     "reflect-metadata": "0.2.2",
     "uuid": "14.0.0"
   },
