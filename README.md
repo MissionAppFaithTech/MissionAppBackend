@@ -57,6 +57,10 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── transformers
 │   ├── utils
 │   └── validators
+│       ├── shared
+│       │   ├── fields
+│       │   └── schemas
+│       └── user
 ├── bin
 ├── bruno
 │   └── environments
@@ -85,7 +89,7 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ├── tests
 └── tmp
 
-51 directories
+55 directories
 ```
 <!-- readme-tree end -->
 
