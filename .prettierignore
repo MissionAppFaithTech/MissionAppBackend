@@ -2,3 +2,5 @@
 node_modules
 build
 README.md
+pnpm-lock.yaml
+pnpm-workspace.yaml
