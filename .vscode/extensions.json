@@ -16,6 +16,7 @@
     "esbenp.prettier-vscode",
     "mylesmurphy.prettify-ts",
     "yoavbls.pretty-ts-errors",
-    "kokakiwi.vscode-just"
+    "kokakiwi.vscode-just",
+    "fallow-rs.fallow-vscode"
   ]
 }

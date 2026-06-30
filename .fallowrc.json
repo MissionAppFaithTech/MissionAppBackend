@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+
+  "entry": [
+    "bin/*.ts",
+    "adonisrc.ts",
+    "ace.js",
+    "start/**/*.ts",
+    "config/**/*.ts",
+    "providers/**/*.ts",
+    "commands/**/*.ts",
+    "database/migrations/**/*.ts",
+    "tests/**/*.spec.ts",
+    "tests/bootstrap.ts"
+  ],
+
+  "ignorePatterns": [
+    ".adonisjs/**",
+    "client/**",
+    "server/**",
+    "stubs/**",
+    "tmp/**",
+    "bruno/**"
+  ],
+
+  "usedClassMembers": ["toObject", "check", "authenticateAsClient", "createUserForGuard", "findById"],
+
+  "duplicates": {
+    "ignore": ["bin/**", "database/migrations/**"]
+  },
+
+  "health": {
+    "ignore": ["bin/**", "database/migrations/**"]
+  },
+
+  "rules": {
+    "unused-files": "off"
+  },
+
+  "overrides": [
+    {
+      "files": ["app/models/**"],
+      "rules": {
+        "circular-dependencies": "off"
+      }
+    },
+    {
+      "files": ["app/**"],
+      "rules": {
+        "unused-files": "error"
+      }
+    },
+    {
+      "files": ["app/auth/**", "app/transformers/**"],
+      "rules": {
+        "unused-class-members": "off"
+      }
+    }
+  ]
+}
