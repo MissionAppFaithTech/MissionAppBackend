@@ -30,12 +30,12 @@ O Semgrep é uma ferramenta de análise estática open-source (LGPL-2.1) mantida
 
 O Semgrep CE é **complementar**, não substituto, ao Snyk ([ADR-0012](./0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md)). As duas ferramentas cobrem superfícies de ataque distintas:
 
-| Ferramenta | O que analisa |
-|---|---|
-| Snyk Open Source | Vulnerabilidades (CVEs) em dependências `package.json` |
-| Snyk Container | Pacotes do OS em imagens Docker |
-| Snyk IaC | Misconfigurations em `docker-compose.yaml` |
-| **Semgrep CE** | **Padrões inseguros no código-fonte TypeScript do projeto** |
+| Ferramenta       | O que analisa                                               |
+| ---------------- | ----------------------------------------------------------- |
+| Snyk Open Source | Vulnerabilidades (CVEs) em dependências `package.json`      |
+| Snyk Container   | Pacotes do OS em imagens Docker                             |
+| Snyk IaC         | Misconfigurations em `docker-compose.yaml`                  |
+| **Semgrep CE**   | **Padrões inseguros no código-fonte TypeScript do projeto** |
 
 O Snyk Code (SAST do Snyk) foi desconsiderado em favor do Semgrep CE por razões documentadas na seção de Alternativas.
 
@@ -43,13 +43,13 @@ O Snyk Code (SAST do Snyk) foi desconsiderado em favor do Semgrep CE por razões
 
 O Semgrep organiza regras em _packs_ temáticos publicados no Semgrep Registry. Os packs selecionados para o MissionApp:
 
-| Pack | Justificativa |
-|---|---|
-| `p/typescript` | Regras específicas para padrões TypeScript inseguros |
-| `p/nodejs` | Padrões inseguros do ecossistema Node.js (path traversal, prototype pollution, eval inseguro) |
-| `p/secrets` | Detecção de secrets hardcoded — crítico para projeto open-source onde o repositório é público |
+| Pack              | Justificativa                                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `p/typescript`    | Regras específicas para padrões TypeScript inseguros                                                                                    |
+| `p/nodejs`        | Padrões inseguros do ecossistema Node.js (path traversal, prototype pollution, eval inseguro)                                           |
+| `p/secrets`       | Detecção de secrets hardcoded — crítico para projeto open-source onde o repositório é público                                           |
 | `p/owasp-top-ten` | Cobertura das 10 categorias de vulnerabilidade mais comuns em aplicações web (injeção, exposição de dados, autenticação quebrada, etc.) |
-| `p/sql-injection` | Detecção de SQL injection em queries raw — relevante dado que as migrations do Lucid usam DDL direto |
+| `p/sql-injection` | Detecção de SQL injection em queries raw — relevante dado que as migrations do Lucid usam DDL direto                                    |
 
 **Por que não usar `--config=auto` junto com packs explícitos:** O flag `--config=auto` detecta as linguagens do projeto e seleciona packs automaticamente — mas sobrepõe com os packs explícitos declarados, gerando achados duplicados no SARIF e aumentando o tempo de scan sem adicionar cobertura nova. A configuração adotada usa apenas packs explícitos, com escolha deliberada de cada um.
 
@@ -130,6 +130,7 @@ Nem todo finding do Semgrep representa uma vulnerabilidade real no contexto do M
 1. **Verificar o contexto do finding:** O Semgrep faz análise _single-file_ (intra-procedural) — não rastreia fluxo de dados entre arquivos. Um finding de "input não sanitizado" pode estar incorreto se a sanitização ocorre no validator VineJS ([ADR-0025](./0025-arquitetura-de-validators-reutilizaveis-com-vinejs.md)) antes de chegar ao código flagado.
 
 2. **Se for falso positivo:** Suprimir inline com comentário obrigatório explicando o motivo:
+
    ```typescript
    // nosemgrep: typescript.lang.security.audit.something -- validado pelo VineJS no validator antes de chegar aqui
    const query = rawParam

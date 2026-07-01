@@ -32,11 +32,11 @@ O k6 é uma ferramenta de código aberto para load testing, desenvolvida em Go e
 
 O k6 suporta múltiplos perfis de carga com propósitos distintos. O MissionApp adotará três:
 
-| Tipo | Objetivo | VUs | Duração | Quando rodar |
-|---|---|---|---|---|
-| **Smoke** | Verificar que o endpoint responde corretamente com carga mínima | 1–5 | 1–2 min | Pode rodar em PR para sanidade básica |
-| **Load** | Validar comportamento sob carga normal esperada (1.000 VUs) | 0 → 1.000 → 0 | 5–10 min | Merge para `main` ou manual |
-| **Stress** | Descobrir o ponto de ruptura além da carga esperada | 0 → 2.000+ → 0 | 10–15 min | Manual, antes de releases maiores |
+| Tipo       | Objetivo                                                        | VUs            | Duração   | Quando rodar                          |
+| ---------- | --------------------------------------------------------------- | -------------- | --------- | ------------------------------------- |
+| **Smoke**  | Verificar que o endpoint responde corretamente com carga mínima | 1–5            | 1–2 min   | Pode rodar em PR para sanidade básica |
+| **Load**   | Validar comportamento sob carga normal esperada (1.000 VUs)     | 0 → 1.000 → 0  | 5–10 min  | Merge para `main` ou manual           |
+| **Stress** | Descobrir o ponto de ruptura além da carga esperada             | 0 → 2.000+ → 0 | 10–15 min | Manual, antes de releases maiores     |
 
 Stress tests não são quality gates de CI — seu objetivo é mapear o limite do sistema, não bloquear deploy. Load tests são os gates relevantes para o pipeline.
 
@@ -46,11 +46,11 @@ Thresholds no k6 são critérios de passa/falha que encerram o processo com exit
 
 Os thresholds adotados para o MissionApp:
 
-| Métrica | Threshold | Justificativa |
-|---|---|---|
-| `http_req_duration` p(95) | `< 500ms` | 95% das requisições devem responder em menos de 500ms — limiar de experiência aceitável para aplicações web |
+| Métrica                   | Threshold  | Justificativa                                                                                                         |
+| ------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| `http_req_duration` p(95) | `< 500ms`  | 95% das requisições devem responder em menos de 500ms — limiar de experiência aceitável para aplicações web           |
 | `http_req_duration` p(99) | `< 1500ms` | 1% dos usuários pode ter latência maior, mas não deve ultrapassar 1.5s — acima disso a experiência é considerada ruim |
-| `http_req_failed` | `< 1%` | Taxa de erro (HTTP 4xx/5xx ou timeout) abaixo de 1% da carga total |
+| `http_req_failed`         | `< 1%`     | Taxa de erro (HTTP 4xx/5xx ou timeout) abaixo de 1% da carga total                                                    |
 
 **Por que p(95) e não média?** A média esconde cauda de latência. Se 950 requisições respondem em 100ms e 50 respondem em 5.000ms, a média fica em ~344ms — aparentemente aceitável — mas 5% dos usuários vivem uma experiência inaceitável. O p(95) garante que a maioria dos usuários tenha uma experiência dentro do threshold definido. O p(99) protege a cauda extrema.
 
@@ -70,10 +70,10 @@ const TOKEN = __ENV.TEST_TOKEN
 
 export const options = {
   stages: [
-    { duration: '1m', target: 100 },   // aquecimento gradual
-    { duration: '2m', target: 500 },   // carga intermediária
-    { duration: '3m', target: 1000 },  // carga sustentada (target do MissionApp)
-    { duration: '1m', target: 0 },     // descida controlada
+    { duration: '1m', target: 100 }, // aquecimento gradual
+    { duration: '2m', target: 500 }, // carga intermediária
+    { duration: '3m', target: 1000 }, // carga sustentada (target do MissionApp)
+    { duration: '1m', target: 0 }, // descida controlada
   ],
   thresholds: {
     http_req_duration: ['p(95)<500', 'p(99)<1500'],

@@ -14,14 +14,7 @@
     "tests/bootstrap.ts"
   ],
 
-  "ignorePatterns": [
-    ".adonisjs/**",
-    "client/**",
-    "server/**",
-    "stubs/**",
-    "tmp/**",
-    "bruno/**"
-  ],
+  "ignorePatterns": [".adonisjs/**", "client/**", "server/**", "stubs/**", "tmp/**", "bruno/**"],
 
   "usedClassMembers": ["toObject", "authenticateAsClient", "createUserForGuard", "findById"],
 
