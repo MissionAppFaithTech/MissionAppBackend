@@ -18,10 +18,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version-file: '.node-version'
 
-      - run: npm ci
+      - run: corepack enable && pnpm install --frozen-lockfile
 
       - name: Snyk SCA
         uses: snyk/actions/node@master
