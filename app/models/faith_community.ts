@@ -2,6 +2,7 @@ import { FaithCommunitySchema } from '#database/schema'
 import { compose } from '@adonisjs/core/helpers'
 import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import Pastor from './pastor.ts'
 import User from './user.ts'
 import { WithCreatedAt } from './mixins/with_created_at.ts'

@@ -5,7 +5,9 @@ import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations
 import FinancialConfig from './financial_config.ts'
 import ImpactProject from './impact_project.ts'
 import MissionaryAgency from './missionary_agency.ts'
+// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import MissionaryWorkAddress from './missionary_work_address.ts'
+// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import Post from './post.ts'
 import User from './user.ts'
 import { WithCreatedAt } from './mixins/with_created_at.ts'

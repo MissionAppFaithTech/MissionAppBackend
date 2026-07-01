@@ -23,7 +23,7 @@
     "bruno/**"
   ],
 
-  "usedClassMembers": ["toObject", "check", "authenticateAsClient", "createUserForGuard", "findById"],
+  "usedClassMembers": ["toObject", "authenticateAsClient", "createUserForGuard", "findById"],
 
   "duplicates": {
     "ignore": ["bin/**", "database/migrations/**"]
@@ -38,12 +38,6 @@
   },
 
   "overrides": [
-    {
-      "files": ["app/models/**"],
-      "rules": {
-        "circular-dependencies": "off"
-      }
-    },
     {
       "files": ["app/**"],
       "rules": {

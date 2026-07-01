@@ -6,7 +6,7 @@ import { DateTime } from 'luxon'
  * Mixin para adicionar createdAt e updatedAt a modelos mutáveis.
  * Normaliza automaticamente para UTC antes de persistir.
  */
-// fallow-ignore-file code-duplication -- createdAt block mirrors with_created_at.ts by design; both encode the same UTC rule independently to avoid mixin composition typing issues
+// fallow-ignore-file code-duplication -- bloco createdAt espelha with_created_at.ts intencionalmente; ambos encapsulam a mesma regra UTC de forma independente para evitar problemas de tipagem na composição de mixins
 export const WithTimestamps = <T extends NormalizeConstructor<typeof BaseModel>>(superclass: T) => {
   class WithTimestampsMixin extends superclass {
     // PostgreSQL TIMESTAMP WITHOUT TIME ZONE armazena o valor literal — sem conversão

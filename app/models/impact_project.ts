@@ -4,6 +4,7 @@ import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import CampaignProject from './campaign_project.ts'
 import MediaAsset from './media_asset.ts'
+// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import Missionary from './missionary.ts'
 import { WithPrimaryUuid } from './mixins/with_primary_uuid.ts'
 import { WithTimestamps } from './mixins/with_timestamps.ts'

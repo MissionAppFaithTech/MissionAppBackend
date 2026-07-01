@@ -2,6 +2,7 @@ import { CommentSchema } from '#database/schema'
 import { compose } from '@adonisjs/core/helpers'
 import { belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import Post from './post.ts'
 import User from './user.ts'
 import { WithPrimaryUuid } from './mixins/with_primary_uuid.ts'

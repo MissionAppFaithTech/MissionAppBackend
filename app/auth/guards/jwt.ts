@@ -61,9 +61,11 @@ export class JwtGuard<
     if (this.authenticationAttempted) {
       return this.getUserOrFail()
     }
+
     this.authenticationAttempted = true
 
     const authHeader = this.#ctx.request.header('authorization')
+
     if (!authHeader?.startsWith('Bearer ')) {
       throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
         guardDriverName: this.driverName,
@@ -91,6 +93,7 @@ export class JwtGuard<
     }
 
     const providerUser = await this.#userProvider.findById(payload.sub)
+
     if (!providerUser) {
       throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
         guardDriverName: this.driverName,
@@ -103,6 +106,7 @@ export class JwtGuard<
     return this.user
   }
 
+  // fallow-ignore-next-line unused-class-member -- contrato GuardContract; chamado pelo auth do AdonisJS via IoC, não por import direto
   async check(): Promise<boolean> {
     try {
       await this.authenticate()
