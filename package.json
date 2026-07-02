@@ -94,7 +94,7 @@
     "@adonisjs/shield": "9.0.0",
     "@dirupt/adonis-lucid-filter": "6.0.2",
     "@tuyau/core": "1.2.2",
-    "@vinejs/vine": "4.3.1",
+    "@vinejs/vine": "4.4.0",
     "argon2": "0.44.0",
     "jose": "6.2.3",
     "luxon": "3.7.2",
