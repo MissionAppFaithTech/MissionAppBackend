@@ -5,5 +5,5 @@ import { password } from '#validators/shared/fields/password'
 export const signupValidator = vine.create({
   fullName: vine.string().nullable(),
   email: email().unique({ table: 'users', column: 'email' }),
-  password: password().confirmed({ as: 'password_confirmation' }),
+  password: password().confirmed({ as: 'passwordConfirmation' }),
 })
