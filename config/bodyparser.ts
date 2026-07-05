@@ -2,38 +2,38 @@ import { defineConfig } from '@adonisjs/core/bodyparser'
 
 const bodyParserConfig = defineConfig({
   /**
-   * Parse request bodies for these HTTP methods.
-   * Keep this aligned with methods that receive payloads in your routes.
+   * Faz parse do corpo da requisição para estes métodos HTTP.
+   * Mantenha alinhado com os métodos que recebem payload nas suas rotas.
    */
   allowedMethods: ['POST', 'PUT', 'PATCH', 'DELETE'],
 
   /**
-   * Config for the "application/x-www-form-urlencoded"
-   * content-type parser.
+   * Configuração do parser de content-type
+   * "application/x-www-form-urlencoded".
    */
   form: {
     /**
-     * Normalize empty string values to null.
+     * Normaliza valores de string vazia para null.
      */
     convertEmptyStringsToNull: true,
 
     /**
-     * Content types handled by the form parser.
+     * Content types tratados pelo parser de form.
      */
     types: ['application/x-www-form-urlencoded'],
   },
 
   /**
-   * Config for the JSON parser.
+   * Configuração do parser de JSON.
    */
   json: {
     /**
-     * Normalize empty string values to null.
+     * Normaliza valores de string vazia para null.
      */
     convertEmptyStringsToNull: true,
 
     /**
-     * Content types handled by the JSON parser.
+     * Content types tratados pelo parser de JSON.
      */
     types: [
       'application/json',
@@ -44,32 +44,33 @@ const bodyParserConfig = defineConfig({
   },
 
   /**
-   * Config for the "multipart/form-data" content-type parser.
-   * File uploads are handled by the multipart parser.
+   * Configuração do parser de content-type "multipart/form-data".
+   * Uploads de arquivo são tratados pelo parser de multipart.
    */
   multipart: {
     /**
-     * Automatically process uploaded files into the system tmp directory.
+     * Processa automaticamente os arquivos enviados no diretório
+     * tmp do sistema.
      */
     autoProcess: true,
 
     /**
-     * Normalize empty string values to null.
+     * Normaliza valores de string vazia para null.
      */
     convertEmptyStringsToNull: true,
 
     /**
-     * Routes where multipart processing is handled manually.
+     * Rotas onde o processamento de multipart é feito manualmente.
      */
     processManually: [],
 
     /**
-     * Maximum accepted payload size for multipart requests.
+     * Tamanho máximo aceito de payload para requisições multipart.
      */
     limit: '20mb',
 
     /**
-     * Content types handled by the multipart parser.
+     * Content types tratados pelo parser de multipart.
      */
     types: ['multipart/form-data'],
   },

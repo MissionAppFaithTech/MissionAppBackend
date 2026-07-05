@@ -20,11 +20,26 @@ A questão central é: **como manter a documentação da API precisa, acessível
 
 ## Decisão
 
-Adotaremos uma abordagem **design-first com spec estático**: o contrato da API é descrito manualmente em `docs/api/v1/openapi.yaml` (OpenAPI 3.x), e o [Scalar](https://scalar.com/) renderiza esse arquivo como documentação interativa.
+Adotaremos uma abordagem **design-first com spec estático**: o contrato da API é descrito manualmente em arquivos YAML (OpenAPI 3.1) sob `docs/api/v1/`, e o [Scalar](https://scalar.com/) renderiza o arquivo raiz como documentação interativa.
 
 O spec YAML é a **fonte de verdade do contrato entre backend e frontend**. Qualquer mudança na superfície da API — nova rota, campo adicionado ou removido, status code alterado — deve ser refletida no YAML no mesmo PR.
 
-Ferramentas como [Orval](https://orval.dev/) e [Kubb](https://kubb.dev/) podem consumir o `openapi.yaml` para gerar clientes TypeScript type-safe e hooks no frontend, tornando o spec o ponto de sincronização entre as duas camadas.
+Ferramentas como [Orval](https://orval.dev/) e [Kubb](https://kubb.dev/) podem consumir o spec para gerar clientes TypeScript type-safe e hooks no frontend, tornando-o o ponto de sincronização entre as duas camadas.
+
+### Organização por domínio
+
+O spec é dividido em múltiplos arquivos para permanecer manutenível à medida que a superfície da API cresce:
+
+- `docs/api/v1/openapi.yaml` — arquivo raiz: `info`, `servers`, `tags`, `securitySchemes` e o mapa `paths`, onde cada rota é um `$ref` apontando para o arquivo de domínio correspondente (ex: `./auth/openapi.yaml#/paths/~1auth~1login`).
+- `docs/api/v1/<domínio>/openapi.yaml` — arquivo de agrupamento da pasta. Não contém `paths` nem `schemas` próprios, apenas `$ref`s para os demais arquivos daquela pasta. É este arquivo que o `openapi.yaml` raiz referencia — o raiz nunca aponta diretamente para `<domínio>.openapi.yaml` ou para os arquivos de superfície adicionais. Toda pasta de domínio tem um, mesmo quando a pasta tem um único arquivo de conteúdo.
+- `docs/api/v1/<domínio>/<domínio>.openapi.yaml` — arquivo principal de conteúdo do domínio: os `paths` e `schemas`/`parameters` (em `components`) da superfície de contrato central daquele domínio (ex: `auth/auth.openapi.yaml`, `user/user.openapi.yaml`).
+- `docs/api/v1/<domínio>/<superfície>.openapi.yaml` — arquivos adicionais para superfícies de contrato distintas dentro do mesmo domínio, quando existirem (ex: `user/missionary.openapi.yaml` para o fluxo de aprovação de missionários, `audit/logins.openapi.yaml` e `audit/permissions.openapi.yaml` para trilhas de auditoria com shapes de resposta diferentes). Cada um é referenciado pelo `openapi.yaml` de agrupamento da própria pasta. Domínios podem referenciar schemas de outros domínios via `$ref` relativo (ex: `../auth/auth.openapi.yaml#/components/schemas/LoginResponse`).
+
+**O critério para abrir um novo arquivo de superfície é o mesmo da separação por domínio — nunca a tabela SQL.** Uma tabela persistir dado de duas superfícies de contrato diferentes (ex: `password_hash` e `full_name`, ambos na tabela `users`, mas expostos por rotas com propósitos de contrato distintos) não é motivo para split; superfícies de contrato diferentes coincidirem por acaso na mesma tabela também não é motivo para uni-las num arquivo só. Dividir por tabela reintroduziria o acoplamento entre schema relacional e contrato de API que a separação por domínio já existe para evitar — um refactor de schema que não muda o contrato do cliente não deveria forçar reorganização de arquivos de documentação.
+
+**Critério de separação por domínio: o que o endpoint faz, não em qual tabela o dado é persistido.** Uma rota entra na pasta `auth/` quando ela prova identidade ou gerencia o ciclo de vida de uma sessão (login, refresh, logout) — o contrato dessas rotas é sobre o mecanismo de autenticação, não sobre o formato de um recurso. Uma rota entra na pasta do recurso (ex: `user/`) quando ela lê ou muta um atributo desse recurso, mesmo que o atributo seja sensível — troca de senha (`PATCH /account/password`) é `user/`, não `auth/`, pelo mesmo motivo que `GET /account/profile` é `user/`: ambas operam sobre o registro do usuário, uma delas apenas atualiza a coluna de senha em vez de outra coluna qualquer. `password_hash` morar na tabela `users` é detalhe de implementação; não determina o shape do contrato de nenhuma dessas rotas.
+
+Essa distinção generaliza para novos domínios conforme a API cresce (ex: `post/` para o recurso Post, `campaign/` para Campaign): a pergunta a fazer é sempre "esta rota autentica/gerencia sessão" (→ `auth/`) ou "esta rota lê/muta um recurso" (→ pasta do recurso), nunca "em qual tabela SQL isso vive".
 
 ## Justificativa
 

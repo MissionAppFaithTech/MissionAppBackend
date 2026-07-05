@@ -138,6 +138,27 @@ Never describe **what** the code does (well-named identifiers already do that). 
 
 All inline code comments must be written in **Portuguese (pt-BR)**.
 
+**Tag every comment that survives the rule above** — a bare `//` explanation is a code smell; tag it so its intent is scannable:
+
+| Tag | When to use |
+| --- | --- |
+| `NOTE:` | Important, non-obvious information — invariant, expected behavior, security/design rationale |
+| `TODO:` | Work not yet done, proposed by whoever is reading/writing the code right now |
+| `FIXME:` / `BUG:` | Known incorrect behavior that needs fixing |
+| `HACK:` | Deliberate, temporary workaround — not the ideal solution |
+| `OPTIMIZE:` | Works correctly but could be faster/cheaper |
+| `REVIEW:` / `CHECK:` | Needs a second pair of eyes or technical validation |
+| `DEPRECATED:` | Old code kept only for compatibility — points to the replacement |
+| `WARNING:` | Risky or sensitive code — changing it carelessly breaks something |
+| `LEGACY:` | Inherited code kept only for backwards compatibility |
+| `UNDONE:` | A feature was reverted and may need reimplementing |
+| `#region` / `#endregion` | Groups a block of code in editors that support folding |
+
+```typescript
+// NOTE: fail-closed — Dragonfly indisponível nunca deve virar "aceitar o token"
+// TODO: validar outputs do Dragonfly contra um schema antes de confiar neles
+```
+
 ### Controller (thin)
 
 ```typescript
@@ -505,6 +526,14 @@ The table below lists only the ADRs that directly affect daily code decisions �
 When creating a new ADR, **always** use `docs/architecture/templates/adr-template.md` as the structural reference. If any section of the template is ambiguous, consult the existing ADRs in `docs/architecture/decisions/` as reference implementations — they represent the canonical style for this project.
 
 After creating the ADR file, **always** update `docs/architecture/decisions/README.md`: add the new entry to the **📚 Índice de ADRs** table with the correct ADR number, full title, and current status. The table must stay in sync with the files in the directory — a missing or outdated entry in the index is a documentation bug.
+
+---
+
+## Opening PRs and issues
+
+When opening a Pull Request, **always** use `.github/pull-request-template.md` as the strict structural base — no exceptions. Keep every section (Motivação, O que foi feito, Como Testar, Evidências, Checklist, Links) and fill out the checklist honestly instead of removing or skipping it. Do not invent a different PR body format, even for small changes.
+
+When opening an issue, **always** use the matching template from `.github/ISSUE_TEMPLATE/` (`bug_report.md`, `feature_request.md`, or `technical_task.md`) as the strict structural base — same principle: keep every section, fill it out completely, don't freelance a different structure.
 
 ---
 

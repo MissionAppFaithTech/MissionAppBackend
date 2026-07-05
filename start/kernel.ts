@@ -1,10 +1,10 @@
 /*
 |--------------------------------------------------------------------------
-| HTTP kernel file
+| Arquivo do kernel HTTP
 |--------------------------------------------------------------------------
 |
-| The HTTP kernel file is used to register the middleware with the server
-| or the router.
+| O arquivo do kernel HTTP é usado para registrar os middlewares no
+| servidor ou no router.
 |
 */
 
@@ -12,15 +12,15 @@ import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
 
 /**
- * The error handler is used to convert an exception
- * to a HTTP response.
+ * O error handler é usado para converter uma exception
+ * em uma resposta HTTP.
  */
 server.errorHandler(() => import('#exceptions/handler'))
 
 /**
- * The server middleware stack runs middleware on all the HTTP
- * requests, even if there is no route registered for
- * the request URL.
+ * A stack de middleware do server roda middlewares em todas as
+ * requisições HTTP, mesmo quando não há rota registrada para
+ * a URL da requisição.
  */
 server.use([
   () => import('#middleware/force_json_response_middleware'),
@@ -29,8 +29,8 @@ server.use([
 ])
 
 /**
- * The router middleware stack runs middleware on all the HTTP
- * requests with a registered route.
+ * A stack de middleware do router roda middlewares em todas as
+ * requisições HTTP com uma rota registrada.
  */
 router.use([
   () => import('@adonisjs/core/bodyparser_middleware'),
@@ -41,8 +41,8 @@ router.use([
 ])
 
 /**
- * Named middleware collection must be explicitly assigned to
- * the routes or the routes group.
+ * Middlewares nomeados devem ser atribuídos explicitamente às
+ * rotas ou ao grupo de rotas.
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),

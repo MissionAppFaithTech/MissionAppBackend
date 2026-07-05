@@ -3,25 +3,28 @@ import { BaseSerializer } from '@adonisjs/core/transformers'
 import { type SimplePaginatorMetaKeys } from '@adonisjs/lucid/types/querybuilder'
 
 /**
- * Custom serializer for API responses that ensures consistent JSON structure
- * across all API endpoints. Wraps response data in a 'data' property and handles
- * pagination metadata for Lucid ORM query results.
+ * Serializer customizado para respostas de API que garante estrutura JSON
+ * consistente em todos os endpoints. Envolve os dados da resposta em uma
+ * propriedade 'data' e trata os metadados de paginação dos resultados de
+ * query do Lucid ORM.
  */
 class ApiSerializer extends BaseSerializer<{
   Wrap: 'data'
   PaginationMetaData: SimplePaginatorMetaKeys
 }> {
   /**
-   * Wraps all serialized data under this key in the response object.
-   * Example: { data: [...] } instead of returning raw arrays/objects
+   * Envolve todos os dados serializados sob esta chave no objeto de resposta.
+   * Exemplo: { data: [...] } em vez de retornar arrays/objetos crus
    */
   wrap: 'data' = 'data'
 
   /**
-   * Validates and defines pagination metadata structure for paginated responses.
-   * Ensures that pagination info from Lucid queries is properly formatted.
+   * Valida e define a estrutura de metadados de paginação para respostas
+   * paginadas. Garante que as informações de paginação das queries do Lucid
+   * estejam formatadas corretamente.
    *
-   * @throws Error if metadata doesn't match Lucid's pagination structure
+   * @throws Error se os metadados não corresponderem à estrutura de
+   * paginação do Lucid
    */
   definePaginationMetaData(metaData: unknown): SimplePaginatorMetaKeys {
     if (!this.isLucidPaginatorMetaData(metaData)) {
@@ -34,7 +37,7 @@ class ApiSerializer extends BaseSerializer<{
 }
 
 /**
- * Single instance of ApiSerializer used across the application
+ * Instância única de ApiSerializer usada em toda a aplicação
  */
 const serializer = new ApiSerializer()
 const serialize = Object.assign(
@@ -52,15 +55,17 @@ const serialize = Object.assign(
 ) as ApiSerializer['serialize'] & { withoutWrapping: ApiSerializer['serializeWithoutWrapping'] }
 
 /**
- * Adds the serialize method to all HttpContext instances.
- * Usage in controllers: return ctx.serialize(data)
- * This ensures all API responses follow the same structure with data wrapping.
+ * Adiciona o método serialize a todas as instâncias de HttpContext.
+ * Uso em controllers: return ctx.serialize(data)
+ * Isso garante que todas as respostas de API sigam a mesma estrutura com
+ * o wrapping de data.
  */
 HttpContext.instanceProperty('serialize', serialize)
 
 /**
- * Module augmentation to add the serialize method to HttpContext.
- * This allows controllers to use ctx.serialize() for consistent API responses.
+ * Module augmentation para adicionar o método serialize ao HttpContext.
+ * Isso permite que controllers usem ctx.serialize() para respostas de
+ * API consistentes.
  */
 declare module '@adonisjs/core/http' {
   export interface HttpContext {

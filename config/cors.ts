@@ -2,47 +2,48 @@ import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/cors'
 
 /**
- * Configuration options to tweak the CORS policy. The following
- * options are documented on the official documentation website.
+ * Opções de configuração para ajustar a política de CORS. As opções
+ * a seguir estão documentadas no site oficial de documentação.
  *
  * https://docs.adonisjs.com/guides/security/cors
  */
 const corsConfig = defineConfig({
   /**
-   * Enable or disable CORS handling globally.
+   * Habilita ou desabilita o tratamento de CORS globalmente.
    */
   enabled: true,
 
   /**
-   * In development, allow every origin to simplify local front/backend setup.
-   * In production, keep an explicit allowlist (empty by default, so no
-   * cross-origin browser access is allowed until configured).
+   * Em desenvolvimento, permite qualquer origem para simplificar o setup
+   * local front/backend. Em produção, mantém um allowlist explícito (vazio
+   * por padrão, então nenhum acesso cross-origin do browser é permitido até
+   * ser configurado).
    */
   origin: app.inDev ? true : [],
 
   /**
-   * HTTP methods accepted for cross-origin requests.
+   * Métodos HTTP aceitos para requisições cross-origin.
    */
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
 
   /**
-   * Reflect request headers by default. Use a string array to restrict
-   * allowed headers.
+   * Reflete os headers da requisição por padrão. Use um array de strings
+   * para restringir os headers permitidos.
    */
   headers: true,
 
   /**
-   * Response headers exposed to the browser.
+   * Headers de resposta expostos ao browser.
    */
   exposeHeaders: [],
 
   /**
-   * Allow cookies/authorization headers on cross-origin requests.
+   * Permite cookies/headers de autorização em requisições cross-origin.
    */
   credentials: true,
 
   /**
-   * Cache CORS preflight response for N seconds.
+   * Cacheia a resposta de preflight do CORS por N segundos.
    */
   maxAge: 90,
 })

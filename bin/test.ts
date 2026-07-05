@@ -1,12 +1,12 @@
 /*
 |--------------------------------------------------------------------------
-| Test runner entrypoint
+| Entrypoint do test runner
 |--------------------------------------------------------------------------
 |
-| The "test.ts" file is the entrypoint for running tests using Japa.
+| O arquivo "test.ts" é o entrypoint para rodar os testes usando o Japa.
 |
-| Either you can run this file directly or use the "test"
-| command to run this file and monitor file changes.
+| Você pode rodar este arquivo diretamente ou usar o comando "test"
+| para rodá-lo e monitorar mudanças de arquivo.
 |
 */
 
@@ -17,14 +17,14 @@ import { Ignitor, prettyPrintError } from '@adonisjs/core'
 import { configure, processCLIArgs, run } from '@japa/runner'
 
 /**
- * URL to the application root. AdonisJS need it to resolve
- * paths to file and directories for scaffolding commands
+ * URL para a raiz da aplicação. O AdonisJS precisa dela para resolver
+ * paths de arquivos e diretórios para comandos de scaffolding
  */
 const APP_ROOT = new URL('../', import.meta.url)
 
 /**
- * The importer is used to import files in context of the
- * application.
+ * O importer é usado para importar arquivos no contexto da
+ * aplicação.
  */
 const IMPORTER = (filePath: string) => {
   if (filePath.startsWith('./') || filePath.startsWith('../')) {

@@ -2,6 +2,8 @@ import { errors, symbols } from '@adonisjs/auth'
 import type { AuthClientResponse, GuardContract } from '@adonisjs/auth/types'
 import type { HttpContext } from '@adonisjs/core/http'
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
+import { v7 as uuidv7 } from 'uuid'
+import type { AuthRevocationService } from '#services/auth_revocation_service'
 
 export type JwtGuardUser<RealUser> = {
   getId(): string
@@ -33,18 +35,59 @@ export class JwtGuard<
   #userProvider: UserProvider
   #options: JwtGuardOptions
   #secret: Uint8Array
+  #authRevocationService: AuthRevocationService
+  #currentJti?: string
+  #currentTokenExpiresAt?: number
+  #currentFamilyId?: string
 
-  constructor(ctx: HttpContext, userProvider: UserProvider, options: JwtGuardOptions) {
+  constructor(
+    ctx: HttpContext,
+    userProvider: UserProvider,
+    authRevocationService: AuthRevocationService,
+    options: JwtGuardOptions
+  ) {
     this.#ctx = ctx
     this.#userProvider = userProvider
+    this.#authRevocationService = authRevocationService
     this.#options = options
     this.#secret = new TextEncoder().encode(options.secret)
   }
 
-  async generate(user: UserProvider[typeof symbols.PROVIDER_REAL_USER]) {
-    const providerUser = await this.#userProvider.createUserForGuard(user)
+  /**
+   * jti/exp/fid do token que autenticou a request atual — usado pelo logout
+   * para bloquear exatamente esse token com o TTL restante correto e para
+   * escopar a revogação de refresh tokens à família (dispositivo) de origem.
+   */
+  get currentJti(): string | undefined {
+    return this.#currentJti
+  }
 
-    const builder = new SignJWT({ sub: String(providerUser.getId()) })
+  get currentTokenExpiresAt(): number | undefined {
+    return this.#currentTokenExpiresAt
+  }
+
+  get currentFamilyId(): string | undefined {
+    return this.#currentFamilyId
+  }
+
+  /**
+   * @param familyId Família do refresh token emitido junto com este access
+   *                 token. Quando omitido (ex: `authenticateAsClient` em
+   *                 testes, sem refresh token real envolvido), uma família
+   *                 avulsa é gerada — nunca aparecerá na blocklist de família
+   *                 revogada, então não afeta a autenticação.
+   */
+  async generate(user: UserProvider[typeof symbols.PROVIDER_REAL_USER], familyId?: string) {
+    const providerUser = await this.#userProvider.createUserForGuard(user)
+    const authVersion = await this.#authRevocationService.getAuthVersion(providerUser.getId())
+
+    const builder = new SignJWT({
+      sub: String(providerUser.getId()),
+      jti: uuidv7(),
+      role: (providerUser.getOriginal() as { role: string }).role,
+      auth_version: authVersion,
+      fid: familyId ?? uuidv7(),
+    })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
 
@@ -86,7 +129,47 @@ export class JwtGuard<
       })
     }
 
-    if (!payload.sub) {
+    const jti = payload.jti
+    const authVersion = payload.auth_version
+    const familyId = payload.fid
+
+    if (
+      !payload.sub ||
+      typeof jti !== 'string' ||
+      typeof authVersion !== 'number' ||
+      typeof familyId !== 'string'
+    ) {
+      throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
+        guardDriverName: this.driverName,
+      })
+    }
+
+    // NOTE: fail-closed — qualquer falha ao consultar o DragonflyDB rejeita a
+    // request. Dado o contexto de dados sensíveis (LGPD) e transações
+    // financeiras, uma indisponibilidade do Dragonfly não deve degradar para
+    // "aceitar o token".
+    try {
+      const currentAuthVersion = await this.#authRevocationService.getAuthVersion(payload.sub)
+
+      if (currentAuthVersion !== authVersion) {
+        throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
+          guardDriverName: this.driverName,
+        })
+      }
+
+      if (await this.#authRevocationService.isJtiBlocked(jti)) {
+        throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
+          guardDriverName: this.driverName,
+        })
+      }
+
+      if (await this.#authRevocationService.isFamilyRevoked(familyId)) {
+        throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
+          guardDriverName: this.driverName,
+        })
+      }
+    } catch (error) {
+      if (error instanceof errors.E_UNAUTHORIZED_ACCESS) throw error
       throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
         guardDriverName: this.driverName,
       })
@@ -102,6 +185,9 @@ export class JwtGuard<
 
     this.user = providerUser.getOriginal()
     this.isAuthenticated = true
+    this.#currentJti = jti
+    this.#currentTokenExpiresAt = payload.exp
+    this.#currentFamilyId = familyId
 
     return this.user
   }
@@ -124,7 +210,7 @@ export class JwtGuard<
     return this.user
   }
 
-  // Suporte ao loginAs() nos testes
+  // NOTE: suporte ao loginAs() nos testes — não é chamado em código de produção
   async authenticateAsClient(
     user: UserProvider[typeof symbols.PROVIDER_REAL_USER]
   ): Promise<AuthClientResponse> {

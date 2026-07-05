@@ -1,5 +1,6 @@
 import { JwtGuard } from '#auth/guards/jwt'
 import { LucidJwtUserProvider } from '#auth/providers/lucid_user_jwt_provider'
+import { AuthRevocationService } from '#services/auth_revocation_service'
 import env from '#start/env'
 import { defineConfig } from '@adonisjs/auth'
 import { sessionGuard, sessionUserProvider } from '@adonisjs/auth/session'
@@ -7,36 +8,29 @@ import type { Authenticators, InferAuthEvents } from '@adonisjs/auth/types'
 
 const authConfig = defineConfig({
   /**
-   * Default guard used when no guard is explicitly specified.
+   * Guard padrão usado quando nenhum guard é especificado explicitamente.
    */
   default: 'jwt',
 
   guards: {
-    /**
-     * Token-based guard for stateless API authentication.
-     */
-    // api: tokensGuard({
-    //   provider: tokensUserProvider({
-    //     tokens: 'accessTokens',
-    //     model: () => import('#models/user'),
-    //   }),
-    // }),
+    // TODO: adicionar guard `api` (tokensGuard + tokensUserProvider) se algum
+    // consumidor precisar de personal access tokens além do fluxo JWT.
 
     /**
-     * JWT-based guard for stateless API authentication.
+     * Guard baseado em JWT para autenticação de API stateless.
      */
     jwt: (ctx) =>
-      new JwtGuard(ctx, new LucidJwtUserProvider(), {
+      new JwtGuard(ctx, new LucidJwtUserProvider(), new AuthRevocationService(), {
         secret: env.get('JWT_SECRET'),
-        expiresIn: env.get('JWT_ACCESS_EXPIRES_IN') ?? '2h',
+        expiresIn: env.get('JWT_ACCESS_EXPIRES_IN'),
       }),
 
     /**
-     * Session-based guard for browser authentication.
+     * Guard baseado em session para autenticação via browser.
      */
     web: sessionGuard({
       /**
-       * Enable persistent login using remember-me tokens.
+       * Habilita login persistente usando remember-me tokens.
        */
       useRememberMeTokens: false,
 
@@ -50,8 +44,8 @@ const authConfig = defineConfig({
 export default authConfig
 
 /**
- * Inferring types from the configured auth
- * guards.
+ * Inferência de tipos a partir dos guards de auth
+ * configurados.
  */
 declare module '@adonisjs/auth/types' {
   export interface Authenticators extends InferAuthenticators<typeof authConfig> {}

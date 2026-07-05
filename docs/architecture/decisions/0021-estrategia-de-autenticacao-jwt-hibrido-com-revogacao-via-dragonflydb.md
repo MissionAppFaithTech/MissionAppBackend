@@ -35,78 +35,105 @@ Adotaremos **autenticação JWT híbrida** com dois tipos de token e revogação
 Token JWT assinado com HS256, emitido a cada login ou renovação, com TTL de 15 minutos. O payload carrega:
 
 - `sub` — ID do usuário
-- `jti` — UUID v7 único por token, utilizado para revogação individual
-- `auth_version` — contador de versão do usuário, utilizado para revogação global
+- `jti` — UUID v7 único por token, utilizado para revogação individual (bloqueio do token corrente no logout)
+- `auth_version` — contador de versão do usuário, utilizado para revogação global (todas as sessões)
+- `fid` — `family_id` do refresh token emitido junto com este access token, utilizado para revogação remota de uma sessão/dispositivo específico
 - `role` — role do usuário no momento da emissão (`ADMIN`, `MISSIONARY` ou `SUPPORTER`), utilizado para autorização sem consulta ao banco
 
 Incluir a `role` no payload elimina o round-trip ao banco ou cache em cada verificação de permissão. A segurança é preservada pelo mecanismo de `auth_version`: qualquer alteração de role deve incrementar o contador, invalidando imediatamente todos os tokens emitidos com a role anterior.
 
-A validação é realizada em três passos por request autenticado: verificação criptográfica da assinatura (`jwtVerify`), verificação da `auth_version` ativa no DragonflyDB e verificação da presença do `jti` na blocklist do DragonflyDB. Todas são operações O(1) — a primeira é CPU-local, as duas seguintes são `GET`s independentes no DragonflyDB.
+A validação é realizada em quatro passos por request autenticado: verificação criptográfica da assinatura (`jwtVerify`), verificação da `auth_version` ativa no DragonflyDB, verificação da presença do `jti` na blocklist do DragonflyDB e verificação de que a `fid` não foi marcada como revogada remotamente. Todas são operações O(1) — a primeira é CPU-local, as três seguintes são `GET`/`EXISTS` independentes no DragonflyDB.
 
 ### Refresh Token (opaco — longa duração)
 
-Token opaco gerado com `crypto.randomBytes(64)`, com TTL de 7 dias. Armazenado no PostgreSQL como hash SHA-256 — o valor bruto nunca é persistido. Cada registro carrega:
+Token opaco gerado com `crypto.randomBytes(64)`. Armazenado no PostgreSQL como hash SHA-256 — o valor bruto nunca é persistido. Cada registro carrega:
 
 - `token_hash` — hash SHA-256 do valor bruto
-- `family_id` — UUID que agrupa todos os tokens de uma mesma sessão de login, utilizado para detecção de roubo via refresh token rotation
-- `expires_at` — expiração absoluta
+- `family_id` — UUID que agrupa todos os tokens de uma mesma sessão/dispositivo, utilizado para detecção de roubo via refresh token rotation e para revogação por-dispositivo
+- `device_type` — `web` ou `mobile`, determina o TTL aplicado (ver abaixo) e é exibido na listagem de sessões
+- `device_name` — nome legível do dispositivo/cliente (opcional, informado pelo cliente via header), exibido apenas na listagem de sessões
+- `ip_address` — IP de origem da requisição que criou ou rotacionou o token
+- `last_used_at` — data da última rotação bem-sucedida, usada para ordenar a listagem de sessões
+- `expires_at` — expiração absoluta, recalculada a cada rotação (sliding window — ver abaixo)
 - `revoked_at` — `null` enquanto válido; preenchido na revogação
 
-A cada uso, o refresh token é rotacionado: o token apresentado é revogado e um novo é emitido na mesma família. Se um token já revogado for apresentado, toda a família é invalidada imediatamente — técnica conhecida como _refresh token rotation with family tracking_.
+**TTL por tipo de dispositivo, recalculado a cada rotação (sliding window):** o TTL não é um valor fixo desde a emissão original — a cada rotação bem-sucedida, `expires_at` é recalculado a partir do momento atual (`JWT_REFRESH_EXPIRES_IN_WEB`, padrão 7 dias; `JWT_REFRESH_EXPIRES_IN_MOBILE`, padrão 30 dias). Na prática: um app mobile usado diariamente nunca desautentica por inatividade, porque cada uso adia a expiração por mais 30 dias a partir daquele instante; só pede login novamente após um período real de inatividade maior que o TTL configurado. O TTL mais longo do mobile reflete o padrão observável de apps como Instagram e é adequado ao contexto mobile-first do MissionApp (NF.6.1) — sessões web (via BFF) usam um TTL mais curto por padrão de segurança.
+
+A cada uso, o refresh token é rotacionado: o token apresentado é revogado e um novo é emitido na mesma família, com os metadados de dispositivo herdados e o TTL recalculado. Se um token já revogado for apresentado, toda a família é invalidada imediatamente — técnica conhecida como _refresh token rotation with family tracking_.
 
 ### Mecanismos de Revogação no DragonflyDB
 
-**Revogação individual (logout em um dispositivo):**
-O `jti` do access token corrente é adicionado ao DragonflyDB com TTL igual ao tempo restante de validade do token. A cada request, o guard verifica a existência da chave `jti:<valor>` antes de autenticar.
+**Revogação individual (bloqueio do access token corrente):**
+O `jti` do access token corrente é adicionado ao DragonflyDB com TTL igual ao tempo restante de validade do token. A cada request, o guard verifica a existência da chave `jti:<valor>` antes de autenticar. Esse bloqueio é por natureza escopado a um único token — apenas o access token usado na requisição de logout é afetado.
 
-**Revogação global (troca de senha, alteração de role, suspenção de conta):**
-Um contador por usuário (`user:<id>:auth_version`) é incrementado no DragonflyDB. O payload do JWT carrega o valor da `auth_version` no momento da emissão. Se o valor no token divergir do valor atual no Dragonfly, o request é rejeitado — todos os tokens de todas as sessões ativas são invalidados instantaneamente, sem necessidade de enumerar os `jti`s emitidos. Isso garante que uma alteração de role nunca seja lida a partir de um token desatualizado.
+**Revogação de sessão específica (logout de um dispositivo, ou revogação remota de outro dispositivo):**
+O logout do dispositivo atual é escopado pela `family_id` do refresh token de origem daquela sessão (`fid` no payload do access token): `UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = ? AND user_id = ?`, afetando apenas aquela sessão — outros dispositivos do mesmo usuário continuam válidos. O mesmo mecanismo é reutilizado para revogação remota: a partir da listagem de sessões ativas (`GET /auth/sessions`), o usuário pode encerrar remotamente qualquer sessão pelo seu `family_id` (`DELETE /auth/sessions/:familyId`), mesmo sem ter em mãos o access token daquele dispositivo. Nesse caso, o refresh token da família é revogado no PostgreSQL, mas o access token daquela sessão — se ainda dentro da janela de 15 minutos — só seria rejeitado organicamente na próxima tentativa de renovação. Para revogação efetivamente imediata, uma chave `family:<family_id>:revoked` é adicionada ao DragonflyDB com TTL igual ao tempo de vida máximo de um access token (`JWT_ACCESS_EXPIRES_IN`); o guard verifica essa chave a cada request (4º passo de validação), então o dispositivo remoto perde o acesso já na próxima requisição, não apenas ao tentar renovar.
 
-### Entrega dos Tokens por Tipo de Cliente
+**Revogação global (troca de senha, alteração de role, suspenção de conta, logout em todos os dispositivos):**
+Um contador por usuário (`user:<id>:auth_version`) é incrementado no DragonflyDB. O payload do JWT carrega o valor da `auth_version` no momento da emissão. Se o valor no token divergir do valor atual no Dragonfly, o request é rejeitado — todos os tokens de todas as sessões ativas são invalidados instantaneamente, sem necessidade de enumerar os `jti`s emitidos. Isso garante que uma alteração de role nunca seja lida a partir de um token desatualizado. O mesmo mecanismo, combinado com `UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ?`, também implementa a ação explícita "sair de todos os dispositivos" (`DELETE /auth/sessions`) — distinta do logout comum, que afeta apenas a sessão corrente.
 
-O servidor distingue clientes pelo header `x-client-type: mobile`. A ausência do header é interpretada como cliente web.
+### Entrega de Tokens
 
-**Cliente web (browser):**
-O refresh token não aparece no body da resposta — é setado diretamente em um cookie `httpOnly` com o nome `__Secure-missionapp_rt`. O cookie carrega os atributos `Secure`, `SameSite=Strict` e `Path=/api/v1/auth/refresh`, restringindo sua transmissão exclusivamente à rota de renovação. O prefixo `__Secure-` é um mecanismo do protocolo HTTP que impõe a rejeição do cookie pelo browser se a resposta não vier de uma conexão HTTPS. O access token é retornado no body e armazenado em memória pelo frontend — não em `localStorage`.
+A API sempre retorna `accessToken` e `refreshToken` no corpo da resposta, em login, signup e refresh — independente do cliente. Não há mais entrega via cookie nesta camada.
+
+**Motivo: o consumidor web não é um browser, é um BFF.**
+O MissionApp é consumido na web por um BFF (Next.js), não diretamente por um browser — o browser fala com o BFF, e o BFF fala com esta API em uma chamada server-to-server. Um cookie setado por `response.cookie()` nesta API seria recebido pelo processo Node.js do BFF, não pelo browser do usuário final — o header `Set-Cookie` nunca atravessaria o hop BFF→browser automaticamente. Setar um cookie aqui seria, na melhor das hipóteses, inútil, e na pior, uma falsa sensação de segurança para quem lê o código sem entender a topologia real da requisição. A responsabilidade de expor um cookie httpOnly ao browser do usuário final é do BFF — ele recebe `{ accessToken, refreshToken }` no corpo desta API e decide como (e se) persistir isso para o navegador, via sua própria camada de sessão. Isso está fora do escopo desta API e deste ADR.
 
 **Cliente mobile (app nativo):**
-O refresh token é retornado no body junto com o access token. O app armazena ambos no storage seguro do sistema operacional: Keychain no iOS, Keystore no Android. JavaScript não está envolvido, portanto o vetor XSS não se aplica.
+Continua recebendo ambos os tokens no corpo, como sempre — sem mudança. O app armazena ambos no storage seguro do sistema operacional: Keychain no iOS, Keystore no Android. JavaScript não está envolvido, portanto o vetor XSS não se aplica a este cliente.
+
+**O que `x-client-type` ainda faz:**
+O header `x-client-type: mobile` (ausente = `web`) deixou de controlar a entrega dos tokens — passou a ser puramente um sinal de metadado, usado para: (1) selecionar a política de TTL do refresh token (sliding window mais longa para mobile — ver seção "Refresh Token"); (2) popular `device_type` na listagem de sessões ativas (`GET /auth/sessions`). Um header opcional adicional, `x-device-name`, permite ao cliente informar um nome legível (`"iPhone 15"`, `"Chrome no macOS"`) exibido apenas nessa listagem.
 
 ### Fluxo Consolidado
 
 ```bash
-Login:
+Login (ou signup):
   Valida credenciais → carrega { id, role } do usuário
-  Emite access token JWT (15 min) com payload { sub, jti, role, auth_version }
-  Emite refresh token opaco (7 dias) → armazena hash SHA-256 no PostgreSQL
-  Web:    refresh token → cookie __Secure-missionapp_rt (httpOnly, Secure, SameSite=Strict,
-          Path=/api/v1/auth/refresh); access token → body
-  Mobile: ambos → body; cliente armazena no Keychain (iOS) / Keystore (Android)
+  Cria refresh token opaco em nova família → armazena hash SHA-256 + device_type/
+    device_name/ip_address no PostgreSQL (TTL por device_type, sliding window)
+  Emite access token JWT (15 min) com payload { sub, jti, role, auth_version, fid }
+  API-->>Cliente: { accessToken, refreshToken } — sempre no body, web e mobile
+    (web é consumido por um BFF, não por um browser — ver "Entrega de Tokens")
 
 Request autenticado:
   Authorization: Bearer <access_token>
-  Guard (3 passos, todos O(1)):
+  Guard (4 passos, todos O(1)):
     1. jwtVerify() [CPU-local] — valida assinatura e expiração
     2. GET user:<id>:auth_version [Dragonfly] — rejeita se divergir do payload
     3. EXISTS jti:<jti> [Dragonfly] — rejeita se token estiver na blocklist
+    4. EXISTS family:<fid>:revoked [Dragonfly] — rejeita se a sessão foi revogada remotamente
   Role extraída do payload JWT — sem consulta ao banco para autorização
 
 Access token expirado:
-  POST /api/v1/auth/refresh
-  Web:    cookie __Secure-missionapp_rt enviado automaticamente pelo browser
-  Mobile: { refreshToken } no body + header x-client-type: mobile
-  Servidor: SHA-256(token recebido) → busca no banco → valida family_id
-            → revoga token atual → emite novo refresh token (mesma família)
-            → emite novo access token com role e auth_version atuais
+  POST /api/v1/auth/refresh { refreshToken }
+  Servidor: SHA-256(refresh token recebido) → busca no banco → valida family_id
+            → revoga token atual → cria novo refresh token na mesma família
+              (TTL recalculado a partir de agora — sliding window)
+            → emite novo access token com role, auth_version e fid atuais
+  API-->>Cliente: { accessToken, refreshToken } — sempre no body
 
-Logout:
-  SET jti:<jti> EX <ttl_restante> [Dragonfly] → bloqueia access token atual
-  UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ? [PostgreSQL]
-  Web: clearCookie(__Secure-missionapp_rt)
+Logout (dispositivo atual):
+  SET jti:<jti> EX <ttl_restante> [Dragonfly] → bloqueia o access token desta requisição
+  UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = ? AND user_id = ? [PostgreSQL]
+     → apenas a sessão/família de origem; outros dispositivos não são afetados
 
-Troca de senha ou alteração de role:
+Listar sessões ativas (GET /auth/sessions):
+  SELECT refresh_tokens WHERE user_id = ? AND revoked_at IS NULL AND expires_at > now()
+    ORDER BY last_used_at DESC [PostgreSQL] — uma linha por família ativa
+
+Revogar sessão remota (DELETE /auth/sessions/:familyId):
+  UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = ? AND user_id = ? [PostgreSQL]
+  SET family:<familyId>:revoked EX <ttl_access_token> [Dragonfly]
+     → access token daquela sessão rejeitado já na próxima request (passo 4), sem
+       esperar sua expiração natural
+
+Logout em todos os dispositivos (DELETE /auth/sessions):
   INCR user:<id>:auth_version [Dragonfly] → invalida todos os access tokens imediatamente
   UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ? [PostgreSQL]
+
+Troca de senha ou alteração de role:
+  Mesmo fluxo do logout em todos os dispositivos
 
 Suspenção/reprovação de conta:
   Mesmo fluxo da troca de senha — acesso cortado na próxima request autenticada
@@ -126,20 +153,16 @@ sequenceDiagram
     participant DB as DragonflyDB
     participant PG as PostgreSQL
 
-    Note over C,PG: Login
-    C->>API: POST /auth/login { email, password }
+    Note over C,PG: Login (ou signup) — resposta sempre no body, web (via BFF) e mobile
+    C->>API: POST /auth/login { email, password } [+ x-client-type, x-device-name opcionais]
     API->>PG: Verifica credenciais
     PG-->>API: { id, role }
     API->>DB: GET user:<id>:auth_version
     DB-->>API: auth_version (0 se inexistente)
-    API->>API: Gera JWT { sub, jti, role, auth_version } TTL 15min
-    API->>API: Gera refresh token opaco → SHA-256(token)
-    API->>PG: INSERT refresh_tokens { token_hash, family_id, expires_at }
-    alt Cliente web
-        API-->>C: { accessToken } + Set-Cookie __Secure-missionapp_rt (httpOnly)
-    else Cliente mobile
-        API-->>C: { accessToken, refreshToken }
-    end
+    API->>API: Gera refresh token opaco → SHA-256(token); gera family_id novo
+    API->>PG: INSERT refresh_tokens { token_hash, family_id, device_type, expires_at }
+    API->>API: Gera JWT { sub, jti, role, auth_version, fid: family_id } TTL 15min
+    API-->>C: { accessToken, refreshToken }
 
     Note over C,PG: Request Autenticado
     C->>API: GET /rota + Authorization: Bearer <accessToken>
@@ -149,28 +172,50 @@ sequenceDiagram
     API->>API: Compara auth_version do token ↔ Dragonfly
     API->>DB: 3. EXISTS jti:<jti>
     DB-->>API: 0 (não blocklisted)
+    API->>DB: 4. EXISTS family:<fid>:revoked
+    DB-->>API: 0 (sessão não revogada remotamente)
     Note right of API: Role lida do payload JWT — sem consulta ao banco
     API-->>C: 200 OK
 
     Note over C,PG: Renovação de Token
-    alt Cliente web
-        C->>API: POST /auth/refresh + Cookie __Secure-missionapp_rt
-    else Cliente mobile
-        C->>API: POST /auth/refresh { refreshToken } + x-client-type: mobile
-    end
-    API->>API: SHA-256(token recebido)
+    C->>API: POST /auth/refresh { refreshToken }
+    API->>API: SHA-256(refresh token recebido)
     API->>PG: SELECT WHERE token_hash = ? AND revoked_at IS NULL
-    PG-->>API: { user_id, family_id }
+    PG-->>API: { user_id, family_id, device_type }
     API->>PG: UPDATE SET revoked_at = now() (revoga token atual)
-    API->>PG: INSERT novo refresh token (mesma family_id)
+    API->>PG: INSERT novo refresh token (mesma family_id, expires_at recalculado)
     API->>DB: GET user:<id>:auth_version
     DB-->>API: auth_version atual
-    API->>API: Gera novo JWT { sub, jti, role, auth_version } TTL 15min
-    alt Cliente web
-        API-->>C: { accessToken } + Set-Cookie __Secure-missionapp_rt (rotacionado)
-    else Cliente mobile
-        API-->>C: { accessToken, refreshToken }
-    end
+    API->>API: Gera novo JWT { sub, jti, role, auth_version, fid: family_id } TTL 15min
+    API-->>C: { accessToken, refreshToken }
+```
+
+### Diagrama de Sequência — Revogação Remota de Sessão
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'noteBkgColor': '#fbbf24', 'noteTextColor': '#1a1a1a', 'noteBorderColor': '#d97706'}}}%%
+sequenceDiagram
+    participant C as Cliente (dispositivo A)
+    participant API as API Server
+    participant DB as DragonflyDB
+    participant PG as PostgreSQL
+    participant R as Dispositivo B (sessão remota)
+
+    C->>API: GET /auth/sessions + Authorization: Bearer <accessToken A>
+    API->>PG: SELECT refresh_tokens WHERE user_id = ? AND revoked_at IS NULL
+    PG-->>API: [{ family_id, device_type, device_name, last_used_at }, ...]
+    API-->>C: Lista de sessões (inclui a família do Dispositivo B)
+
+    C->>API: DELETE /auth/sessions/:familyId (família do Dispositivo B)
+    API->>PG: UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = ? AND user_id = ?
+    API->>DB: SET family:<familyId>:revoked EX <ttl_access_token>
+    API-->>C: 200 OK
+
+    Note over R,DB: Próxima request do Dispositivo B, dentro dos 15 min do access token
+    R->>API: GET /rota + Authorization: Bearer <accessToken B>
+    API->>DB: 4. EXISTS family:<fid>:revoked
+    DB-->>API: 1 (revogada)
+    API-->>R: 401 Unauthorized
 ```
 
 ## Justificativa
@@ -198,14 +243,14 @@ Independente de quem usa o token roubado primeiro, o mecanismo garante que ambas
 
 Em ambos os cenários, o uso de um token já revogado é o gatilho da invalidação da família inteira. Sem rotation, um refresh token roubado seria utilizável pelo atacante até a expiração de 7 dias — sem que o servidor tivesse qualquer sinal de comprometimento.
 
-**Distinção por `x-client-type` mantém a API unificada:**
-Uma única API atende web e mobile sem endpoints separados. O header diferencia o comportamento de entrega do refresh token. A ausência do header assume web por padrão — comportamento mais seguro, pois o cookie httpOnly não expõe o token ao JavaScript.
+**Entrega sempre via body simplifica a API sem reduzir segurança:**
+A API não distingue mais o formato de entrega por tipo de cliente — todo cliente recebe `{ accessToken, refreshToken }` no corpo, sempre. Isso é possível porque o único consumidor "browser-like" da API (a aplicação web) na verdade fala com ela através de um BFF, nunca diretamente: o cookie httpOnly que protegeria o refresh token de um browser real é responsabilidade do BFF, que é quem efetivamente conversa com o navegador do usuário final. Do ponto de vista desta API, web e mobile são ambos clientes server-to-server ou app-nativo — nenhum dos dois é um browser executando JavaScript não confiável. O header `x-client-type` continua existindo, mas apenas como sinal de metadado (TTL por dispositivo, nome exibido na listagem de sessões), não mais como decisão de segurança.
 
-**O modelo é estruturalmente resistente a XSS e CSRF:**
+**O modelo é estruturalmente resistente a XSS, e CSRF não se aplica a esta API:**
 
-_XSS (Cross-Site Scripting):_ O vetor clássico de XSS contra autenticação é roubar um token persistido em `localStorage` e usá-lo para fazer requests em nome da vítima indefinidamente. A estratégia adotada remove esse vetor em duas camadas: o access token nunca é gravado em disco — reside apenas em memória JavaScript e expira em 15 minutos; o refresh token é protegido de forma adequada a cada contexto de cliente — no browser, via cookie `httpOnly` inacessível ao JavaScript por definição, independente de qual script seja injetado na página; no mobile, via Keychain (iOS) ou Keystore (Android), storages isolados por app e criptografados pelo sistema operacional, onde JavaScript sequer existe como superfície de ataque. Um ataque XSS bem-sucedido pode usar o access token durante sua janela de 15 minutos, mas não consegue renovar a sessão — sem o refresh token, a sessão termina na próxima expiração.
+_XSS (Cross-Site Scripting):_ O vetor clássico de XSS contra autenticação é roubar um token persistido em `localStorage` e usá-lo para fazer requests em nome da vítima indefinidamente. Essa API nunca é exposta a esse vetor diretamente — ela não roda no browser do usuário final. A responsabilidade de proteger o access/refresh token de XSS no navegador é do BFF (ex: manter o access token em memória do servidor ou de um contexto não acessível a JavaScript de terceiros, e o refresh token em cookie httpOnly do próprio domínio do BFF) — está documentada na arquitetura do BFF, fora do escopo deste ADR. No cliente mobile, o refresh token vai para Keychain (iOS) ou Keystore (Android), storages isolados por app onde JavaScript sequer existe como superfície de ataque.
 
-_CSRF (Cross-Site Request Forgery):_ CSRF explora o comportamento do browser de enviar cookies automaticamente em requests cross-origin. A estratégia adota duas defesas complementares: (1) todos os endpoints autenticados exigem o header `Authorization: Bearer <token>` — browsers não enviam headers customizados em requests cross-origin sem permissão CORS explícita, tornando esses endpoints imunes a CSRF por design; (2) o único cookie existente (`__Secure-missionapp_rt`) carrega `SameSite=Strict`, que instrui o browser a não enviar o cookie em nenhum request originado de domínio diferente — e `Path=/api/v1/auth/refresh`, restringindo a transmissão do cookie exclusivamente à rota de renovação de token. A combinação elimina a superfície de CSRF sem exigir tokens anti-CSRF adicionais.
+_CSRF (Cross-Site Request Forgery):_ CSRF explora o envio automático de cookies pelo browser em requests cross-origin. Esta API nunca seta um cookie — não há nada para o browser enviar automaticamente, então a superfície de CSRF contra ela é zero por construção, não por mitigação. Todos os endpoints autenticados exigem o header `Authorization: Bearer <token>`, que por si só já impediria CSRF mesmo se um cookie existisse (browsers não anexam headers customizados a requests cross-origin sem CORS explícito). A defesa contra CSRF no tráfego browser↔BFF é responsabilidade do BFF, que é quem eventualmente seta um cookie voltado ao navegador.
 
 ## Alternativas Consideradas
 
@@ -227,7 +272,17 @@ Descartado. Tokens opacos para access token exigem lookup no banco em cada reque
 
 **5. Cookie `__Host-` em vez de `__Secure-`**
 
-Descartado para este caso. O prefixo `__Host-` proíbe o atributo `Path` e força `path=/`, tornando o cookie enviado para todos os endpoints da API — não apenas para `/api/v1/auth/refresh`. A restrição de `path` é uma camada de segurança relevante: reduz a superfície de transmissão do refresh token. O `__Secure-` preserva a restrição de `path` e impõe HTTPS sem proibir `domain`.
+Descartado para este caso, na época em que a API ainda setava cookies diretamente. O prefixo `__Host-` proíbe o atributo `Path` e força `path=/`, tornando o cookie enviado para todos os endpoints da API — não apenas para `/api/v1/auth/refresh`. A restrição de `path` era uma camada de segurança relevante: reduzia a superfície de transmissão do refresh token. O `__Secure-` preservava a restrição de `path` e impunha HTTPS sem proibir `domain`.
+
+**Nota de atualização:** esta alternativa ficou obsoleta com a adoção da arquitetura BFF — a API não seta mais nenhum cookie (ver seção "Entrega de Tokens"). Mantida aqui por completude histórica; o cookie httpOnly voltado ao navegador do usuário final, se necessário, é responsabilidade do BFF e está fora do escopo deste ADR.
+
+**6. Better Auth (biblioteca de autenticação completa)**
+
+Descartada. O Better Auth resolve bem o problema de quem está começando do zero sem saber como estruturar autenticação, mas o modelo deste ADR já é mais sofisticado do que o que a biblioteca entrega por padrão nos pontos que importam para o MissionApp. A rotation de refresh token com family tracking cobrindo os dois sentidos de roubo — atacante reutiliza o token primeiro ou usuário legítimo reutiliza primeiro, ambos invalidando a família inteira — não é comportamento padrão do Better Auth. A revogação global instantânea via `auth_version` (um único `INCR` no DragonflyDB, sem enumerar sessões) também não tem equivalente: o Better Auth revoga invalidando sessões na própria tabela, um lookup por usuário. A distinção mobile/web por `x-client-type` — refresh token no body para mobile, cookie httpOnly para web — não existe na biblioteca, que assume o browser como contexto primário. E a conformidade com a LGPD (revogação imediata em exclusão de conta, suspensão e troca de senha) não foi requisito de design do Better Auth; reproduzir esse comportamento exigiria customização extensiva por cima da abstração da biblioteca.
+
+Há também um custo de integração real, embora secundário ao argumento acima: não existe adaptador Lucid para o Better Auth. Adotá-lo significaria rodar dois ORMs em paralelo ou escrever um adaptador do zero — qualquer uma das duas opções contraria a coesão que é o principal valor do AdonisJS como framework.
+
+O Better Auth adicionaria valor genuíno em três frentes que este ADR não cobre — login social (OAuth, mais de 40 providers prontos), 2FA (TOTP ou SMS) e passkeys (WebAuthn) — mas nenhuma é requisito atual do MissionApp, e nenhuma justifica adotar a biblioteca inteira só para antecipá-las. Login social é resolvido pelo `@adonisjs/ally`, pacote oficial do ecossistema AdonisJS que se integra nativamente ao guard e ao `HttpContext` já existentes; 2FA pode ser adicionado como extensão do guard atual usando uma biblioteca TOTP como `otpauth`, sem abrir mão do modelo de revogação já construído. Multi-tenancy no sentido SaaS — organizações isoladas com seus próprios membros e permissões, o cenário em que o plugin de multi-tenancy do Better Auth faria sentido — também não se aplica: missionário e apoiador são roles dentro do mesmo sistema, não organizações separadas.
 
 ## Consequências (Trade-offs)
 
@@ -239,23 +294,29 @@ Descartado para este caso. O prefixo `__Host-` proíbe o atributo `Path` e forç
 
 - **Caminho crítico sem I/O no banco relacional:** Requests autenticados rotineiros não consultam o PostgreSQL. A `auth_version` é um `GET` no DragonflyDB. O banco é consultado apenas em eventos de baixa frequência: renovação do refresh token (a cada 15 minutos por usuário) e operações de revogação.
 
-- **Suporte nativo a mobile e web com uma única API:** O header `x-client-type` diferencia o comportamento sem duplicar endpoints. Clientes mobile recebem o refresh token no body e o armazenam em storage seguro do SO. Clientes web recebem o refresh token em cookie httpOnly inacessível ao JavaScript.
+- **Suporte nativo a mobile e web com uma única API:** web (via BFF) e mobile recebem exatamente a mesma resposta — `{ accessToken, refreshToken }` no corpo. O header `x-client-type` diferencia apenas a política de TTL e os metadados de exibição, não o contrato da resposta.
 
 - **Detecção de roubo de refresh token:** O mecanismo de rotation com `family_id` invalida automaticamente toda a linhagem da sessão comprometida quando um token revogado é reutilizado — sem intervenção manual e sem falso positivo para o usuário legítimo, que é forçado a fazer novo login com senha.
 
-- **DragonflyDB reutilizado — zero adição de infraestrutura:** A blocklist de `jti`s e os contadores de `auth_version` são mais dois namespaces no DragonflyDB já em operação. Não há nova peça de infraestrutura para provisionar, monitorar ou manter.
+- **DragonflyDB reutilizado — zero adição de infraestrutura:** A blocklist de `jti`s, os contadores de `auth_version` e a blocklist de `family_id` são mais três namespaces no DragonflyDB já em operação. Não há nova peça de infraestrutura para provisionar, monitorar ou manter.
+
+- **Logout corretamente escopado por dispositivo:** o logout comum afeta apenas a sessão/família de origem — outros dispositivos do mesmo usuário não são interrompidos. "Sair de todos os dispositivos" continua disponível como ação explícita e distinta (`DELETE /auth/sessions`), em vez de ser o comportamento implícito de todo logout.
+
+- **Gerenciamento de sessões por dispositivo, estilo Google/Instagram:** o usuário pode listar todas as sessões ativas (dispositivo, IP, última atividade) e revogar remotamente qualquer uma delas — incluindo a de um dispositivo furtado ou esquecido logado, sem precisar trocar a senha (o que derrubaria também as sessões legítimas). A revogação remota é efetiva já na próxima request daquela sessão, não apenas na próxima tentativa de renovação.
+
+- **TTL de refresh token adequado a cada contexto:** sliding window mais longa para mobile (30 dias por padrão) reduz o atrito de relogin em um app usado com frequência — mesma lógica observável em apps como Instagram — sem abrir mão de TTL mais curto por padrão para sessões web.
 
 ### Negativas / Riscos
 
-- **DragonflyDB no caminho crítico de autenticação:** Cada request autenticado faz um `GET` no DragonflyDB. Se o serviço estiver indisponível, o guard deve optar por _fail closed_ (rejeitar todos os requests) ou _fail open_ (aceitar todos os tokens válidos criptograficamente). Para o MissionApp, _fail closed_ é a posição segura dado o contexto de dados sensíveis e transações financeiras — mas impacta disponibilidade durante falha do DragonflyDB.
+- **DragonflyDB no caminho crítico de autenticação:** Cada request autenticado faz até três operações no DragonflyDB (`auth_version`, `jti`, `family_id`). Se o serviço estiver indisponível, o guard deve optar por _fail closed_ (rejeitar todos os requests) ou _fail open_ (aceitar todos os tokens válidos criptograficamente). Para o MissionApp, _fail closed_ é a posição segura dado o contexto de dados sensíveis e transações financeiras — mas impacta disponibilidade durante falha do DragonflyDB.
 
 - **Janela de exposição de ≤ 15 minutos na troca de senha:** A `auth_version` invalida novos requests imediatamente, mas access tokens já emitidos e em uso em requests concorrentes naquele instante podem completar. Essa janela de até 15 minutos é a consequência direta do TTL curto e é considerada aceitável para os requisitos do MissionApp.
 
-- **Complexidade operacional superior ao JWT puro:** A estratégia envolve três mecanismos distintos: JWT, DragonflyDB e tabela de refresh tokens no PostgreSQL. Contribuidores precisam compreender a interação entre os três para implementar corretamente cenários de autenticação, renovação e revogação.
-
-- **Prefixo `__Secure-` exige HTTPS estrito:** Em ambiente de desenvolvimento local (HTTP), o browser ignora silenciosamente cookies com prefixo `__Secure-`. A constante que define o nome do cookie deve ser condicionada ao ambiente, usando `__Secure-missionapp_rt` em produção e `missionapp_rt` em desenvolvimento — conforme documentado na implementação.
+- **Complexidade operacional cresceu com o gerenciamento de sessões:** a estratégia agora envolve quatro mecanismos de revogação (jti, auth_version, family, e a própria tabela de refresh tokens) em vez de dois. Contribuidores precisam compreender a diferença entre "revogar uma família" (um dispositivo) e "incrementar auth_version" (todos os dispositivos) para implementar corretamente novos cenários — um erro comum seria usar o mecanismo global onde o escopado bastaria.
 
 - **Tabela de refresh tokens requer manutenção periódica:** Tokens expirados e revogados acumulam na tabela sem serem removidos automaticamente. Um job periódico de limpeza via BullMQ é necessário para evitar crescimento indefinido da tabela.
+
+- **Dependência de um BFF para a segurança do cliente web:** a API em si não protege mais o browser do usuário final contra XSS/CSRF — essa responsabilidade passou inteiramente para o BFF. Um BFF mal implementado (ex: expõe o refresh token para o client-side JavaScript em vez de mantê-lo apenas em cookie httpOnly do próprio domínio do BFF) reintroduziria os riscos que esta API deixou de tratar diretamente.
 
 ## Referências
 
@@ -269,6 +330,7 @@ Descartado para este caso. O prefixo `__Host-` proíbe o atributo `Path` e forç
 - [MDN — Set-Cookie: SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie#samesitesamesite-value): comportamento de `SameSite=Strict` e proteção contra CSRF
 - [RFC 9700 — seção 4.14](https://datatracker.ietf.org/doc/html/rfc9700#section-4.14): OAuth 2.0 Security Best Current Practice — base normativa para refresh token rotation e detecção de roubo via reuso de token revogado
 - [Auth0 — Refresh Token Rotation](https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation): descrição aplicada do mecanismo de rotation with family tracking
+- [Better Auth](https://www.better-auth.com/): biblioteca de autenticação avaliada e descartada como alternativa — ver seção "Alternativas Consideradas"
 - [LGPD Art. 11](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm): dados pessoais sensíveis — fundamento legal para revogação imediata de acesso
 - [LGPD Art. 18](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm): direitos do titular — inclui direito à exclusão e revogação de consentimento
 - [ADR-0005](./0005-adocao-do-dragonfly-como-cache-e-armazenamento-temporario.md): decisão de adoção do DragonflyDB — justifica seu uso como armazenamento da blocklist e contadores de `auth_version`

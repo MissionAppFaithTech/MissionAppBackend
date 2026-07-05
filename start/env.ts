@@ -1,11 +1,11 @@
 /*
 |--------------------------------------------------------------------------
-| Environment variables service
+| Serviço de variáveis de ambiente
 |--------------------------------------------------------------------------
 |
-| The `Env.create` method creates an instance of the Env service. The
-| service validates the environment variables and also cast values
-| to JavaScript data types.
+| O método `Env.create` cria uma instância do serviço Env. O serviço
+| valida as variáveis de ambiente e também converte os valores
+| para tipos de dados do JavaScript.
 |
 */
 
@@ -27,7 +27,7 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
-  | Variables for configuring database connection
+  | Variáveis de configuração da conexão com o banco de dados
   |----------------------------------------------------------
   */
   DB_HOST: Env.schema.string({ format: 'host' }),
@@ -36,6 +36,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PASSWORD: Env.schema.string.optional(),
   DB_DATABASE: Env.schema.string(),
 
+  REDIS_HOST: Env.schema.string({ format: 'host' }),
+  REDIS_PORT: Env.schema.number(),
   REDIS_PASSWORD: Env.schema.string(),
 
   S3_ENDPOINT: Env.schema.string(),
@@ -50,5 +52,10 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   JWT_ACCESS_EXPIRES_IN: Env.schema.string(),
 
-  JWT_REFRESH_EXPIRES_IN: Env.schema.string(),
+  // NOTE: TTL do refresh token por tipo de cliente — sliding window
+  // recalculado a cada rotação. Mobile fica mais tempo (ADR-0021): app usado
+  // com frequência nunca desautentica; só pede login após período real de
+  // inatividade.
+  JWT_REFRESH_EXPIRES_IN_WEB: Env.schema.string(),
+  JWT_REFRESH_EXPIRES_IN_MOBILE: Env.schema.string(),
 })

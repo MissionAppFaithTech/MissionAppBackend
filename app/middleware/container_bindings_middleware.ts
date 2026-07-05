@@ -3,11 +3,11 @@ import { HttpContext } from '@adonisjs/core/http'
 import { type NextFn } from '@adonisjs/core/types/http'
 
 /**
- * The container bindings middleware binds classes to their request
- * specific value using the container resolver.
+ * O middleware de container bindings vincula classes ao seu valor
+ * específico da requisição usando o container resolver.
  *
- * - We bind "HttpContext" class to the "ctx" object
- * - And bind "Logger" class to the "ctx.logger" object
+ * - Vinculamos a classe "HttpContext" ao objeto "ctx"
+ * - E vinculamos a classe "Logger" ao objeto "ctx.logger"
  */
 export default class ContainerBindingsMiddleware {
   handle(ctx: HttpContext, next: NextFn) {

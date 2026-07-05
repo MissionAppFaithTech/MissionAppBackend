@@ -36,6 +36,12 @@ export default class extends BaseSchema {
         .notNullable()
         .comment('Data de emissão do token')
 
+      table
+        .timestamp('updated_at', { precision: 3, useTz: true })
+        .notNullable()
+        .defaultTo(this.now())
+        .comment('Última atualização do registro (ex: revogação); mantido pelo WithTimestamps')
+
       // FK: CASCADE — tokens são excluídos junto com o usuário proprietário
       table.uuid('user_id').notNullable().comment('Usuário proprietário do token')
 

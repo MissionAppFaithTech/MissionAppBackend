@@ -1,14 +1,14 @@
 import { defineConfig, drivers } from '@adonisjs/core/hash'
 
 /**
- * Hashing configuration.
+ * Configuração de hashing.
  *
- * This starter uses Node.js scrypt under the hood.
- * Node.js reference: https://nodejs.org/api/crypto.html#cryptoscryptpassword-salt-keylen-options-callback
+ * Este starter usa scrypt do Node.js por baixo dos panos.
+ * Referência do Node.js: https://nodejs.org/api/crypto.html#cryptoscryptpassword-salt-keylen-options-callback
  */
 const hashConfig = defineConfig({
   /**
-   * Default hasher used by the application.
+   * Hasher padrão usado pela aplicação.
    */
   default: 'argon',
 
@@ -23,50 +23,51 @@ const hashConfig = defineConfig({
     }),
 
     /**
-     * Scrypt is memory-hard, which makes brute-force attacks more expensive.
+     * Scrypt é memory-hard, o que torna ataques de força bruta mais caros.
      */
     scrypt: drivers.scrypt({
       /**
-       * Work factor (Node alias: N / cost).
-       * Higher values increase security and CPU+memory usage.
+       * Fator de trabalho (alias no Node: N / cost).
+       * Valores mais altos aumentam segurança e uso de CPU+memória.
        *
-       * Tuning guideline:
-       * - Start with 16384.
-       * - Increase gradually (for example 32768) and benchmark login/signup latency.
-       * - Keep values practical for your slowest production machine.
+       * Guia de ajuste:
+       * - Comece com 16384.
+       * - Aumente gradualmente (por exemplo 32768) e faça benchmark da
+       *   latência de login/signup.
+       * - Mantenha valores práticos para a máquina mais lenta em produção.
        *
-       * Node constraint: value must be a power of two greater than 1.
+       * Restrição do Node: o valor deve ser uma potência de dois maior que 1.
        */
       cost: 16384,
 
       /**
-       * Block size (Node alias: r / blockSize).
-       * Increases memory and CPU linearly.
+       * Tamanho do bloco (alias no Node: r / blockSize).
+       * Aumenta memória e CPU linearmente.
        *
-       * Tuning guideline:
-       * - Keep 8 unless you have a measured reason to change it.
-       * - Raise only with benchmark data, because memory usage grows quickly.
+       * Guia de ajuste:
+       * - Mantenha 8 a menos que haja um motivo medido para mudar.
+       * - Aumente só com dados de benchmark, pois o uso de memória cresce rápido.
        */
       blockSize: 8,
 
       /**
-       * Parallelization (Node alias: p / parallelization).
-       * Controls how many independent computations are performed.
+       * Paralelização (alias no Node: p / parallelization).
+       * Controla quantas computações independentes são realizadas.
        *
-       * Tuning guideline:
-       * - Keep 1 for most applications.
-       * - Increase only after load testing if your infrastructure benefits from it.
+       * Guia de ajuste:
+       * - Mantenha 1 para a maioria das aplicações.
+       * - Aumente só após teste de carga, se sua infraestrutura se beneficiar.
        */
       parallelization: 1,
 
       /**
-       * Maximum memory limit in bytes (Node alias: maxmem / maxMemory).
-       * Hashing throws if the estimated memory usage is above this limit.
-       * Node documents the check as approximately: 128 * N * r > maxmem.
+       * Limite máximo de memória em bytes (alias no Node: maxmem / maxMemory).
+       * O hashing lança erro se o uso estimado de memória ultrapassar esse limite.
+       * O Node documenta a verificação como aproximadamente: 128 * N * r > maxmem.
        *
-       * Tuning guideline:
-       * - Keep this aligned with your cost/blockSize choices.
-       * - Increase carefully on memory-constrained environments.
+       * Guia de ajuste:
+       * - Mantenha alinhado com suas escolhas de cost/blockSize.
+       * - Aumente com cuidado em ambientes com restrição de memória.
        */
       maxMemory: 33554432,
     }),
@@ -76,8 +77,8 @@ const hashConfig = defineConfig({
 export default hashConfig
 
 /**
- * Inferring types for the list of hashers you have configured
- * in your application.
+ * Inferência de tipos para a lista de hashers configurados
+ * na aplicação.
  */
 declare module '@adonisjs/core/types' {
   export interface HashersList extends InferHashers<typeof hashConfig> {}

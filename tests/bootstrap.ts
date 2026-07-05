@@ -7,22 +7,23 @@ import { dbAssertions } from '@adonisjs/lucid/plugins/db'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { authApiClient } from '@adonisjs/auth/plugins/api_client'
 import { sessionApiClient } from '@adonisjs/session/plugins/api_client'
+import { closeDragonflyClient } from '#services/dragonfly_client'
 import type { Registry } from '../.adonisjs/client/registry/schema.d.ts'
 
 /**
- * This file is imported by the "bin/test.ts" entrypoint file
+ * Este arquivo é importado pelo arquivo de entrypoint "bin/test.ts"
  */
 declare module '@japa/api-client/types' {
   interface RoutesRegistry extends Registry {}
 }
 
 /**
- * This file is imported by the "bin/test.ts" entrypoint file
+ * Este arquivo é importado pelo arquivo de entrypoint "bin/test.ts"
  */
 
 /**
- * Configure Japa plugins in the plugins array.
- * Learn more - https://japa.dev/docs/runner-config#plugins-optional
+ * Configure os plugins do Japa no array plugins.
+ * Saiba mais - https://japa.dev/docs/runner-config#plugins-optional
  */
 export const plugins: Config['plugins'] = [
   assert(),
@@ -34,20 +35,22 @@ export const plugins: Config['plugins'] = [
 ]
 
 /**
- * Configure lifecycle function to run before and after all the
- * tests.
+ * Configure a função de ciclo de vida executada antes e depois
+ * de todos os testes.
  *
- * The setup functions are executed before all the tests
- * The teardown functions are executed after all the tests
+ * As funções de setup são executadas antes de todos os testes
+ * As funções de teardown são executadas depois de todos os testes
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
   setup: [],
-  teardown: [],
+  // NOTE: fecha a conexão ioredis compartilhada — sem isso o processo nunca
+  // encerra sozinho (forceExit: false + socket aberto mantêm o event loop vivo).
+  teardown: [() => closeDragonflyClient()],
 }
 
 /**
- * Configure suites by tapping into the test suite instance.
- * Learn more - https://japa.dev/docs/test-suites#lifecycle-hooks
+ * Configure as suítes acessando a instância da suíte de teste.
+ * Saiba mais - https://japa.dev/docs/test-suites#lifecycle-hooks
  */
 export const configureSuite: Config['configureSuite'] = (suite) => {
   if (['browser', 'functional', 'e2e'].includes(suite.name)) {

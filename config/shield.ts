@@ -2,91 +2,91 @@ import { defineConfig } from '@adonisjs/shield'
 
 const shieldConfig = defineConfig({
   /**
-   * Configure CSP policies for your app. Refer documentation
-   * to learn more.
+   * Configure as políticas de CSP da sua app. Consulte a documentação
+   * para saber mais.
    */
   csp: {
     /**
-     * Enable the Content-Security-Policy header.
+     * Habilita o header Content-Security-Policy.
      */
     enabled: false,
 
     /**
-     * Per-resource CSP directives.
+     * Diretivas de CSP por recurso.
      */
     directives: {},
 
     /**
-     * Report violations without blocking resources.
+     * Reporta violações sem bloquear recursos.
      */
     reportOnly: false,
   },
 
   /**
-   * Configure CSRF protection options. Refer documentation
-   * to learn more.
+   * Configure as opções de proteção CSRF. Consulte a documentação
+   * para saber mais.
    */
   csrf: {
     /**
-     * Enable CSRF token verification for state-changing requests.
+     * Habilita a verificação de token CSRF para requisições que alteram estado.
      */
     enabled: false,
 
     /**
-     * Route patterns to exclude from CSRF checks.
-     * Useful for external webhooks or API endpoints.
+     * Padrões de rota excluídos das checagens de CSRF.
+     * Útil para webhooks externos ou endpoints de API.
      */
     exceptRoutes: [],
 
     /**
-     * Expose an encrypted XSRF-TOKEN cookie for frontend HTTP clients.
+     * Expõe um cookie XSRF-TOKEN criptografado para clientes HTTP do frontend.
      */
     enableXsrfCookie: true,
 
     /**
-     * HTTP methods protected by CSRF validation.
+     * Métodos HTTP protegidos pela validação de CSRF.
      */
     methods: ['POST', 'PUT', 'PATCH', 'DELETE'],
   },
 
   /**
-   * Control how your website should be embedded inside
+   * Controla como seu site pode ser embutido dentro de
    * iframes.
    */
   xFrame: {
     /**
-     * Enable the X-Frame-Options header.
+     * Habilita o header X-Frame-Options.
      */
     enabled: true,
 
     /**
-     * Block all framing attempts. Default value is DENY.
+     * Bloqueia todas as tentativas de framing. Valor padrão é DENY.
      */
     action: 'DENY',
   },
 
   /**
-   * Force browser to always use HTTPS.
+   * Força o browser a sempre usar HTTPS.
    */
   hsts: {
     /**
-     * Enable the Strict-Transport-Security header.
+     * Habilita o header Strict-Transport-Security.
      */
     enabled: true,
 
     /**
-     * HSTS policy duration remembered by browsers.
+     * Duração da política HSTS lembrada pelos browsers.
      */
     maxAge: '180 days',
   },
 
   /**
-   * Disable browsers from sniffing content types and rely only
-   * on the response content-type header.
+   * Impede que browsers façam sniffing de content type e dependam apenas
+   * do header content-type da resposta.
    */
   contentTypeSniffing: {
     /**
-     * Enable X-Content-Type-Options: nosniff.
+     * Habilita X-Content-Type-Options: nosniff.
      */
     enabled: true,
   },

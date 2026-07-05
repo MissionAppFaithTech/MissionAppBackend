@@ -1,13 +1,13 @@
 /*
 |--------------------------------------------------------------------------
-| Ace entry point
+| Entry point do Ace
 |--------------------------------------------------------------------------
 |
-| The "console.ts" file is the entrypoint for booting the AdonisJS
-| command-line framework and executing commands.
+| O arquivo "console.ts" é o entrypoint para inicializar o framework de
+| linha de comando do AdonisJS e executar comandos.
 |
-| Commands do not boot the application, unless the currently running command
-| has "options.startApp" flag set to true.
+| Comandos não inicializam a aplicação, a menos que o comando em execução
+| tenha a flag "options.startApp" definida como true.
 |
 */
 
@@ -15,14 +15,14 @@ await import('reflect-metadata')
 const { Ignitor, prettyPrintError } = await import('@adonisjs/core')
 
 /**
- * URL to the application root. AdonisJS need it to resolve
- * paths to file and directories for scaffolding commands
+ * URL para a raiz da aplicação. O AdonisJS precisa dela para resolver
+ * paths de arquivos e diretórios para comandos de scaffolding
  */
 const APP_ROOT = new URL('../', import.meta.url)
 
 /**
- * The importer is used to import files in context of the
- * application.
+ * O importer é usado para importar arquivos no contexto da
+ * aplicação.
  */
 const IMPORTER = (filePath: string) => {
   if (filePath.startsWith('./') || filePath.startsWith('../')) {

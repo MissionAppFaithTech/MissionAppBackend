@@ -1,0 +1,14 @@
+# Arquivo de agrupamento da pasta auth/ (ADR-0025). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /auth/login:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1login'
+  /auth/refresh:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1refresh'
+  /auth/logout:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1logout'
+  /auth/sessions:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1sessions'
+  /auth/sessions/{familyId}:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1sessions~1{familyId}'

@@ -23,11 +23,21 @@ router
       .group(() => {
         router.post('login', [controllers.AccessTokens, 'store'])
         router.delete('logout', [controllers.AccessTokens, 'destroy']).use(middleware.auth())
+        router.post('refresh', [controllers.RefreshTokens, 'store'])
+
+        router
+          .group(() => {
+            router.get('sessions', [controllers.Sessions, 'index'])
+            router.delete('sessions', [controllers.AllSessions, 'destroy'])
+            router.delete('sessions/:familyId', [controllers.Sessions, 'destroy'])
+          })
+          .use(middleware.auth())
       })
       .prefix('auth')
       .as('auth')
 
     router.get('account/profile', [controllers.Profile, 'show']).use(middleware.auth())
+    router.patch('account/password', [controllers.AccountPassword, 'update']).use(middleware.auth())
   })
   .prefix('/api/v1')
   .as('v1')

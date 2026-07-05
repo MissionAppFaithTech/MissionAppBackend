@@ -1,0 +1,23 @@
+meta {
+  name: Logout (todos os dispositivos)
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{base_url}}/api/v1/auth/sessions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Encerra todas as sessões do usuário de uma vez — incrementa o
+  `auth_version` (invalida instantaneamente todos os access tokens ativos,
+  de todos os dispositivos) e revoga todos os refresh tokens no PostgreSQL.
+  Ação explícita do usuário ("sair de todos os dispositivos"), distinta do
+  logout comum que afeta só a sessão corrente. Ver ADR-0021.
+}

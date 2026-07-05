@@ -199,6 +199,18 @@ typecheck:
 [group('qualidade')]
 ci: lint typecheck
 
+# Falha se package-lock.json ou yarn.lock estiverem versionados (proibido — ver CONTRIBUTING.md)
+[group('qualidade')]
+check-lockfiles:
+    @if git ls-files --error-unmatch package-lock.json yarn.lock >/dev/null 2>&1; then \
+        echo "Erro: package-lock.json/yarn.lock não podem ser commitados — use apenas pnpm." >&2; exit 1; \
+    fi
+    @echo "OK: nenhum lockfile de npm/yarn versionado."
+
+# Checagens automatizáveis antes de abrir um PR: ci + testes + lockfiles
+[group('qualidade')]
+pr-check: ci test check-lockfiles
+
 # Executa todas as verificações: lint, format, typecheck, testes e fallow
 [group('qualidade')]
 verify: lint format typecheck test fallow-audit

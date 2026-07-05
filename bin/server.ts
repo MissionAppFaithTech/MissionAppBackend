@@ -1,11 +1,11 @@
 /*
 |--------------------------------------------------------------------------
-| HTTP server entrypoint
+| Entrypoint do servidor HTTP
 |--------------------------------------------------------------------------
 |
-| The "server.ts" file is the entrypoint for starting the AdonisJS HTTP
-| server. Either you can run this file directly or use the "serve"
-| command to run this file and monitor file changes
+| O arquivo "server.ts" é o entrypoint para iniciar o servidor HTTP do
+| AdonisJS. Você pode rodar este arquivo diretamente ou usar o comando
+| "serve" para rodá-lo e monitorar mudanças de arquivo
 |
 */
 
@@ -13,14 +13,14 @@ await import('reflect-metadata')
 const { Ignitor, prettyPrintError } = await import('@adonisjs/core')
 
 /**
- * URL to the application root. AdonisJS need it to resolve
- * paths to file and directories for scaffolding commands
+ * URL para a raiz da aplicação. O AdonisJS precisa dela para resolver
+ * paths de arquivos e diretórios para comandos de scaffolding
  */
 const APP_ROOT = new URL('../', import.meta.url)
 
 /**
- * The importer is used to import files in context of the
- * application.
+ * O importer é usado para importar arquivos no contexto da
+ * aplicação.
  */
 const IMPORTER = (filePath: string) => {
   if (filePath.startsWith('./') || filePath.startsWith('../')) {

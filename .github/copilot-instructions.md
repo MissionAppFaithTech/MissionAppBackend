@@ -125,6 +125,27 @@ Never describe **what** the code does (well-named identifiers already do that). 
 
 All inline code comments must be written in **Portuguese (pt-BR)**.
 
+**Tag every comment that survives the rule above** — a bare `//` explanation is a code smell; tag it so its intent is scannable:
+
+| Tag | When to use |
+| --- | --- |
+| `NOTE:` | Important, non-obvious information — invariant, expected behavior, security/design rationale |
+| `TODO:` | Work not yet done, proposed by whoever is reading/writing the code right now |
+| `FIXME:` / `BUG:` | Known incorrect behavior that needs fixing |
+| `HACK:` | Deliberate, temporary workaround — not the ideal solution |
+| `OPTIMIZE:` | Works correctly but could be faster/cheaper |
+| `REVIEW:` / `CHECK:` | Needs a second pair of eyes or technical validation |
+| `DEPRECATED:` | Old code kept only for compatibility — points to the replacement |
+| `WARNING:` | Risky or sensitive code — changing it carelessly breaks something |
+| `LEGACY:` | Inherited code kept only for backwards compatibility |
+| `UNDONE:` | A feature was reverted and may need reimplementing |
+| `#region` / `#endregion` | Groups a block of code in editors that support folding |
+
+```typescript
+// NOTE: fail-closed — Dragonfly indisponível nunca deve virar "aceitar o token"
+// TODO: validar outputs do Dragonfly contra um schema antes de confiar neles
+```
+
 ### Controller — always thin
 
 ```typescript
@@ -486,6 +507,14 @@ The table below lists the ADRs that directly affect daily code decisions, along 
 | **ADR-0023** — Controllers & routing | Controller & routing  | Controllers expose only the 5 standard methods: `index`, `show`, `store`, `update`, `destroy`. No arbitrary method names (`publish`, `approve`, `archive`). Non-CRUD operations get dedicated controllers. Routes use `#generated/controllers` barrel — never import controllers directly. Maximum 2 levels of nesting. Singleton attributes (e.g. `status`) use explicit routes, not `.resource()`.                                               |
 | **ADR-0024** — Query filters         | Query filtering       | Filter classes live in `app/models/filters/<domain>/`, organized by domain subdirectory. Each public method maps to a query parameter. Filters handle HTTP→query mapping; reusable query logic belongs in scopes. `filter()` and scope composition via `.apply()` are exclusive to the service layer — controllers never build queries. Use `blacklist` + `whitelistMethod` for field-level access control by role.                                |
 | **ADR-0025** — OpenAPI + Scalar      | API documentation     | The API contract lives in `docs/api/v1/openapi.yaml` (design-first, manually maintained). Any PR that changes the API surface (new route, changed field, new error response) must update the spec in the same PR. Never use JSDoc annotations or decorators in controllers for API documentation.                                                                                                                                                  |
+
+---
+
+## Opening PRs and Issues
+
+When opening a Pull Request, **always** use `.github/pull-request-template.md` as the strict structural base — no exceptions. Keep every section (Motivação, O que foi feito, Como Testar, Evidências, Checklist, Links) and fill out the checklist honestly instead of removing or skipping it. Do not invent a different PR body format, even for small changes.
+
+When opening an issue, **always** use the matching template from `.github/ISSUE_TEMPLATE/` (`bug_report.md`, `feature_request.md`, or `technical_task.md`) as the strict structural base — same principle: keep every section, fill it out completely, don't freelance a different structure.
 
 ---
 

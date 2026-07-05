@@ -3,90 +3,90 @@ import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/core/http'
 
 /**
- * The app key is used for encrypting cookies, generating signed URLs,
- * and by the "encryption" module.
+ * A app key é usada para criptografar cookies, gerar URLs assinadas,
+ * e pelo módulo de "encryption".
  *
- * The encryption module will fail to decrypt data if the key is lost or
- * changed. Therefore it is recommended to keep the app key secure.
+ * O módulo de encryption falhará ao descriptografar dados se a chave for
+ * perdida ou alterada. Portanto, é recomendado manter a app key segura.
  */
 export const appKey = env.get('APP_KEY')
 
 /**
- * The app URL can be used in various places where you want to create absolute
- * URLs to your application. For example, when sending emails, images should
- * use absolute URLs.
+ * A app URL pode ser usada em vários lugares onde você quer criar URLs
+ * absolutas para sua aplicação. Por exemplo, ao enviar emails, imagens
+ * devem usar URLs absolutas.
  */
 export const appUrl = env.get('APP_URL')
 
 /**
- * The configuration settings used by the HTTP server
+ * As configurações usadas pelo servidor HTTP
  */
 export const http = defineConfig({
   /**
-   * Generate a unique request id for each incoming request.
-   * Useful to correlate logs and debug a request flow.
+   * Gera um id único de requisição para cada requisição recebida.
+   * Útil para correlacionar logs e debugar o fluxo de uma requisição.
    */
   generateRequestId: true,
 
   /**
-   * Allow HTTP method spoofing via the "_method" form/query parameter.
-   * This lets HTML forms target PUT/PATCH/DELETE routes while still
-   * submitting with POST.
+   * Permite spoofing do método HTTP via o parâmetro de form/query "_method".
+   * Isso permite que formulários HTML acessem rotas PUT/PATCH/DELETE
+   * mesmo enviando via POST.
    */
   allowMethodSpoofing: false,
 
   /**
-   * Enabling async local storage will let you access HTTP context
-   * from anywhere inside your application.
+   * Habilitar async local storage permite acessar o contexto HTTP
+   * de qualquer lugar dentro da aplicação.
    */
   useAsyncLocalStorage: false,
 
   /**
-   * Redirect configuration controls the behavior of
-   * response.redirect().back() and query string forwarding.
+   * A configuração de redirect controla o comportamento de
+   * response.redirect().back() e do encaminhamento da query string.
    */
   redirect: {
     /**
-     * When enabled, all redirects automatically carry over the current
-     * request's query string parameters to the redirect destination.
-     * Use withQs(false) to opt out for a specific redirect.
+     * Quando habilitado, todos os redirects carregam automaticamente os
+     * parâmetros da query string da requisição atual para o destino do
+     * redirect. Use withQs(false) para desativar em um redirect específico.
      */
     forwardQueryString: true,
   },
 
   /**
-   * Manage cookies configuration. The settings for the session id cookie are
-   * defined inside the "config/session.ts" file.
+   * Gerencia a configuração de cookies. As configurações do cookie de
+   * session id são definidas no arquivo "config/session.ts".
    */
   cookie: {
     /**
-     * Restrict the cookie to a specific domain.
-     * Keep empty to use the current host.
+     * Restringe o cookie a um domínio específico.
+     * Deixe vazio para usar o host atual.
      */
     domain: '',
 
     /**
-     * Restrict the cookie to a URL path. '/' means all routes.
+     * Restringe o cookie a um path de URL. '/' significa todas as rotas.
      */
     path: '/',
 
     /**
-     * Default lifetime for cookies managed by the HTTP layer.
+     * Tempo de vida padrão para cookies gerenciados pela camada HTTP.
      */
     maxAge: '2h',
 
     /**
-     * Prevent JavaScript access to the cookie in the browser.
+     * Impede acesso via JavaScript ao cookie no browser.
      */
     httpOnly: true,
 
     /**
-     * Send cookies only over HTTPS in production.
+     * Envia cookies apenas via HTTPS em produção.
      */
     secure: app.inProduction,
 
     /**
-     * Cross-site policy for cookie sending.
+     * Política cross-site para envio de cookies.
      */
     sameSite: 'lax',
   },

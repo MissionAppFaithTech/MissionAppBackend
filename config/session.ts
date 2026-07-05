@@ -4,72 +4,71 @@ import { defineConfig, stores } from '@adonisjs/session'
 
 const sessionConfig = defineConfig({
   /**
-   * Enable or disable session support globally.
+   * Habilita ou desabilita o suporte a session globalmente.
    */
   enabled: true,
 
   /**
-   * Cookie name storing the session identifier.
+   * Nome do cookie que armazena o identificador da session.
    */
   cookieName: 'adonis-session',
 
   /**
-   * When set to true, the session id cookie will be deleted
-   * once the user closes the browser.
+   * Quando definido como true, o cookie de session id será deletado
+   * assim que o usuário fechar o browser.
    */
   clearWithBrowser: false,
 
   /**
-   * Define how long to keep the session data alive without
-   * any activity.
+   * Define por quanto tempo manter os dados da session vivos sem
+   * nenhuma atividade.
    */
   age: '2h',
 
   /**
-   * Configuration for session cookie and the
-   * cookie store.
+   * Configuração do cookie de session e do
+   * store de cookie.
    */
   cookie: {
     /**
-     * Restrict the cookie to a URL path. '/' means all routes.
+     * Restringe o cookie a um path de URL. '/' significa todas as rotas.
      */
     path: '/',
 
     /**
-     * Prevent JavaScript access to the cookie in the browser.
+     * Impede acesso via JavaScript ao cookie no browser.
      */
     httpOnly: true,
 
     /**
-     * Send cookies only over HTTPS in production.
+     * Envia cookies apenas via HTTPS em produção.
      */
     secure: app.inProduction,
 
     /**
-     * Cross-site policy for cookie sending.
+     * Política cross-site para envio de cookies.
      */
     sameSite: 'lax',
   },
 
   /**
-   * The store to use. Make sure to validate the environment
-   * variable in order to infer the store name without any
-   * errors.
+   * O store a ser usado. Certifique-se de validar a variável de
+   * ambiente para inferir o nome do store sem erros.
    */
   store: env.get('SESSION_DRIVER'),
 
   /**
-   * List of configured stores. Refer documentation to see
-   * list of available stores and their config.
+   * Lista de stores configurados. Consulte a documentação para ver
+   * a lista de stores disponíveis e suas configurações.
    */
   stores: {
     /**
-     * Store session data inside encrypted cookies.
+     * Armazena os dados da session dentro de cookies criptografados.
      */
     cookie: stores.cookie(),
 
     /**
-     * Store session data inside the configured database.
+     * Armazena os dados da session no banco de dados configurado.
      */
     database: stores.database(),
   },

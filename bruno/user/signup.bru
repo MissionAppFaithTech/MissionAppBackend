@@ -1,0 +1,26 @@
+meta {
+  name: Signup
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/v1/accounts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "fullName": "Nome Completo",
+    "email": "novo-usuario@example.com",
+    "password": "senha12345",
+    "passwordConfirmation": "senha12345"
+  }
+}
+
+docs {
+  Cria um novo usuário e emite o par de tokens de autenticação, seguindo o
+  mesmo fluxo de entrega do login (cookie para web, corpo para mobile via
+  `x-client-type: mobile`).
+}

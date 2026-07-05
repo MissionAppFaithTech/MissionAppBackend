@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: MissionApp API
+  version: '1.0.0'
+  description: >-
+    Contrato da API do MissionApp (ADR-0025). Endpoints agrupados por domínio
+    em arquivos separados sob docs/api/v1/<domínio>/openapi.yaml — este
+    arquivo referencia cada domínio via $ref. Critério de domínio: o que o
+    endpoint faz (mecanismo de sessão vs. atributo de recurso), não a tabela
+    onde o dado é persistido. Ver seção "Critério de separação por domínio"
+    na ADR-0025.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: /api/v1
+    description: Prefixo da API
+
+tags:
+  - name: auth
+    description: >-
+      Ciclo de vida de autenticação e sessão — login, renovação de token,
+      logout. Não expõe nem muta atributos de um recurso.
+  - name: user
+    description: >-
+      Conta do usuário — cadastro, leitura de perfil, troca de senha. Mesmo
+      quando o atributo é sensível (senha), a operação é sobre o recurso User.
+
+paths:
+  /auth/login:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1login'
+  /auth/refresh:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1refresh'
+  /auth/logout:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1logout'
+  /auth/sessions:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1sessions'
+  /auth/sessions/{familyId}:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1sessions~1{familyId}'
+  /accounts:
+    $ref: './user/openapi.yaml#/paths/~1accounts'
+  /account/profile:
+    $ref: './user/openapi.yaml#/paths/~1account~1profile'
+  /account/password:
+    $ref: './user/openapi.yaml#/paths/~1account~1password'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token JWT de curta duração (15 min), emitido no login/refresh.

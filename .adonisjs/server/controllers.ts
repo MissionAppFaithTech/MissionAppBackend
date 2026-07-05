@@ -6,5 +6,9 @@
 export const controllers = {
   AccessTokens: () => import('#controllers/access_tokens_controller'),
   Account: () => import('#controllers/account_controller'),
+  AccountPassword: () => import('#controllers/account_password_controller'),
+  AllSessions: () => import('#controllers/all_sessions_controller'),
   Profile: () => import('#controllers/profile_controller'),
+  RefreshTokens: () => import('#controllers/refresh_tokens_controller'),
+  Sessions: () => import('#controllers/sessions_controller'),
 }

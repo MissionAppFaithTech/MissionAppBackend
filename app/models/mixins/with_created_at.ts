@@ -9,8 +9,9 @@ import { DateTime } from 'luxon'
  */
 export const WithCreatedAt = <T extends NormalizeConstructor<typeof BaseModel>>(superclass: T) => {
   class WithCreatedAtMixin extends superclass {
-    // PostgreSQL TIMESTAMP WITHOUT TIME ZONE armazena o valor literal — sem conversão
-    // explícita para UTC, timestamps de fusos distintos geram drift silencioso no banco.
+    // NOTE: PostgreSQL TIMESTAMP WITHOUT TIME ZONE armazena o valor literal —
+    // sem conversão explícita para UTC, timestamps de fusos distintos geram
+    // drift silencioso no banco.
     @column.dateTime({
       autoCreate: true,
       prepare: (value: DateTime) => value.toUTC().toSQL(),

@@ -4,34 +4,34 @@ import { defineConfig, syncDestination, targets } from '@adonisjs/core/logger'
 
 const loggerConfig = defineConfig({
   /**
-   * Default logger name used by ctx.logger and app logger calls.
+   * Nome do logger padrão usado por ctx.logger e chamadas do app logger.
    */
   default: 'app',
 
   loggers: {
     app: {
       /**
-       * Toggle this logger on/off.
+       * Liga/desliga este logger.
        */
       enabled: true,
 
       /**
-       * Logger name shown in log records.
+       * Nome do logger exibido nos registros de log.
        */
       name: env.get('APP_NAME'),
 
       /**
-       * Minimum level to output (trace, debug, info, warn, error, fatal).
+       * Nível mínimo para saída (trace, debug, info, warn, error, fatal).
        */
       level: env.get('LOG_LEVEL'),
 
       /**
-       * Use sync destination in non-production for immediate flush.
+       * Usa destino síncrono fora de produção para flush imediato.
        */
       destination: !app.inProduction ? await syncDestination() : undefined,
 
       /**
-       * Configure where logs are written.
+       * Configura para onde os logs são escritos.
        */
       transport: {
         targets: [targets.file({ destination: 1 })],
@@ -43,8 +43,8 @@ const loggerConfig = defineConfig({
 export default loggerConfig
 
 /**
- * Inferring types for the list of loggers you have configured
- * in your application.
+ * Inferência de tipos para a lista de loggers configurados
+ * na aplicação.
  */
 declare module '@adonisjs/core/types' {
   export interface LoggersList extends InferLoggers<typeof loggerConfig> {}

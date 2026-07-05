@@ -383,26 +383,41 @@ export class RedirectSchema extends BaseModel {
 export class RefreshTokenSchema extends BaseModel {
   static $columns = [
     'createdAt',
+    'deviceName',
+    'deviceType',
     'expiresAt',
     'familyId',
     'id',
+    'ipAddress',
+    'lastUsedAt',
     'revokedAt',
     'tokenHash',
+    'updatedAt',
     'userId',
   ] as const
   $columns = RefreshTokenSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare deviceName: string | null
+  @column()
+  declare deviceType: string
   @column.dateTime()
   declare expiresAt: DateTime
   @column()
   declare familyId: string
   @column({ isPrimary: true })
   declare id: string
+  @column()
+  declare ipAddress: string | null
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
   @column.dateTime()
   declare revokedAt: DateTime | null
   @column()
   declare tokenHash: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
   @column()
   declare userId: string
 }

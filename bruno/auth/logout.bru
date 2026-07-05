@@ -1,0 +1,24 @@
+meta {
+  name: Logout (dispositivo atual)
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{base_url}}/api/v1/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Encerra apenas a sessão/dispositivo do access token usado nesta requisição:
+  bloqueia o `jti` corrente no DragonflyDB e revoga somente a família de
+  refresh token de origem — outras sessões do mesmo usuário (outros
+  dispositivos/browsers) não são afetadas. Para logout em todos os
+  dispositivos, use "Logout (todos os dispositivos)" em `sessions/`. Ver
+  ADR-0021.
+}
