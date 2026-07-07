@@ -38,12 +38,14 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── auth
 │   │   ├── guards
 │   │   └── providers
+│   ├── constants
 │   ├── controllers
 │   ├── enums
 │   │   ├── authentication_audit
 │   │   ├── financial_config
 │   │   ├── media_asset
 │   │   ├── missionary
+│   │   ├── refresh_token
 │   │   ├── user
 │   │   └── user_action_audit
 │   ├── exceptions
@@ -63,7 +65,10 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │       └── user
 ├── bin
 ├── bruno
-│   └── environments
+│   ├── auth
+│   │   └── sessions
+│   ├── environments
+│   └── user
 ├── client
 │   └── registry
 ├── commands
@@ -73,6 +78,8 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ├── docs
 │   ├── api
 │   │   └── v1
+│   │       ├── auth
+│   │       └── user
 │   ├── architecture
 │   │   ├── decisions
 │   │   └── templates
@@ -87,9 +94,13 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │       ├── model
 │       └── util
 ├── tests
+│   ├── functional
+│   │   └── auth
+│   └── unit
+│       └── services
 └── tmp
 
-55 directories
+66 directories
 ```
 <!-- readme-tree end -->
 
