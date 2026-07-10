@@ -3,6 +3,6 @@ import { text } from '#validators/shared/fields/text'
 import vine from '@vinejs/vine'
 
 export const loginValidator = vine.create({
-  email: email(),
+  login: email(),
   password: text(8, 128),
 })

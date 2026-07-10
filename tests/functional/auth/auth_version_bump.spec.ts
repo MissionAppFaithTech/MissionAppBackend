@@ -1,5 +1,5 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
-import { AuthRevocationService } from '#services/auth_revocation_service'
+import { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
@@ -19,7 +19,7 @@ test.group('Auth - revogação global via auth_version', (group) => {
 
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const accessToken = (login.body() as TokensBody).data.accessToken
 

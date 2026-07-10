@@ -113,6 +113,20 @@ export default class extends BaseSchema {
           'Contador de tentativas de login falhadas consecutivas; base para bloqueio por força bruta'
         )
       table
+        .timestamp('locked_at', { precision: 3, useTz: true })
+        .nullable()
+        .comment(
+          'Data e hora em que a conta foi bloqueada por excesso de tentativas de login falhadas; null indica conta não bloqueada'
+        )
+      table
+        .integer('lock_count')
+        .unsigned()
+        .notNullable()
+        .defaultTo(0)
+        .comment(
+          'Quantidade de vezes que a conta já foi bloqueada; usado para calcular a duração exponencial do próximo bloqueio'
+        )
+      table
         .timestamp('last_login', { precision: 3, useTz: true })
         .nullable()
         .comment(
@@ -147,6 +161,7 @@ export default class extends BaseSchema {
       table.check('?? >= 0', ['followers_count'], 'chk_users_followers_count_non_negative')
       table.check('?? >= 0', ['following_count'], 'chk_users_following_count_non_negative')
       table.check('?? >= 0', ['login_attempts'], 'chk_users_login_attempts_non_negative')
+      table.check('?? >= 0', ['lock_count'], 'chk_users_lock_count_non_negative')
 
       // painel admin filtra por membership_status e role; busca de login usa email
       table.index(['membership_status'], 'idx_users_membership_status')

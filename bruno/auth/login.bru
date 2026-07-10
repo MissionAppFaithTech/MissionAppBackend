@@ -12,16 +12,16 @@ post {
 
 body:json {
   {
-    "email": "usuario@example.com",
+    "login": "usuario@example.com",
     "password": "senha12345"
   }
 }
 
 docs {
-  Autentica com email e senha. A API sempre retorna access token e refresh
+  Autentica com login (email) e senha. A API sempre retorna access token e refresh
   token no corpo da resposta — não existe mais entrega via cookie nesta
   camada, já que o consumidor web é um BFF (Next.js), não um browser. Ver
-  ADR-0021, seção "Entrega de Tokens".
+  ADR-0023, seção "Entrega de Tokens".
 
   Copie o `accessToken` da resposta para a variável de ambiente `auth_token`,
   e o `refreshToken` para `refresh_token`, antes de rodar as demais

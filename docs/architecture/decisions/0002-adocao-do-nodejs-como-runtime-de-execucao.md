@@ -34,7 +34,7 @@ A versão do Node.js em uso no projeto é fixada no campo `"engines"` do `packag
 
 - **APIs nativas do Node.js 24 em uso direto pelo AdonisJS v7:** O AdonisJS v7 removeu dependências de bibliotecas de utilitários em favor de APIs nativas do Node.js 24 — entre elas `util.parseEnv` (substitui o `dotenv` para leitura de variáveis de ambiente), `crypto.randomUUID` (geração de UUIDs), e diagnostic channels para observabilidade. Essas APIs são específicas do Node.js e têm comportamento ou disponibilidade inconsistente em runtimes alternativos.
 
-- **Paridade com o ecossistema de pacotes:** O `node_modules/` instalado via pnpm ([ADR-0009](./0009-adocao-do-pnpm-como-gerenciador-de-pacotes.md)) assume Node.js como runtime. Pacotes com módulos nativos compilados (addons em C++ como `sharp`, `bcrypt`, `argon2`) são compilados para a ABI do Node.js — não são portáveis para outros runtimes sem recompilação ou shims.
+- **Paridade com o ecossistema de pacotes:** O `node_modules/` instalado via pnpm ([ADR-0011](./0011-adocao-do-pnpm-como-gerenciador-de-pacotes.md)) assume Node.js como runtime. Pacotes com módulos nativos compilados (addons em C++ como `sharp`, `bcrypt`, `argon2`) são compilados para a ABI do Node.js — não são portáveis para outros runtimes sem recompilação ou shims.
 
 - **Compatibilidade com o ciclo de vida do Docker:** A imagem `node:24-alpine` é mantida oficialmente pela equipe do Node.js com patches de segurança regulares. Runtimes alternativos têm imagens Docker menos maduras, atualizações menos previsíveis e menor adoção em ambientes de produção gerenciados.
 
@@ -52,7 +52,7 @@ O Bun é um runtime JavaScript moderno desenvolvido pela Oven.sh, posicionado co
 
 3. **Instabilidade para projetos em início de desenvolvimento:** Adotar um runtime com incompatibilidades conhecidas no começo de um projeto significa assumir uma dívida técnica de rastreamento — problemas que surgem podem ser bugs do runtime, do framework, ou da interação entre ambos, com pouca documentação e comunidade para apoiar o diagnóstico.
 
-> **Nota:** Bun como _gerenciador de pacotes_ (`bun install`) é tecnicamente viável com AdonisJS, mas foi descartado em favor do pnpm pelos critérios documentados no [ADR-0009](./0009-adocao-do-pnpm-como-gerenciador-de-pacotes.md). Os dois produtos são independentes.
+> **Nota:** Bun como _gerenciador de pacotes_ (`bun install`) é tecnicamente viável com AdonisJS, mas foi descartado em favor do pnpm pelos critérios documentados no [ADR-0011](./0011-adocao-do-pnpm-como-gerenciador-de-pacotes.md). Os dois produtos são independentes.
 
 ### Deno
 
@@ -72,11 +72,11 @@ O Deno é um runtime JavaScript/TypeScript desenvolvido pela Deno Land Inc., com
 
 - **Compatibilidade garantida com AdonisJS v7:** Node.js 24 é o único runtime com suporte oficial. Sem friction de compatibilidade, sem issue tracking para acompanhar, sem comportamentos divergentes entre ambientes.
 
-- **Ecossistema npm completo:** Todos os pacotes com módulos nativos funcionam sem configuração adicional. O pnpm ([ADR-0009](./0009-adocao-do-pnpm-como-gerenciador-de-pacotes.md)) instala para a ABI correta automaticamente.
+- **Ecossistema npm completo:** Todos os pacotes com módulos nativos funcionam sem configuração adicional. O pnpm ([ADR-0011](./0011-adocao-do-pnpm-como-gerenciador-de-pacotes.md)) instala para a ABI correta automaticamente.
 
 - **Suporte LTS com ciclo previsível:** Node.js 24 tem suporte LTS com patches de segurança regulares e horizonte de suporte até abril de 2027 (Active LTS) e abril de 2028 (Maintenance). Atualizações previsíveis facilitam o planejamento de upgrades.
 
-- **Imagens Docker oficiais estáveis:** `node:24-alpine` é mantida oficialmente, com patches de segurança e builds para múltiplas arquiteturas (`amd64`, `arm64`), alinhando-se à estratégia de containerização do [ADR-0008](./0008-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md).
+- **Imagens Docker oficiais estáveis:** `node:24-alpine` é mantida oficialmente, com patches de segurança e builds para múltiplas arquiteturas (`amd64`, `arm64`), alinhando-se à estratégia de containerização do [ADR-0010](./0010-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md).
 
 - **Familiaridade dos contribuidores:** Node.js é o runtime dominante no ecossistema. A maioria dos contribuidores potenciais já trabalha com Node.js — sem curva de aprendizado de runtime, sem surpresas de compatibilidade.
 
@@ -86,7 +86,7 @@ O Deno é um runtime JavaScript/TypeScript desenvolvido pela Deno Land Inc., com
 
 - **Ausência de transpilação TypeScript nativa:** O Node.js não executa TypeScript diretamente. O projeto depende do `ts-exec` (compilador SWC integrado ao AdonisJS v7) para desenvolvimento com HMR e do `tsc` para build de produção. Bun executaria `.ts` diretamente sem etapa de build — mas esse ganho não justifica a troca dado o custo de compatibilidade.
 
-- **Dependência do ciclo de release do Node.js:** Upgrades de versão principal do Node.js (ex: 24 → 26) precisam ser coordenados com o AdonisJS, que pode ou não ter adotado as APIs da nova versão. O Renovate ([ADR-0013](./0013-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md)) monitora isso, mas upgrades de runtime ainda requerem validação manual.
+- **Dependência do ciclo de release do Node.js:** Upgrades de versão principal do Node.js (ex: 24 → 26) precisam ser coordenados com o AdonisJS, que pode ou não ter adotado as APIs da nova versão. O Renovate ([ADR-0015](./0015-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md)) monitora isso, mas upgrades de runtime ainda requerem validação manual.
 
 ---
 
@@ -98,6 +98,6 @@ O Deno é um runtime JavaScript/TypeScript desenvolvido pela Deno Land Inc., com
 - [Bun — Issue de compatibilidade com AdonisJS](https://github.com/oven-sh/bun/issues/1290): issue que documenta a incompatibilidade que levou à rejeição do Bun
 - [Deno — Site oficial](https://deno.com): runtime alternativo avaliado e descartado pelo ecossistema npm ainda imaturo
 - [ADR-0001](./0001-adocao-do-adonisjs-como-framework-backend.md): adoção do AdonisJS, que exige Node.js 24+ como runtime
-- [ADR-0008](./0008-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md): Docker que padroniza o runtime Node.js 24 em todos os ambientes
-- [ADR-0009](./0009-adocao-do-pnpm-como-gerenciador-de-pacotes.md): pnpm gerenciado via Corepack, que requer Node.js 24 habilitado
-- [ADR-0013](./0013-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md): Renovate para atualizar a imagem base do Node.js quando novas versões LTS forem lançadas
+- [ADR-0010](./0010-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md): Docker que padroniza o runtime Node.js 24 em todos os ambientes
+- [ADR-0011](./0011-adocao-do-pnpm-como-gerenciador-de-pacotes.md): pnpm gerenciado via Corepack, que requer Node.js 24 habilitado
+- [ADR-0015](./0015-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md): Renovate para atualizar a imagem base do Node.js quando novas versões LTS forem lançadas

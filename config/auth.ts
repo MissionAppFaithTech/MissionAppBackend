@@ -1,9 +1,8 @@
 import { JwtGuard } from '#auth/guards/jwt'
 import { LucidJwtUserProvider } from '#auth/providers/lucid_user_jwt_provider'
-import { AuthRevocationService } from '#services/auth_revocation_service'
+import { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import env from '#start/env'
 import { defineConfig } from '@adonisjs/auth'
-import { sessionGuard, sessionUserProvider } from '@adonisjs/auth/session'
 import type { Authenticators, InferAuthEvents } from '@adonisjs/auth/types'
 
 const authConfig = defineConfig({
@@ -17,27 +16,15 @@ const authConfig = defineConfig({
     // consumidor precisar de personal access tokens além do fluxo JWT.
 
     /**
-     * Guard baseado em JWT para autenticação de API stateless.
+     * Guard baseado em JWT para autenticação de API stateless — único guard
+     * em uso (ver ADR-0023). Sessão stateful clássica foi avaliada e
+     * descartada (ver Alternativas Consideradas do ADR).
      */
     jwt: (ctx) =>
       new JwtGuard(ctx, new LucidJwtUserProvider(), new AuthRevocationService(), {
         secret: env.get('JWT_SECRET'),
         expiresIn: env.get('JWT_ACCESS_EXPIRES_IN'),
       }),
-
-    /**
-     * Guard baseado em session para autenticação via browser.
-     */
-    web: sessionGuard({
-      /**
-       * Habilita login persistente usando remember-me tokens.
-       */
-      useRememberMeTokens: false,
-
-      provider: sessionUserProvider({
-        model: () => import('#models/user'),
-      }),
-    }),
   },
 })
 

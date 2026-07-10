@@ -19,13 +19,14 @@ test.group('Auth - logout', (group) => {
 
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
-    const accessToken = (login.body() as TokensBody).data.accessToken
+    const { accessToken, refreshToken } = (login.body() as TokensBody).data
 
     const logout = await client
       .delete(router.builder().make('v1.auth.access_tokens.destroy')!)
       .header('Authorization', `Bearer ${accessToken}`)
+      .json({ refreshToken })
 
     logout.assertStatus(200)
 
@@ -46,17 +47,20 @@ test.group('Auth - logout', (group) => {
     // NOTE: duas sessões independentes do mesmo usuário — duas famílias distintas
     const sessionA = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
     const sessionB = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
-    const { accessToken: accessTokenA } = (sessionA.body() as TokensBody).data
+    const { accessToken: accessTokenA, refreshToken: refreshTokenA } = (
+      sessionA.body() as TokensBody
+    ).data
     const { refreshToken: refreshTokenB } = (sessionB.body() as TokensBody).data
 
     const logout = await client
       .delete(router.builder().make('v1.auth.access_tokens.destroy')!)
       .header('Authorization', `Bearer ${accessTokenA}`)
+      .json({ refreshToken: refreshTokenA })
 
     logout.assertStatus(200)
 
@@ -67,5 +71,41 @@ test.group('Auth - logout', (group) => {
 
     refreshB.assertStatus(200)
     assert.isString((refreshB.body() as TokensBody).data.accessToken)
+  })
+
+  test('logout funciona sem access token válido — revoga via refresh token mesmo assim', async ({
+    client,
+  }) => {
+    const { user, password } = await createTestUser()
+
+    const login = await client
+      .post(router.builder().make('v1.auth.access_tokens.store')!)
+      .json({ login: user.email, password })
+
+    const { refreshToken } = (login.body() as TokensBody).data
+
+    // NOTE: sem header Authorization — simula access token expirado/ausente,
+    // que não deve impedir o logout (RFC 7009)
+    const logout = await client
+      .delete(router.builder().make('v1.auth.access_tokens.destroy')!)
+      .json({ refreshToken })
+
+    logout.assertStatus(200)
+
+    const refresh = await client
+      .post(router.builder().make('v1.auth.refresh_tokens.store')!)
+      .json({ refreshToken })
+
+    refresh.assertStatus(401)
+  })
+
+  test('logout é idempotente — refresh token desconhecido ainda responde 200', async ({
+    client,
+  }) => {
+    const logout = await client
+      .delete(router.builder().make('v1.auth.access_tokens.destroy')!)
+      .json({ refreshToken: 'token-que-nunca-existiu' })
+
+    logout.assertStatus(200)
   })
 })

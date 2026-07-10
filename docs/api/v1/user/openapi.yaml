@@ -1,4 +1,4 @@
-# Arquivo de agrupamento da pasta user/ (ADR-0025). Não contém paths nem
+# Arquivo de agrupamento da pasta user/ (ADR-0027). Não contém paths nem
 # schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
 # É este arquivo que o openapi.yaml raiz referencia.
 paths:

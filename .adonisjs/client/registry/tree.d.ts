@@ -14,6 +14,19 @@ export interface ApiDefinition {
       refreshTokens: {
         store: typeof routes['v1.auth.refresh_tokens.store']
       }
+      forgotPassword: {
+        store: typeof routes['v1.auth.forgot_password.store']
+      }
+      resetPassword: {
+        update: typeof routes['v1.auth.reset_password.update']
+      }
+      sessions: {
+        index: typeof routes['v1.auth.sessions.index']
+        destroy: typeof routes['v1.auth.sessions.destroy']
+      }
+      allSessions: {
+        destroy: typeof routes['v1.auth.all_sessions.destroy']
+      }
     }
     profile: {
       show: typeof routes['v1.profile.show']

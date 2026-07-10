@@ -1,4 +1,5 @@
 import { UserActionAuditSchema } from '#database/schema'
+import { SystemAction } from '#enums/user_action_audit/system_action_type'
 import { belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { WithCreatedAt } from './mixins/with_created_at.ts'
@@ -13,6 +14,8 @@ export default class UserActionAudit extends compose(
   WithCreatedAt,
   Filterable
 ) {
+  declare actionType: SystemAction
+
   @belongsTo(() => User, { foreignKey: 'actor_id' })
   declare actor: BelongsTo<typeof User>
 

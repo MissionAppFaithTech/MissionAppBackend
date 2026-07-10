@@ -16,7 +16,7 @@ test.group('Auth - troca de senha', (group) => {
 
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const accessToken = (login.body() as TokensBody).data.accessToken
 
@@ -44,7 +44,7 @@ test.group('Auth - troca de senha', (group) => {
 
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const accessToken = (login.body() as TokensBody).data.accessToken
 
@@ -65,7 +65,7 @@ test.group('Auth - troca de senha', (group) => {
 
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const accessToken = (login.body() as TokensBody).data.accessToken
 
@@ -80,7 +80,7 @@ test.group('Auth - troca de senha', (group) => {
 
     const newLogin = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password: 'newpassword456' })
+      .json({ login: user.email, password: 'newpassword456' })
 
     newLogin.assertStatus(200)
   })

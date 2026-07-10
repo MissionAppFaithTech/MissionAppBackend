@@ -12,11 +12,13 @@ export default class SessionTransformer extends BaseTransformer<RefreshToken> {
   toObject() {
     return {
       id: this.resource.familyId,
-      deviceType: this.resource.deviceType,
-      deviceName: this.resource.deviceName,
-      ipAddress: this.resource.ipAddress,
-      lastUsedAt: this.resource.lastUsedAt,
-      createdAt: this.resource.createdAt,
+      ...this.pick(this.resource, [
+        'deviceType',
+        'deviceName',
+        'ipAddress',
+        'lastUsedAt',
+        'createdAt',
+      ]),
       current: this.resource.familyId === this.#currentFamilyId,
     }
   }

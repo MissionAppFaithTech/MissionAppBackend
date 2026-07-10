@@ -17,7 +17,7 @@ headers {
 
 body:json {
   {
-    "email": "usuario@example.com",
+    "login": "usuario@example.com",
     "password": "senha12345"
   }
 }
@@ -27,5 +27,5 @@ docs {
   headers não mudam onde os tokens são entregues (sempre no corpo, em ambos
   os casos) — determinam apenas: (1) a política de TTL do refresh token
   (mobile tem sliding window mais longa, `JWT_REFRESH_EXPIRES_IN_MOBILE`) e
-  (2) os metadados exibidos na listagem de sessões ativas. Ver ADR-0021.
+  (2) os metadados exibidos na listagem de sessões ativas. Ver ADR-0023.
 }

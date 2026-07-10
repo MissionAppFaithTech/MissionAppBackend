@@ -53,9 +53,23 @@ export default await Env.create(new URL('../', import.meta.url), {
   JWT_ACCESS_EXPIRES_IN: Env.schema.string(),
 
   // NOTE: TTL do refresh token por tipo de cliente — sliding window
-  // recalculado a cada rotação. Mobile fica mais tempo (ADR-0021): app usado
+  // recalculado a cada rotação. Mobile fica mais tempo (ADR-0023): app usado
   // com frequência nunca desautentica; só pede login após período real de
   // inatividade.
   JWT_REFRESH_EXPIRES_IN_WEB: Env.schema.string(),
   JWT_REFRESH_EXPIRES_IN_MOBILE: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the mail package
+  |----------------------------------------------------------
+  */
+  MAIL_MAILER: Env.schema.enum(['resend'] as const),
+  MAIL_FROM_NAME: Env.schema.string(),
+  MAIL_FROM_ADDRESS: Env.schema.string(),
+  RESEND_API_KEY: Env.schema.string(),
+
+  // NOTE: base do BFF (Next.js), usada para montar links de email
+  // transacional (ex: recuperação de senha) — ver ADR-0023.
+  FRONTEND_URL: Env.schema.string({ format: 'url', tld: false }),
 })

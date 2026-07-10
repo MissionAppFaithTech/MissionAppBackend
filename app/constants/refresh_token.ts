@@ -8,3 +8,6 @@
 export const DEVICE_TYPE_MAX_LENGTH = 16
 export const DEVICE_NAME_MAX_LENGTH = 120
 export const IP_ADDRESS_MAX_LENGTH = 45
+
+/** Tamanho em bytes do refresh token bruto antes de virar hex — 512 bits de entropia. */
+export const REFRESH_TOKEN_BYTES = 64

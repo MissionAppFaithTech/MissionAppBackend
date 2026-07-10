@@ -9,9 +9,11 @@ import { DateTime } from 'luxon'
 // fallow-ignore-file code-duplication -- bloco createdAt espelha with_created_at.ts intencionalmente; ambos encapsulam a mesma regra UTC de forma independente para evitar problemas de tipagem na composição de mixins
 export const WithTimestamps = <T extends NormalizeConstructor<typeof BaseModel>>(superclass: T) => {
   class WithTimestampsMixin extends superclass {
-    // NOTE: PostgreSQL TIMESTAMP WITHOUT TIME ZONE armazena o valor literal —
-    // sem conversão explícita para UTC, timestamps de fusos distintos geram
-    // drift silencioso no banco.
+    /**
+     * PostgreSQL TIMESTAMP WITHOUT TIME ZONE armazena o valor literal — sem
+     * conversão explícita para UTC, timestamps de fusos distintos geram
+     * drift silencioso no banco.
+     */
     @column.dateTime({
       autoCreate: true,
       prepare: (value: DateTime) => value.toUTC().toSQL(),

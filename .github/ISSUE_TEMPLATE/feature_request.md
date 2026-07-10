@@ -17,7 +17,7 @@ Descreva de forma clara a funcionalidade desejada e como ela deveria funcionar.
 ## Domínio(s) afetado(s)
 
 <!-- Marque o(s) domínio(s) relacionado(s). Critério: o que o endpoint faz,
-     não em qual tabela o dado é persistido — ver ADR-0025. -->
+     não em qual tabela o dado é persistido — ver ADR-0027. -->
 
 - [ ] `auth` — autenticação e ciclo de vida de sessão
 - [ ] `user` — conta, perfil, credenciais
@@ -42,8 +42,8 @@ Descreva de forma clara a funcionalidade desejada e como ela deveria funcionar.
 - [ ] Requer novo Transformer?
 - [ ] Requer background job (BullMQ)?
 - [ ] Requer novo ADR (banco/ORM/serviço externo/padrão arquitetural novo)?
-- [ ] Requer documentação OpenAPI em `docs/api/v1/<domínio>/` (ADR-0025)?
-- [ ] Requer requisição Bruno nova/atualizada em `bruno/` (ADR-0017)?
+- [ ] Requer documentação OpenAPI em `docs/api/v1/<domínio>/` (ADR-0027)?
+- [ ] Requer requisição Bruno nova/atualizada em `bruno/` (ADR-0019)?
 
 ## Alternativas consideradas
 

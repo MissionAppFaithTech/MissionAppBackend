@@ -19,7 +19,7 @@ body:json {
 docs {
   Rotaciona o refresh token e emite um novo access token. O refresh token
   sempre vai no corpo da requisição — não existe mais fallback via cookie
-  (a API não é consumida diretamente por um browser; ver ADR-0021).
+  (a API não é consumida diretamente por um browser; ver ADR-0023).
 
   Reutilizar um refresh token já rotacionado invalida toda a família de
   tokens daquela sessão/dispositivo (detecção de roubo).

@@ -3,12 +3,12 @@ info:
   title: MissionApp API
   version: '1.0.0'
   description: >-
-    Contrato da API do MissionApp (ADR-0025). Endpoints agrupados por domínio
+    Contrato da API do MissionApp (ADR-0027). Endpoints agrupados por domínio
     em arquivos separados sob docs/api/v1/<domínio>/openapi.yaml — este
     arquivo referencia cada domínio via $ref. Critério de domínio: o que o
     endpoint faz (mecanismo de sessão vs. atributo de recurso), não a tabela
     onde o dado é persistido. Ver seção "Critério de separação por domínio"
-    na ADR-0025.
+    na ADR-0027.
   license:
     name: MIT
     identifier: MIT

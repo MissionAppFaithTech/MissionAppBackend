@@ -1,10 +1,9 @@
+// fallow-ignore-file circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import { CampaignProjectSchema } from '#database/schema'
 import { compose } from '@adonisjs/core/helpers'
 import { belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import Campaign from './campaign.ts'
-// fallow-ignore-next-line circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import ImpactProject from './impact_project.ts'
 import { WithCreatedAt } from './mixins/with_created_at.ts'
 import { WithPrimaryUuid } from './mixins/with_primary_uuid.ts'

@@ -6,13 +6,11 @@
 2. [Estrutura do Projeto](#estrutura-do-projeto)
 3. [Estrutura da Documentação](#estrutura-da-documentacao)
 4. [Tipos de Usuários](#tipos-de-usuarios)
-5. [Funcionalidades por Requisito](#funcionalidades-por-requisito)
-6. [Requisitos Não Funcionais](#requisitos-nao-funcionais)
-7. [Ferramentas Necessárias](#ferramentas-necessarias)
-8. [Versões de Tecnologias Utilizadas](#versoes-de-tecnologias-utilizadas)
-9. [Como Executar o Servidor](#como-executar-o-servidor)
-10. [Links Externos](#links-externos)
-11. [Equipe de Desenvolvimento](#equipe-de-desenvolvimento)
+5. [Ferramentas Necessárias](#ferramentas-necessarias)
+6. [Versões de Tecnologias Utilizadas](#versoes-de-tecnologias-utilizadas)
+7. [Como Executar o Servidor](#como-executar-o-servidor)
+8. [Links Externos](#links-externos)
+9. [Equipe de Desenvolvimento](#equipe-de-desenvolvimento)
 
 ---
 
@@ -122,9 +120,9 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
   </thead>
   <tbody>
     <tr>
-      <td><code>docs/api/</code></td>
+      <td><code>docs/api/v1/&lt;domínio&gt;/</code></td>
       <td>Devs frontend e mobile</td>
-      <td>Specs OpenAPI/Swagger, coleções Postman, guias de autenticação e contratos de resposta por endpoint.</td>
+      <td>Contrato OpenAPI por domínio (<code>auth/</code>, <code>user/</code> e etc). <code>openapi.yaml</code> é um agregador só com <code>$ref</code>s; o conteúdo real (paths, schemas) vive em <code>&lt;domínio&gt;.openapi.yaml</code> no mesmo diretório. Servido estaticamente via Scalar — ver <a href="./docs/architecture/decisions/0027-documentacao-de-endpoints-com-openapi-estatico-e-scalar.md">ADR-0027</a>.</td>
     </tr>
     <tr>
       <td><code>docs/architecture/</code></td>
@@ -132,19 +130,9 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
       <td><strong>ADRs</strong> — o porquê de cada decisão arquitetural. Template oficial em <code>templates/</code>. Leia o <a href="./docs/architecture/decisions/README.md">guia de ADRs</a> antes de propor mudanças estruturais.</td>
     </tr>
     <tr>
-      <td><code>docs/business/</code></td>
-      <td>Product Managers e devs</td>
-      <td>Regras de negócio puras, fluxos de doações, aprovação de campanhas, campos obrigatórios por perfil de usuário.</td>
-    </tr>
-    <tr>
-      <td><code>docs/setup/</code></td>
-      <td>Novos contribuidores</td>
-      <td>Guia de instalação, subida dos containers Docker, execução das migrations e explicação do <code>.env.example</code>.</td>
-    </tr>
-    <tr>
       <td><code>docs/deployment/</code></td>
       <td>DevOps e infraestrutura</td>
-      <td>Pipelines do GitHub Actions, arquitetura AWS (ver <a href="./docs/architecture/decisions/0011-padronizacao-de-nomenclatura-de-buckets.md">ADR-0011</a>), requisitos de produção e runbooks.</td>
+      <td>Pipelines do GitHub Actions, arquitetura AWS (ver <a href="./docs/architecture/decisions/0013-padronizacao-de-nomenclatura-de-buckets.md">ADR-0013</a>), requisitos de produção e runbooks.</td>
     </tr>
   </tbody>
 </table>
@@ -176,110 +164,21 @@ A plataforma reconhece **três perfis principais**, cada um com privilégios e r
   <tbody>
     <tr>
       <td><code>ADMIN</code></td>
-      <td>Provisionamento interno (DB) — sem auto-cadastro (Req 4.1)</td>
-      <td><strong>Gerenciamento global:</strong> Aprovação de missionários (Req 5), curadoria de projetos (Req 5.4), gestão de campanhas de promoção, controle de usuários.<br><br><strong>Acesso exclusivo:</strong> Painel administrativo com verificação explícita de role (Req 4.2).</td>
+      <td>Provisionamento interno (DB) — sem auto-cadastro</td>
+      <td><strong>Gerenciamento global:</strong> Aprovação de missionários, curadoria de projetos, gestão de campanhas de promoção, controle de usuários.<br><br><strong>Acesso exclusivo:</strong> Painel administrativo com verificação explícita de role.</td>
     </tr>
     <tr>
       <td><code>MISSIONARY</code></td>
-      <td>Auto-cadastro + email verification + aprovação de admin (Req 3)</td>
-      <td><strong>Produção de conteúdo:</strong> Criar posts com imagens (Req 6), projetos de impacto com vídeo e capa (Req 7), campanhas de arrecadação.<br><br><strong>Gerenciamento financeiro:</strong> Configurar Pix, transferência bancária e futuros gateways (Req 9).<br><br><strong>Rede social:</strong> Seguir outros missionários, visualizar feeds de conexões (Req 14.4). Perfil expandido com agência missionária e dados eclesiásticos (Req 3.1.1).</td>
+      <td>Auto-cadastro + email verification + aprovação de admin</td>
+      <td><strong>Produção de conteúdo:</strong> Criar posts com imagens, projetos de impacto com vídeo e capa, campanhas de arrecadação.<br><br><strong>Gerenciamento financeiro:</strong> Configurar Pix, transferência bancária e futuros gateways.<br><br><strong>Rede social:</strong> Seguir outros missionários, visualizar feeds de conexões. Perfil expandido com agência missionária e dados eclesiásticos.</td>
     </tr>
     <tr>
       <td><code>SUPPORTER</code></td>
-      <td>Auto-cadastro com dados básicos (Req 2.1) — opcional: criar/vincular comunidade de fé</td>
-      <td><strong>Consumo e apoio:</strong> Seguir missionários, visualizar feed de postagens, interagir com likes em posts (Req 5.4, 15.2.1).<br><br><strong>Descoberta:</strong> Explorar projetos recomendados (Req 12, 15.4.1), pesquisar missionários e projetos (Req 11).<br><br><strong>Doações:</strong> Realizar contribuições via Pix, transferência bancária e futuro gateway (Req 9).<br><br><strong>Acesso anônimo:</strong> Usuários não autenticados podem acessar rotas públicas em leitura (Req 1.4).</td>
+      <td>Auto-cadastro com dados básicos — opcional: criar/vincular comunidade de fé</td>
+      <td><strong>Consumo e apoio:</strong> Seguir missionários, visualizar feed de postagens, interagir com likes em posts.<br><br><strong>Descoberta:</strong> Explorar projetos recomendados, pesquisar missionários e projetos.<br><br><strong>Doações:</strong> Realizar contribuições via Pix, transferência bancária e futuro gateway.<br><br><strong>Acesso anônimo:</strong> Usuários não autenticados podem acessar rotas públicas em leitura.</td>
     </tr>
   </tbody>
 </table>
-
-### Contexto de Comunidade de Fé
-
-Usuários **SUPPORTER** e **MISSIONARY** podem estar vinculados a uma **Comunidade de Fé (igreja)** durante o cadastro:
-
-- Os dados eclesiásticos podem ser atualizados pelo próprio usuário dentro de **30 dias** após cadastro
-- Após 30 dias, alterações requerem aprovação formal do administrador (Req 13.3)
-- Pastores são implementados como usuários **SUPPORTER** com vinculação à comunidade de fé, sem role separada
-
----
-
-<a name="funcionalidades-por-requisito"></a>
-
-## ✅ Funcionalidades por Requisito
-
-### 📌 Requisito 1 – Autenticação e Acesso
-
-- [ ] 1.1 Login com e-mail e senha
-- [ ] 1.2 Logout e revogação de token de acesso
-- [ ] 1.3 Aprovação de cadastro: administrador aprova pedido de registro de missionário
-
-### 📌 Requisito 2 – Cadastro e Edição de Usuários
-
-- [ ] 2.1 Cadastro de usuário padrão
-- [ ] 2.2 Cadastro e perfil de missionário (com agência missionária vinculada)
-- [ ] 2.3 Cadastro e perfil de pastor (com comunidade de fé vinculada)
-- [ ] 2.4 Cadastro de administrador do sistema
-- [ ] 2.5 Edição e deleção de perfis pelos respectivos tipos de usuário
-
-### 📌 Requisito 3 – Agências Missionárias
-
-- [ ] 3.1 Criação de agência missionária
-- [ ] 3.2 Edição e deleção de agência
-- [ ] 3.3 Associação de missionários a agências
-- [ ] 3.4 Listagem e busca de agências
-
-### 📌 Requisito 4 – Comunidades de Fé
-
-- [ ] 4.1 Criação de comunidade de fé
-- [ ] 4.2 Edição e deleção de comunidade
-- [ ] 4.3 Vinculação de pastor a comunidade
-
-### 📌 Requisito 5 – Posts e Interações
-
-- [ ] 5.1 Criação de post por missionário
-- [ ] 5.2 Edição e deleção de post pelo autor
-- [ ] 5.3 Listagem e feed de posts
-- [ ] 5.4 Likes em posts:
-  - [ ] 5.4.1 Criação de like
-  - [ ] 5.4.2 Remoção de like
-  - [ ] 5.4.3 Contagem de likes por post
-- [ ] 5.5 Comentários em posts:
-  - [ ] 5.5.1 Criação de comentário
-  - [ ] 5.5.2 Recuperação de comentários de um post
-  - [ ] 5.5.3 Edição de comentário pelo autor
-  - [ ] 5.5.4 Deleção de comentário
-  - [ ] 5.5.5 Resposta a comentários (comentários aninhados)
-- [ ] 5.6 Seguidores:
-  - [ ] 5.6.1 Seguir missionário
-  - [ ] 5.6.2 Deixar de seguir
-  - [ ] 5.6.3 Listagem de seguidores e seguidos
-
-### 📌 Requisito 6 – Projetos de Impacto e Campanhas
-
-- [ ] 6.1 Criação de projeto de impacto por missionário
-- [ ] 6.2 Edição e deleção de projeto de impacto
-- [ ] 6.3 Criação de campanha vinculada a projeto de impacto
-- [ ] 6.4 Edição e deleção de campanha
-- [ ] 6.5 Criação de projeto de campanha
-- [ ] 6.6 Acompanhamento de progresso de campanha
-
-### 📌 Requisito 7 – Mídias e Arquivos
-
-- [ ] 7.1 Upload de foto de perfil (missionário, pastor, usuário)
-- [ ] 7.2 Upload de imagens em posts
-- [ ] 7.3 Upload de documentos em projetos de impacto
-- [ ] 7.4 Deleção de mídia associada a recurso removido
-
----
-
-<a name="requisitos-nao-funcionais"></a>
-
-## 🧪 Requisitos Não Funcionais
-
-- [x] NF.1 — **Segurança:** Controle de acesso por tipo de usuário via middleware de autenticação
-- [x] NF.2 — **Auditoria:** Ações sensíveis registradas em `authentication_audits` e `user_action_audits`
-- [ ] NF.3 — **Desempenho:** Respostas de busca em menos de 500ms
-- [ ] NF.4 — **Usabilidade:** Busca tolerante a erros de digitação em termos individuais
-- [ ] NF.5 — **Observabilidade:** Logs estruturados em produção com rastreabilidade de requisições
 
 ---
 

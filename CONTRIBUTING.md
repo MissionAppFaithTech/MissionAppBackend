@@ -27,10 +27,10 @@ Antes de começar, recomenda-se ter instalado:
 | Ferramenta                                                                                         | Versão mínima           | Obrigatório | Finalidade                                                                                                                             |
 | -------------------------------------------------------------------------------------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | [Node.js](https://nodejs.org/)                                                                     | 24.x                    | Sim         | Runtime da aplicação                                                                                                                   |
-| [pnpm](https://pnpm.io/)                                                                           | 11.x                    | Sim         | Gerenciador de pacotes ([ADR-0007](./docs/architecture/decisions/0007-adocao-do-pnpm-como-gerenciador-de-pacotes.md))                  |
-| [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) | Qualquer versão estável | Sim         | Serviços de infraestrutura ([ADR-0006](./docs/architecture/decisions/0006-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)) |
+| [pnpm](https://pnpm.io/)                                                                           | 11.x                    | Sim         | Gerenciador de pacotes ([ADR-0011](./docs/architecture/decisions/0011-adocao-do-pnpm-como-gerenciador-de-pacotes.md))                  |
+| [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/) | Qualquer versão estável | Sim         | Serviços de infraestrutura ([ADR-0010](./docs/architecture/decisions/0010-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md)) |
 | [Git](https://git-scm.com/)                                                                        | 2.x                     | Sim         | Controle de versão                                                                                                                     |
-| [Bruno](https://www.usebruno.com/)                                                                 | Última estável          | Sim         | Cliente HTTP oficial para testar a API ([ADR-0015](./docs/architecture/decisions/0015-adocao-do-bruno-como-cliente-http-oficial.md))   |
+| [Bruno](https://www.usebruno.com/)                                                                 | Última estável          | Sim         | Cliente HTTP oficial para testar a API ([ADR-0019](./docs/architecture/decisions/0019-adocao-do-bruno-como-cliente-http-oficial.md))   |
 | [just](https://just.systems/)                                                                      | 1.17+                   | Não         | Runner de comandos — atalhos para os comandos mais usados                                                                              |
 
 ### Gerenciando a versão do Node.js
@@ -200,7 +200,7 @@ Exemplos:
 ```
 feat(auth): adicionar verificação de expiração do token de verificação de email
 fix(doações): corrigir arredondamento de moeda no payload pix
-docs(adr): adicionar ADR-0013 para estratégia de autenticação
+docs(adr): adicionar ADR-0015 para estratégia de autenticação
 test(missionários): adicionar teste de integração para atualização de perfil
 ```
 
@@ -228,16 +228,39 @@ O CI rejeitará PRs com erros de lint ou falhas de typecheck.
 ### Convenções do AdonisJS
 
 - **Controllers** são finos: validam a requisição com VineJS, delegam para um Service, retornam a resposta transformada. Nenhuma regra de negócio vive no controller.
-- **Services** são o local da lógica de negócio e da transação relacional. Ao concluir uma operação, emitem um evento via `emitter` — nunca chamam diretamente Elasticsearch, serviço de email ou outros efeitos colaterais. Veja o [ADR-0008](./docs/architecture/decisions/0008-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md).
+- **Services** são o local da lógica de negócio e da transação relacional. Ao concluir uma operação, emitem um evento via `emitter` — nunca chamam diretamente Elasticsearch, serviço de email ou outros efeitos colaterais. Veja o [ADR-0010](./docs/architecture/decisions/0010-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md).
 - **Listeners** são roteadores: recebem um evento e enfileiram um Job no BullMQ em menos de 1ms. Nenhuma lógica pesada dentro de Listeners.
 - **Jobs** executam o trabalho assíncrono real (indexação, email, compressão) como workers isolados.
-- **Workers** são criados exclusivamente via `node ace make:command` e vivem em `commands/`. Nunca crie `Dockerfiles` separados para workers — a aplicação usa imagem única com múltiplos entrypoints. Veja o [ADR-0013](./docs/architecture/decisions/0013-padrao-imagem-unica-multiplos-entrypoints-para-workers.md).
+- **Workers** são criados exclusivamente via `node ace make:command` e vivem em `commands/`. Nunca crie `Dockerfiles` separados para workers — a aplicação usa imagem única com múltiplos entrypoints. Veja o [ADR-0015](./docs/architecture/decisions/0015-padrao-imagem-unica-multiplos-entrypoints-para-workers.md).
 - **Validators** usam VineJS e vivem em `app/validators/`. Nunca valide entrada de usuário no controller ou no service diretamente.
 - **Nunca use `npm install` ou `yarn`** — use exclusivamente `pnpm`. O arquivo `pnpm-lock.yaml` é o lockfile autoritativo.
+
+### Idioma
+
+- **Identificadores** (variáveis, funções, classes, arquivos, pastas) sempre em **inglês**.
+- **Comentários e JSDoc** sempre em **português (pt-BR)**.
 
 ### Comentários no código
 
 Não adicione comentários que expliquem _o que_ o código faz — nomes bem escolhidos já fazem isso. Adicione um comentário apenas quando o _porquê_ for não-óbvio: uma restrição oculta, uma invariante sutil ou um contorno para um bug específico.
+
+Todo comentário que sobreviver a essa regra deve vir marcado com uma tag, pra deixar a intenção escaneável:
+
+| Tag | Quando usar |
+| --- | --- |
+| `NOTE:` | Informação relevante e não-óbvia — invariante, comportamento esperado, motivo de segurança/design |
+| `TODO:` | Trabalho ainda não feito, proposto por quem está lendo/escrevendo o código agora |
+| `FIXME:` / `BUG:` | Comportamento incorreto conhecido que precisa ser corrigido |
+| `HACK:` | Contorno deliberado e temporário — não é a solução ideal |
+| `OPTIMIZE:` | Funciona corretamente, mas poderia ser mais rápido/barato |
+| `REVIEW:` / `CHECK:` | Precisa de uma segunda revisão ou validação técnica |
+| `DEPRECATED:` | Código antigo mantido só por compatibilidade — aponta pro substituto |
+| `WARNING:` | Código sensível ou arriscado — mudar sem cuidado quebra algo |
+| `LEGACY:` | Código herdado mantido só por retrocompatibilidade |
+| `UNDONE:` | Uma funcionalidade foi revertida e pode precisar ser reimplementada |
+| `#region` / `#endregion` | Agrupa um bloco de código em editores que suportam folding |
+
+Essas tags valem para uma linha ou bloco não-óbvio dentro do corpo de uma função — nunca substituem JSDoc na declaração da função/classe/método. Documentação de função/classe/método é sempre um bloco `/** */` (ver [ADR-0024](./docs/architecture/decisions/0024-convencao-de-documentacao-de-codigo-com-jsdoc.md) para as regras de rigor por camada).
 
 ---
 
@@ -262,7 +285,7 @@ Antes de abrir um PR, confirme que todos os testes passam localmente. O CI execu
 
 ## Testando a API com Bruno
 
-O [Bruno](https://www.usebruno.com/) é o cliente HTTP oficial do repositório ([ADR-0015](./docs/architecture/decisions/0015-adocao-do-bruno-como-cliente-http-oficial.md)). A coleção de requisições fica em `bruno/` na raiz do projeto e é versionada junto com o código — após clonar o repositório, a coleção já está pronta para uso.
+O [Bruno](https://www.usebruno.com/) é o cliente HTTP oficial do repositório ([ADR-0017](./docs/architecture/decisions/0017-adocao-do-bruno-como-cliente-http-oficial.md)). A coleção de requisições fica em `bruno/` na raiz do projeto e é versionada junto com o código — após clonar o repositório, a coleção já está pronta para uso.
 
 ### Configurando o Bruno
 

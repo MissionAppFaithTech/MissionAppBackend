@@ -52,10 +52,10 @@ app/
   auth/
     guards/       custom Lucid guards (e.g. JwtGuard)
     providers/    custom Lucid user providers
-  controllers/    thin HTTP handlers — validate, delegate, serialize
-  services/       business logic and relational transactions
+  controllers/    thin HTTP handlers — validate, delegate, serialize; organized by domain subdirectory once a domain has more than one controller (e.g. controllers/auth/, controllers/user/ — see ADR-0025 §7)
+  services/       business logic and relational transactions; domain subdirectory is mandatory from the first file, no exceptions (e.g. services/auth/) — a service that isn't domain-specific goes in services/shared/, never at the root — see ADR-0003
   listeners/      event routers — emit → enqueue job, nothing else
-  jobs/           BullMQ job definitions (payload types, process logic)
+  jobs/           BullMQ job definitions (payload types, process logic); domain subdirectory is mandatory from the first file, same rule as services/ and exceptions/ — see ADR-0003
   models/         Lucid ORM models (extend generated schema + mixins)
   models/filters/ adonis-lucid-filter query filter classes, organized by domain subdirectory (e.g. filters/user/)
   models/mixins/  WithPrimaryUuid, WithTimestamps, WithCreatedAt, AuthFinder
@@ -63,7 +63,10 @@ app/
   validators/     VineJS schemas for all input boundaries
   middleware/     HTTP middleware
   enums/          TypeScript enums organized by domain subdirectory
-  exceptions/     global error handler
+  exceptions/     domain exception classes organized by domain subdirectory (e.g. exceptions/auth/), same rule as services/ — see ADR-0003; handler.ts (global error handler) stays at the root, it's AdonisJS scaffold, not a domain exception
+  constants/      exported values/maps/objects shared across files — never functions (those go in utils/)
+  utils/          reusable pure functions — never bare constants (those go in constants/); every exported function requires JSDoc (ADR-0024)
+  types/          shared type/interface declarations, tree-mirrored by owning layer/domain (e.g. types/services/auth/ for a type owned by services/auth/) — every export requires a comment (ADR-0024, ADR-0003)
 commands/         BullMQ worker entry points (Ace CLI commands)
 database/
   migrations/     source of truth for schema — edit here, never in schema.ts
@@ -74,8 +77,11 @@ start/
   env.ts          validated environment variable schema (AdonisJS Env)
   validator.ts    VineJS global config
 config/           AdonisJS package configuration files
+resources/
+  views/          Edge templates — currently just transactional emails (resources/views/emails/)
 providers/
-  api_provider.ts adds ctx.serialize() to HttpContext
+  api_provider.ts   adds ctx.serialize() to HttpContext
+  cache_provider.ts registers the CacheClient singleton in the container (see #services/shared/cache/cache)
 ```
 
 ---
@@ -158,6 +164,23 @@ All inline code comments must be written in **Portuguese (pt-BR)**.
 // NOTE: fail-closed — Dragonfly indisponível nunca deve virar "aceitar o token"
 // TODO: validar outputs do Dragonfly contra um schema antes de confiar neles
 ```
+
+**These tags are for a single non-obvious line or block inside a function body — never a substitute for JSDoc at the function/class/method declaration itself.** If a function or class needs documentation (per the per-layer table in ADR-0024), that documentation is always a proper `/** */` JSDoc block, never a multi-line `//` comment and never a tagged `// NOTE:` sitting above the declaration in place of JSDoc.
+
+```typescript
+// ❌ wrong — function "documented" with a // comment instead of JSDoc
+// NOTE: closes the shared connection so the process can exit on its own
+export async function closeSharedConnection(): Promise<void> { ... }
+
+// ✅ correct — JSDoc documents the function
+/**
+ * Closes the shared connection — needed in processes that must exit on
+ * their own, since an open connection keeps the event loop alive.
+ */
+export async function closeSharedConnection(): Promise<void> { ... }
+```
+
+If the layer forbids JSDoc (e.g. Controllers, per ADR-0024), the answer isn't to fall back to a `//` block describing the whole function — it's to not document the function at all. A tagged inline comment inside that same function, annotating one specific line, is still fine.
 
 ### Controller (thin)
 
@@ -296,6 +319,8 @@ export const createPostValidator = vine.create({
 
 - All validators live in `app/validators/`, grouped by resource
 - Never validate user input inside a controller or service
+- **Any `vine.create()` validator must live in a subfolder of `app/validators/`, in its structurally appropriate location — never inline in a util, service, or controller.** Domain-specific validators go in `app/validators/<domain>/`; validators shared across domains (not tied to one resource) go directly in `app/validators/shared/`, alongside (not inside) `shared/fields/` and `shared/schemas/`
+- **Name a validator after the business action/data it validates, never after the HTTP verb or controller method name** (`loginValidator`, not `accessTokensStoreValidator`). This lets identical-shape validators be reused across different controllers/methods instead of duplicated — see [ADR-0028](./docs/architecture/decisions/0028-arquitetura-de-validators-reutilizaveis-com-vinejs.md)
 
 ### Filter
 
@@ -432,7 +457,7 @@ const port = env.get('PORT')
 - Timestamps use Luxon `DateTime`, not native `Date`.
 - Soft deletes use a `deletedAt` column (set to `DateTime | null`) — no Lucid soft-delete plugin.
 
-### Migration conventions ([ADR-0018](./docs/architecture/decisions/0018-convencoes-de-escrita-de-migracoes.md))
+### Migration conventions ([ADR-0020](./docs/architecture/decisions/0020-convencoes-de-escrita-de-migracoes.md))
 
 Every migration must follow this exact declaration order inside `createTable`:
 
@@ -513,15 +538,15 @@ The table below lists only the ADRs that directly affect daily code decisions �
 | Area                  | ADR                                                                 |
 | --------------------- | ------------------------------------------------------------------- |
 | Framework & ecosystem | ADR-0001 (AdonisJS)                                                 |
-| Async operations      | ADR-0010 (EDA + BullMQ)                                             |
-| Migration conventions | ADR-0018 (ordering, comments, types)                                |
-| Primary key strategy  | ADR-0019 (UUID v7, all tables without exception)                    |
-| Model mixin pattern   | ADR-0020 (compose(), never @column on Model)                        |
-| Authentication        | ADR-0021 (JWT hybrid + DragonflyDB revocation)                      |
-| JSDoc convention      | ADR-0022 (selective, why-focused documentation)                     |
-| Controller & routing  | ADR-0023 (5 standard methods, dedicated controllers, nesting rules) |
-| Query filters         | ADR-0024 (adonis-lucid-filter, filter class per model)              |
-| API documentation     | ADR-0025 (OpenAPI static YAML + Scalar)                             |
+| Async operations      | ADR-0012 (EDA + BullMQ)                                             |
+| Migration conventions | ADR-0020 (ordering, comments, types)                                |
+| Primary key strategy  | ADR-0021 (UUID v7, all tables without exception)                    |
+| Model mixin pattern   | ADR-0022 (compose(), never @column on Model)                        |
+| Authentication        | ADR-0023 (JWT hybrid + DragonflyDB revocation)                      |
+| JSDoc convention      | ADR-0024 (selective, why-focused documentation)                     |
+| Controller & routing  | ADR-0025 (5 standard methods, dedicated controllers, nesting rules) |
+| Query filters         | ADR-0026 (adonis-lucid-filter, filter class per model)              |
+| API documentation     | ADR-0027 (OpenAPI static YAML + Scalar)                             |
 
 When creating a new ADR, **always** use `docs/architecture/templates/adr-template.md` as the structural reference. If any section of the template is ambiguous, consult the existing ADRs in `docs/architecture/decisions/` as reference implementations — they represent the canonical style for this project.
 

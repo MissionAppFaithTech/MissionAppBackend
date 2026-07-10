@@ -1,26 +1,21 @@
 import { errors, symbols } from '@adonisjs/auth'
 import type { AuthClientResponse, GuardContract } from '@adonisjs/auth/types'
 import type { HttpContext } from '@adonisjs/core/http'
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
+import { SignJWT, jwtVerify } from 'jose'
+import type { JWTPayload } from 'jose'
 import { v7 as uuidv7 } from 'uuid'
-import type { AuthRevocationService } from '#services/auth_revocation_service'
+import type { AuthRevocationService } from '#services/auth/auth_revocation_service'
+import type { JwtGuardOptions, JwtUserProviderContract } from '#types/auth/jwt_guard'
 
-export type JwtGuardUser<RealUser> = {
-  getId(): string
-  getOriginal(): RealUser
-}
-
-export interface JwtUserProviderContract<RealUser> {
-  [symbols.PROVIDER_REAL_USER]: RealUser
-  createUserForGuard(user: RealUser): Promise<JwtGuardUser<RealUser>>
-  findById(id: string | number | bigint): Promise<JwtGuardUser<RealUser> | null>
-}
-
-export type JwtGuardOptions = {
-  secret: string
-  expiresIn?: string
-}
-
+/**
+ * Guard de autenticação stateless via JWT assinado (HS256), com revogação
+ * híbrida apoiada em DragonflyDB — combina três mecanismos independentes
+ * (bloqueio de `jti` individual, `auth_version` por usuário e blocklist de
+ * família de refresh token) para cobrir logout de um dispositivo, logout
+ * global e detecção de roubo de token sem esperar a expiração natural do
+ * access token. Ver ADR-0023 ("Estratégia de Autenticação: JWT Híbrido com
+ * Revogação via DragonflyDB").
+ */
 export class JwtGuard<
   UserProvider extends JwtUserProviderContract<unknown>,
 > implements GuardContract<UserProvider[typeof symbols.PROVIDER_REAL_USER]> {
@@ -33,9 +28,10 @@ export class JwtGuard<
 
   #ctx: HttpContext
   #userProvider: UserProvider
+  #authRevocationService: AuthRevocationService
   #options: JwtGuardOptions
   #secret: Uint8Array
-  #authRevocationService: AuthRevocationService
+
   #currentJti?: string
   #currentTokenExpiresAt?: number
   #currentFamilyId?: string
@@ -54,28 +50,47 @@ export class JwtGuard<
   }
 
   /**
-   * jti/exp/fid do token que autenticou a request atual — usado pelo logout
-   * para bloquear exatamente esse token com o TTL restante correto e para
-   * escopar a revogação de refresh tokens à família (dispositivo) de origem.
+   * `jti` do access token que autenticou a request atual — usado pelo logout
+   * para bloquear exatamente esse token na blocklist individual do Dragonfly.
+   * `undefined` até `authenticate()` ter sucesso.
    */
   get currentJti(): string | undefined {
     return this.#currentJti
   }
 
+  /**
+   * Expiração (`exp`, epoch em segundos) do access token atual — usado pelo
+   * logout para calcular o TTL restante do bloqueio de `jti`. `undefined`
+   * até `authenticate()` ter sucesso.
+   */
   get currentTokenExpiresAt(): number | undefined {
     return this.#currentTokenExpiresAt
   }
 
+  /**
+   * `fid` (família do refresh token) vinculado ao access token atual — usado
+   * pelo logout para escopar a revogação de refresh tokens ao dispositivo de
+   * origem, sem afetar as demais sessões do usuário. `undefined` até
+   * `authenticate()` ter sucesso.
+   */
   get currentFamilyId(): string | undefined {
     return this.#currentFamilyId
   }
 
   /**
+   * Assina um novo access token JWT (HS256) para o usuário informado.
+   *
+   * @param user Usuário real devolvido pelo provider — convertido
+   *             internamente via `createUserForGuard()` para extrair id/role.
    * @param familyId Família do refresh token emitido junto com este access
    *                 token. Quando omitido (ex: `authenticateAsClient` em
    *                 testes, sem refresh token real envolvido), uma família
    *                 avulsa é gerada — nunca aparecerá na blocklist de família
    *                 revogada, então não afeta a autenticação.
+   * @returns `{ type: 'bearer', token }` — pronto para o header
+   *          `Authorization: Bearer <token>`.
+   * @example
+   * const { token } = await guard.generate(user, familyId)
    */
   async generate(user: UserProvider[typeof symbols.PROVIDER_REAL_USER], familyId?: string) {
     const providerUser = await this.#userProvider.createUserForGuard(user)
@@ -84,7 +99,7 @@ export class JwtGuard<
     const builder = new SignJWT({
       sub: String(providerUser.getId()),
       jti: uuidv7(),
-      role: (providerUser.getOriginal() as { role: string }).role,
+      role: providerUser.getRole(),
       auth_version: authVersion,
       fid: familyId ?? uuidv7(),
     })
@@ -100,6 +115,21 @@ export class JwtGuard<
     return { type: 'bearer' as const, token }
   }
 
+  /**
+   * Valida o access token do header `Authorization: Bearer <token>` em 4
+   * etapas: assinatura/expiração (`jwtVerify`), `auth_version` do payload
+   * contra o valor atual no Dragonfly, `jti` contra a blocklist individual e
+   * `fid` contra a blocklist de família. Qualquer falha em qualquer etapa —
+   * incluindo indisponibilidade do Dragonfly — rejeita a request
+   * (fail-closed, ver NOTE abaixo). Idempotente: chamadas repetidas na mesma
+   * request reaproveitam o resultado da primeira tentativa.
+   *
+   * @returns Usuário real autenticado.
+   * @throws {errors.E_UNAUTHORIZED_ACCESS} Header ausente/malformado, token
+   *         inválido/expirado, payload com claims ausentes, `auth_version`
+   *         desatualizado, `jti` bloqueado, família revogada, usuário não
+   *         encontrado, ou falha ao consultar o Dragonfly.
+   */
   async authenticate(): Promise<UserProvider[typeof symbols.PROVIDER_REAL_USER]> {
     if (this.authenticationAttempted) {
       return this.getUserOrFail()
@@ -149,21 +179,17 @@ export class JwtGuard<
     // financeiras, uma indisponibilidade do Dragonfly não deve degradar para
     // "aceitar o token".
     try {
-      const currentAuthVersion = await this.#authRevocationService.getAuthVersion(payload.sub)
+      // NOTE: As 3 checagens são independentes (fontes distintas no Dragonfly) —
+      // rodam em paralelo em vez de sequencial.
+      const [authVersionMismatch, jtiBlocked, familyRevoked] = await Promise.all([
+        this.#authRevocationService
+          .getAuthVersion(payload.sub)
+          .then((currentAuthVersion) => currentAuthVersion !== authVersion),
+        this.#authRevocationService.isJtiBlocked(jti),
+        this.#authRevocationService.isFamilyRevoked(familyId),
+      ])
 
-      if (currentAuthVersion !== authVersion) {
-        throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
-          guardDriverName: this.driverName,
-        })
-      }
-
-      if (await this.#authRevocationService.isJtiBlocked(jti)) {
-        throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
-          guardDriverName: this.driverName,
-        })
-      }
-
-      if (await this.#authRevocationService.isFamilyRevoked(familyId)) {
+      if (authVersionMismatch || jtiBlocked || familyRevoked) {
         throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
           guardDriverName: this.driverName,
         })
@@ -192,6 +218,11 @@ export class JwtGuard<
     return this.user
   }
 
+  /**
+   * Verifica se a request está autenticada, sem lançar erro.
+   *
+   * @returns `true` se `authenticate()` teria sucesso; `false` caso contrário.
+   */
   async check(): Promise<boolean> {
     try {
       await this.authenticate()
@@ -201,6 +232,13 @@ export class JwtGuard<
     }
   }
 
+  /**
+   * Devolve o usuário já autenticado nesta request.
+   *
+   * @returns Usuário real.
+   * @throws {errors.E_UNAUTHORIZED_ACCESS} `authenticate()` ainda não teve
+   *         sucesso nesta request.
+   */
   getUserOrFail(): UserProvider[typeof symbols.PROVIDER_REAL_USER] {
     if (!this.user) {
       throw new errors.E_UNAUTHORIZED_ACCESS('Unauthorized access', {
@@ -210,7 +248,12 @@ export class JwtGuard<
     return this.user
   }
 
-  // NOTE: suporte ao loginAs() nos testes — não é chamado em código de produção
+  /**
+   * Suporte ao `loginAs()` nos testes — não é chamado em código de produção.
+   *
+   * @param user Usuário a autenticar no client de teste.
+   * @returns Header `Authorization: Bearer <token>` pronto para a request de teste.
+   */
   async authenticateAsClient(
     user: UserProvider[typeof symbols.PROVIDER_REAL_USER]
   ): Promise<AuthClientResponse> {

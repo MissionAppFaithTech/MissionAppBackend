@@ -7,7 +7,7 @@ import { dbAssertions } from '@adonisjs/lucid/plugins/db'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { authApiClient } from '@adonisjs/auth/plugins/api_client'
 import { sessionApiClient } from '@adonisjs/session/plugins/api_client'
-import { closeDragonflyClient } from '#services/dragonfly_client'
+import cache from '#services/shared/cache/cache'
 import type { Registry } from '../.adonisjs/client/registry/schema.d.ts'
 
 /**
@@ -45,7 +45,7 @@ export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
   setup: [],
   // NOTE: fecha a conexão ioredis compartilhada — sem isso o processo nunca
   // encerra sozinho (forceExit: false + socket aberto mantêm o event loop vivo).
-  teardown: [() => closeDragonflyClient()],
+  teardown: [() => cache.quit()],
 }
 
 /**

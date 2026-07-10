@@ -38,10 +38,10 @@ app/
   auth/
     guards/       custom Lucid guards (e.g. JwtGuard)
     providers/    custom Lucid user providers
-  controllers/    thin HTTP handlers — validate, delegate, serialize
-  services/       business logic and relational transactions
+  controllers/    thin HTTP handlers — validate, delegate, serialize; organized by domain subdirectory once a domain has more than one controller (e.g. controllers/auth/, controllers/user/ — see ADR-0025 §7)
+  services/       business logic and relational transactions; domain subdirectory is mandatory from the first file, no exceptions (e.g. services/auth/) — a service that isn't domain-specific goes in services/shared/, never at the root — see ADR-0003
   listeners/      event routers — emit → enqueue job, nothing else
-  jobs/           BullMQ job definitions
+  jobs/           BullMQ job definitions; domain subdirectory is mandatory from the first file, same rule as services/ and exceptions/ — see ADR-0003
   models/         Lucid ORM models (extend generated schema + mixins)
   models/filters/ adonis-lucid-filter query filter classes, organized by domain subdirectory (e.g. filters/user/)
   models/mixins/  WithPrimaryUuid, WithTimestamps, WithCreatedAt, AuthFinder
@@ -49,7 +49,10 @@ app/
   validators/     VineJS schemas for all input boundaries
   middleware/     HTTP middleware
   enums/          TypeScript enums by domain subdirectory
-  exceptions/     global error handler
+  constants/      exported values/maps/objects shared across files — never functions (those go in utils/)
+  utils/          reusable pure functions — never bare constants (those go in constants/); every exported function requires JSDoc (ADR-0024)
+  types/          shared type/interface declarations, tree-mirrored by owning layer/domain (e.g. types/services/auth/ for a type owned by services/auth/) — every export requires a comment (ADR-0024, ADR-0003)
+  exceptions/     domain exception classes organized by domain subdirectory (e.g. exceptions/auth/), same rule as services/ — see ADR-0003; handler.ts (global error handler) stays at the root, it's AdonisJS scaffold, not a domain exception
 commands/         BullMQ worker entry points (Ace CLI commands)
 database/
   migrations/     source of truth for schema — edit here, never in schema.ts
@@ -59,8 +62,11 @@ start/
   kernel.ts       middleware registration
   env.ts          validated environment variable schema
 config/           AdonisJS package configuration files
+resources/
+  views/          Edge templates — currently just transactional emails (resources/views/emails/)
 providers/
-  api_provider.ts adds ctx.serialize() to HttpContext
+  api_provider.ts   adds ctx.serialize() to HttpContext
+  cache_provider.ts registers the CacheClient singleton in the container (see #services/shared/cache/cache)
 ```
 
 ---
@@ -145,6 +151,23 @@ All inline code comments must be written in **Portuguese (pt-BR)**.
 // NOTE: fail-closed — Dragonfly indisponível nunca deve virar "aceitar o token"
 // TODO: validar outputs do Dragonfly contra um schema antes de confiar neles
 ```
+
+**These tags are for a single non-obvious line or block inside a function body — never a substitute for JSDoc at the function/class/method declaration itself.** If a function or class needs documentation (per the per-layer table in ADR-0024), that documentation is always a proper `/** */` JSDoc block, never a multi-line `//` comment and never a tagged `// NOTE:` sitting above the declaration in place of JSDoc.
+
+```typescript
+// ❌ wrong — function "documented" with a // comment instead of JSDoc
+// NOTE: closes the shared connection so the process can exit on its own
+export async function closeSharedConnection(): Promise<void> { ... }
+
+// ✅ correct — JSDoc documents the function
+/**
+ * Closes the shared connection — needed in processes that must exit on
+ * their own, since an open connection keeps the event loop alive.
+ */
+export async function closeSharedConnection(): Promise<void> { ... }
+```
+
+If the layer forbids JSDoc (e.g. Controllers, per ADR-0024), the answer isn't to fall back to a `//` block describing the whole function — it's to not document the function at all. A tagged inline comment inside that same function, annotating one specific line, is still fine.
 
 ### Controller — always thin
 
@@ -278,6 +301,9 @@ export const createPostValidator = vine.create({
   highlightLink: vine.string().url().optional(),
 })
 ```
+
+- **Any `vine.create()` validator must live in a subfolder of `app/validators/`, in its structurally appropriate location — never inline in a util, service, or controller.** Domain-specific validators go in `app/validators/<domain>/`; validators shared across domains go directly in `app/validators/shared/`, alongside (not inside) `shared/fields/` and `shared/schemas/`
+- **Name a validator after the business action/data it validates, never after the HTTP verb or controller method name** (`loginValidator`, not `accessTokensStoreValidator`). This lets identical-shape validators be reused across different controllers/methods instead of duplicated — see [ADR-0028](docs/architecture/decisions/0028-arquitetura-de-validators-reutilizaveis-com-vinejs.md)
 
 ---
 
@@ -498,15 +524,15 @@ The table below lists the ADRs that directly affect daily code decisions, along 
 | ADR                                  | Area                  | Key Checkpoints                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ADR-0001** — AdonisJS              | Framework & ecosystem | All code follows AdonisJS conventions: Lucid ORM for data access, VineJS for validation, Japa for tests, Tuyau barrel for controller imports. Never suggest Express, Fastify, NestJS, Jest, Vitest, Prisma, TypeORM, Zod, or class-validator.                                                                                                                                                                                                      |
-| **ADR-0010** — EDA + BullMQ          | Async operations      | Side effects (email, Elasticsearch, storage) must go through the event pipeline: Service emits domain event → Listener enqueues BullMQ Job (< 1ms, no logic) → Worker executes. Never call external services directly from a Service. Never put business logic or DB queries in a Listener. Never use Lucid hooks (`@afterCreate`, etc.) for side effects.                                                                                         |
-| **ADR-0018** — Migration conventions | Database migrations   | Every `createTable` must follow the declaration order: `table.comment()` → id → data columns → FK uuid columns → `.foreign()` → `.unique()` → `.check()` → `.index()`. Every column and table must have `.comment()`. File references must use `uuid` FK to `media_assets`, never `string` URLs. All indexes, constraints, and foreign keys must have explicit names following the naming pattern (`fk_`, `uq_`, `idx_`, `chk_`).                  |
-| **ADR-0019** — UUID v7               | Primary key strategy  | All tables use UUID v7 as primary key — no exceptions, including internal and junction tables. Never suggest `SERIAL`, `BIGSERIAL`, or UUID v4. PKs are generated via the `WithPrimaryUuid` mixin, never declared manually in the Model or Schema.                                                                                                                                                                                                 |
-| **ADR-0020** — Model mixins          | Model composition     | Models use `compose(Schema, ...Mixins)` — never a single base class. Never declare `@column` on the Model class (columns come from the auto-generated Schema). Never declare `id`, `createdAt`, or `updatedAt` manually — they come from mixins. Mixin order matters: Schema first, then structural mixins, then domain mixins, then utility mixins.                                                                                               |
-| **ADR-0021** — JWT hybrid auth       | Authentication        | Access tokens are JWT (15 min TTL) validated in 3 steps: signature verification (CPU-local), `auth_version` check (DragonflyDB), `jti` blocklist check (DragonflyDB). Refresh tokens are opaque, stored as SHA-256 hash in PostgreSQL, rotated on each use with family tracking. Password change or role change must increment `auth_version`. Never store tokens in `localStorage`. Web clients receive refresh token via `httpOnly` cookie only. |
-| **ADR-0022** — JSDoc convention      | Code documentation    | JSDoc is selective and why-focused — document invariants, security constraints, and surprising behavior only. Never describe what the code does (identifiers already do that). Services and auth guards require class-level JSDoc. Controllers, listeners, validators, and transformers must NOT have JSDoc. All comments in Portuguese (pt-BR).                                                                                                   |
-| **ADR-0023** — Controllers & routing | Controller & routing  | Controllers expose only the 5 standard methods: `index`, `show`, `store`, `update`, `destroy`. No arbitrary method names (`publish`, `approve`, `archive`). Non-CRUD operations get dedicated controllers. Routes use `#generated/controllers` barrel — never import controllers directly. Maximum 2 levels of nesting. Singleton attributes (e.g. `status`) use explicit routes, not `.resource()`.                                               |
-| **ADR-0024** — Query filters         | Query filtering       | Filter classes live in `app/models/filters/<domain>/`, organized by domain subdirectory. Each public method maps to a query parameter. Filters handle HTTP→query mapping; reusable query logic belongs in scopes. `filter()` and scope composition via `.apply()` are exclusive to the service layer — controllers never build queries. Use `blacklist` + `whitelistMethod` for field-level access control by role.                                |
-| **ADR-0025** — OpenAPI + Scalar      | API documentation     | The API contract lives in `docs/api/v1/openapi.yaml` (design-first, manually maintained). Any PR that changes the API surface (new route, changed field, new error response) must update the spec in the same PR. Never use JSDoc annotations or decorators in controllers for API documentation.                                                                                                                                                  |
+| **ADR-0012** — EDA + BullMQ          | Async operations      | Side effects (email, Elasticsearch, storage) must go through the event pipeline: Service emits domain event → Listener enqueues BullMQ Job (< 1ms, no logic) → Worker executes. Never call external services directly from a Service. Never put business logic or DB queries in a Listener. Never use Lucid hooks (`@afterCreate`, etc.) for side effects.                                                                                         |
+| **ADR-0020** — Migration conventions | Database migrations   | Every `createTable` must follow the declaration order: `table.comment()` → id → data columns → FK uuid columns → `.foreign()` → `.unique()` → `.check()` → `.index()`. Every column and table must have `.comment()`. File references must use `uuid` FK to `media_assets`, never `string` URLs. All indexes, constraints, and foreign keys must have explicit names following the naming pattern (`fk_`, `uq_`, `idx_`, `chk_`).                  |
+| **ADR-0021** — UUID v7               | Primary key strategy  | All tables use UUID v7 as primary key — no exceptions, including internal and junction tables. Never suggest `SERIAL`, `BIGSERIAL`, or UUID v4. PKs are generated via the `WithPrimaryUuid` mixin, never declared manually in the Model or Schema.                                                                                                                                                                                                 |
+| **ADR-0022** — Model mixins          | Model composition     | Models use `compose(Schema, ...Mixins)` — never a single base class. Never declare `@column` on the Model class (columns come from the auto-generated Schema). Never declare `id`, `createdAt`, or `updatedAt` manually — they come from mixins. Mixin order matters: Schema first, then structural mixins, then domain mixins, then utility mixins.                                                                                               |
+| **ADR-0023** — JWT hybrid auth       | Authentication        | Access tokens are JWT (15 min TTL) validated in 3 steps: signature verification (CPU-local), `auth_version` check (DragonflyDB), `jti` blocklist check (DragonflyDB). Refresh tokens are opaque, stored as SHA-256 hash in PostgreSQL, rotated on each use with family tracking. Password change or role change must increment `auth_version`. Never store tokens in `localStorage`. Web clients receive refresh token via `httpOnly` cookie only. |
+| **ADR-0024** — JSDoc convention      | Code documentation    | JSDoc is selective and why-focused — document invariants, security constraints, and surprising behavior only. Never describe what the code does (identifiers already do that). Services and auth guards require class-level JSDoc. Controllers, listeners, validators, and transformers must NOT have JSDoc. All comments in Portuguese (pt-BR).                                                                                                   |
+| **ADR-0025** — Controllers & routing | Controller & routing  | Controllers expose only the 5 standard methods: `index`, `show`, `store`, `update`, `destroy`. No arbitrary method names (`publish`, `approve`, `archive`). Non-CRUD operations get dedicated controllers. Routes use `#generated/controllers` barrel — never import controllers directly. Maximum 2 levels of nesting. Singleton attributes (e.g. `status`) use explicit routes, not `.resource()`.                                               |
+| **ADR-0026** — Query filters         | Query filtering       | Filter classes live in `app/models/filters/<domain>/`, organized by domain subdirectory. Each public method maps to a query parameter. Filters handle HTTP→query mapping; reusable query logic belongs in scopes. `filter()` and scope composition via `.apply()` are exclusive to the service layer — controllers never build queries. Use `blacklist` + `whitelistMethod` for field-level access control by role.                                |
+| **ADR-0027** — OpenAPI + Scalar      | API documentation     | The API contract lives in `docs/api/v1/openapi.yaml` (design-first, manually maintained). Any PR that changes the API surface (new route, changed field, new error response) must update the spec in the same PR. Never use JSDoc annotations or decorators in controllers for API documentation.                                                                                                                                                  |
 
 ---
 

@@ -29,12 +29,12 @@ test.group('Auth - sessions', (group) => {
       .post(router.builder().make('v1.auth.access_tokens.store')!)
       .header('x-client-type', 'mobile')
       .header('x-device-name', 'iPhone 15')
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
       .header('x-device-name', 'Chrome no macOS')
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const { accessToken: accessTokenA } = (sessionA.body() as TokensBody).data
 
@@ -59,10 +59,10 @@ test.group('Auth - sessions', (group) => {
 
     const sessionA = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
     const sessionB = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const { accessToken: accessTokenA, refreshToken: refreshTokenA } = (
       sessionA.body() as TokensBody
@@ -111,11 +111,11 @@ test.group('Auth - sessions', (group) => {
 
     const loginB = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: userB.email, password: passwordB })
+      .json({ login: userB.email, password: passwordB })
 
     const loginA = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: userA.email, password: passwordA })
+      .json({ login: userA.email, password: passwordA })
 
     const { accessToken: accessTokenA } = (loginA.body() as TokensBody).data
 
@@ -139,10 +139,10 @@ test.group('Auth - sessions', (group) => {
 
     const sessionA = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
     const sessionB = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const { accessToken: accessTokenA } = (sessionA.body() as TokensBody).data
     const { accessToken: accessTokenB, refreshToken: refreshTokenB } = (

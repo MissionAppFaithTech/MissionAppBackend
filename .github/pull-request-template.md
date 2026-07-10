@@ -1,7 +1,5 @@
 ## 📌 Tipo de Mudança
 
-<!-- TODO: Adicionar checkbox de sanitização de comentarios, revisar comentarios criados, eliminar TODO's da codebase antes de submeter qualquer codigo e etc -->
-
 <!-- Marque todas que se aplicam -->
 
 - [ ] `feat` — nova funcionalidade
@@ -61,20 +59,21 @@ Proponho a seguinte mudança ...
 
 **Contrato e documentação**
 
-- [ ] Rota criada/alterada: documentação OpenAPI atualizada em `docs/api/v1/<domínio>/` (ADR-0025) — _sem fix automático, edição manual do YAML_ (se possível e preferível, utilize auxílio de ferramentas de IA)
-- [ ] Rota criada/alterada: coleção Bruno atualizada/criada em `bruno/` (ADR-0017) — _sem fix automático, crie/edite o `.bru` correspondente_ (se possível e preferível, utilize auxílio de ferramentas de IA)
-- [ ] JSDoc adicionado apenas onde a convenção exige — Services, Providers, Middlewares e etc (ADR-0022) — _sem fix automático_
+- [ ] Rota criada/alterada: documentação OpenAPI atualizada em `docs/api/v1/<domínio>/` (ADR-0027) — _sem fix automático, edição manual do YAML_ (se possível e preferível, utilize auxílio de ferramentas de IA)
+- [ ] Rota criada/alterada: coleção Bruno atualizada/criada em `bruno/` (ADR-0019) — _sem fix automático, crie/edite o `.bru` correspondente_ (se possível e preferível, utilize auxílio de ferramentas de IA)
+- [ ] JSDoc adicionado apenas onde a convenção exige — Services, Providers, Middlewares e etc (ADR-0024) — _sem fix automático_
+- [ ] Comentários revisados: só o *porquê* não-óbvio, tags corretas (`NOTE`/`TODO`/`FIXME`/`WARNING` e etc), sem JSDoc substituído por `//`, idioma correto (identificadores em inglês, comentários/JSDoc em português) — ver [CONTRIBUTING.md](../CONTRIBUTING.md#padroes-de-codigo) — _sem fix automático_
 
 **Banco de dados**
 
 - [ ] Migration criada: `database/schema.ts` regenerado (`just migrate` ou `node ace migration:run` + codegen) — _fix: rode `just migrate` ou `node ace migration:run`_
-- [ ] Migration segue convenção de comentários e constraints nomeados (ADR-0018) — _sem fix automático_
+- [ ] Migration segue convenção de comentários e constraints nomeados (ADR-0020) — _sem fix automático_
 
 **Arquitetura**
 
 - [ ] Mudança não viola nenhum ADR existente em `docs/architecture/decisions/` — _sem fix automático_
 - [ ] Mudança não introduz banco/ORM/serviço externo/padrão arquitetural novo sem ADR correspondente criado — _use `docs/architecture/templates/adr-template.md` como base_
-- [ ] Controllers permanecem finos — lógica de negócio vive em Services (ADR-0023) — _sem fix automático_
+- [ ] Controllers permanecem finos — lógica de negócio vive em Services (ADR-0025) — _sem fix automático_
 
 **Higiene do PR**
 

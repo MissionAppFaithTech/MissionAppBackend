@@ -50,5 +50,5 @@ Esta política cobre vulnerabilidades no código-fonte deste repositório. Estã
 
 Este projeto utiliza as seguintes ferramentas para detecção contínua de vulnerabilidades:
 
-- **[Snyk](https://snyk.io/)** — varredura de dependências (SCA), análise estática (SAST), containers e IaC em cada PR ([ADR-0012](./docs/architecture/decisions/0012-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md))
-- **[Renovate](https://docs.renovatebot.com/)** — atualização automática de dependências com quarentena de pacotes novos ([ADR-0011](./docs/architecture/decisions/0011-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md))
+- **[Snyk](https://snyk.io/)** — varredura de dependências (SCA), análise estática (SAST), containers e IaC em cada PR ([ADR-0014](./docs/architecture/decisions/0014-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md))
+- **[Renovate](https://docs.renovatebot.com/)** — atualização automática de dependências com quarentena de pacotes novos ([ADR-0013](./docs/architecture/decisions/0013-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md))

@@ -79,7 +79,7 @@ O AdonisJS foi escolhido por atender de forma direta e integrada ao conjunto de 
 
 - **Auditoria facilitada:** Os hooks de ciclo de vida do Lucid (`beforeCreate`, `afterUpdate`, etc.) e o middleware nativo tornam simples registrar ações sensíveis nas tabelas `authentication_audits` e `user_action_audits`, conforme exigido pelos requisitos não funcionais do projeto.
 
-- **Abstração de storage pronta:** O `@adonisjs/drive` abstrai local, S3 e GCS com a mesma interface, o que alinha diretamente com a estratégia de buckets S3 documentada no [ADR-0011](./0011-padronizacao-de-nomenclatura-de-buckets.md).
+- **Abstração de storage pronta:** O `@adonisjs/drive` abstrai local, S3 e GCS com a mesma interface, o que alinha diretamente com a estratégia de buckets S3 documentada no [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md).
 
 ### Negativas / Riscos
 
@@ -100,5 +100,5 @@ O AdonisJS foi escolhido por atender de forma direta e integrada ao conjunto de 
 - [Tuyau](https://docs.adonisjs.com/guides/frontend/api-client): geração do barrel tipado de controllers e cliente HTTP type-safe para o frontend
 - [@adonisjs/bouncer](https://docs.adonisjs.com/guides/authorization/introduction): pacote oficial de autorização via abilities e policies
 - [@adonisjs/mail](https://docs.adonisjs.com/guides/digging-deeper/mail): pacote oficial de envio de email com suporte a múltiplos transports
-- [ADR-0011](./0011-padronizacao-de-nomenclatura-de-buckets.md): convenção de nomenclatura de buckets S3 definida neste projeto
+- [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md): convenção de nomenclatura de buckets S3 definida neste projeto
 - [The Rails Doctrine — Convention over Configuration (DHH)](https://rubyonrails.org/doctrine#convention-over-configuration): origem e justificativa do design opinado em frameworks web

@@ -17,7 +17,7 @@ test.group('Auth - refresh rotation', (group) => {
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
       .header('x-client-type', 'mobile')
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const loginBody = login.body() as TokensBody
     const firstAccessToken = loginBody.data.accessToken
@@ -42,7 +42,7 @@ test.group('Auth - refresh rotation', (group) => {
     const login = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
       .header('x-client-type', 'mobile')
-      .json({ email: user.email, password })
+      .json({ login: user.email, password })
 
     const rt1 = (login.body() as TokensBody).data.refreshToken
 

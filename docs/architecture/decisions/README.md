@@ -30,21 +30,6 @@ Um **Architecture Decision Record** captura uma decisão arquitetural importante
       <tr>
          <td align="left"><strong>Decisão</strong></td>
          <td align="left">O que foi escolhido?</td>
-      </tr>
-      <tr>
-         <td align="left"><strong>Justificativa</strong></td>
-         <td align="left">Por que essa opção e não outra?</td>
-      </tr>
-      <tr>
-         <td align="left"><strong>Alternativas Consideradas</strong></td>
-         <td align="left">O que foi avaliado e descartado?</td>
-      </tr>
-      <tr>
-         <td align="left"><strong>Consequências (Trade-offs)</strong></td>
-         <td align="left">Quais os impactos positivos e negativos?</td>
-      </tr>
-   </tbody>
-</table>
 
 > [!TIP]
 > Leia os ADRs em ordem cronológica (`0000 → 0001 → ...`) para entender a evolução arquitetural do projeto. É a forma mais eficiente de fazer onboarding na arquitetura.
@@ -376,7 +361,7 @@ flowchart LR
    <tbody>
       <tr>
          <td><a href="./0000-uso-de-architecture-decision-records.md">ADR-0000</a></td>
-         <td align="left">Adoção de Architecture Decision Records como Mecanismo de Documentação Arquitetural</td>
+         <td align="left">Adoção de Architecture Decision Records (ADR) como Mecanismo de Documentação Arquitetural</td>
          <td>🔵 Em Uso</td>
       </tr>
       <tr>
@@ -385,138 +370,153 @@ flowchart LR
          <td>🔵 Em Uso</td>
       </tr>
       <tr>
-         <td><a href="./0004-adocao-do-postgresql-como-banco-de-dados.md">ADR-0004</a></td>
-         <td align="left">Adoção do PostgreSQL como Banco de Dados Relacional</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0005-adocao-do-dragonfly-como-cache-e-armazenamento-temporario.md">ADR-0005</a></td>
-         <td align="left">Adoção do DragonflyDB como Cache, Armazenamento Temporário e Broker de Filas</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0006-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md">ADR-0006</a></td>
-         <td align="left">Uso do MinIO como Emulador de Storage em Ambiente de Desenvolvimento</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0007-adocao-do-elasticsearch-como-mecanismo-de-busca.md">ADR-0007</a></td>
-         <td align="left">Adoção do Elasticsearch como Mecanismo de Busca</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0008-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md">ADR-0008</a></td>
-         <td align="left">Uso do Docker para Padronização de Ambiente de Desenvolvimento e Deploy</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0009-adocao-do-pnpm-como-gerenciador-de-pacotes.md">ADR-0009</a></td>
-         <td align="left">Adoção do pnpm como Gerenciador de Pacotes</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0010-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md">ADR-0010</a></td>
-         <td align="left">Adoção de Arquitetura Orientada a Eventos com BullMQ para Operações Assíncronas</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0011-padronizacao-de-nomenclatura-de-buckets.md">ADR-0011</a></td>
-         <td align="left">Padronização de Nomenclatura de Buckets</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0012-adocao-do-resend-como-provedor-de-email-transacional.md">ADR-0012</a></td>
-         <td align="left">Adoção do Resend como Provedor de Email Transacional</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0013-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md">ADR-0013</a></td>
-         <td align="left">Adoção do Renovate para Atualização Automática de Dependências</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0014-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md">ADR-0014</a></td>
-         <td align="left">Adoção do Snyk para Detecção e Correção de Vulnerabilidades</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0015-padrao-imagem-unica-multiplos-entrypoints-para-workers.md">ADR-0015</a></td>
-         <td align="left">Padrão de Imagem Única com Múltiplos Entrypoints para Workers BullMQ</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0016-adocao-do-ghcr-como-registry-de-imagens-docker.md">ADR-0016</a></td>
-         <td align="left">Adoção do GitHub Container Registry (GHCR) como Registry de Imagens Docker</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0017-adocao-do-bruno-como-cliente-http-oficial.md">ADR-0017</a></td>
-         <td align="left">Adoção do Bruno como Cliente HTTP Oficial do Repositório</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0018-convencoes-de-escrita-de-migracoes.md">ADR-0018</a></td>
-         <td align="left">Convenções de Escrita de Migrações de Banco de Dados</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0019-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md">ADR-0019</a></td>
-         <td align="left">Adoção de UUID v7 como Estratégia de Chave Primária</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0020-padrao-de-composicao-de-mixins-para-comportamentos-compartilhados-em-models.md">ADR-0020</a></td>
-         <td align="left">Padrão de Composição de Mixins para Comportamentos Compartilhados em Models</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
          <td><a href="./0002-adocao-do-nodejs-como-runtime-de-execucao.md">ADR-0002</a></td>
          <td align="left">Adoção do Node.js como Runtime de Execução</td>
          <td>🔵 Em Uso</td>
       </tr>
       <tr>
-         <td><a href="./0021-estrategia-de-autenticacao-jwt-hibrido-com-revogacao-via-dragonflydb.md">ADR-0021</a></td>
-         <td align="left">Estratégia de Autenticação: JWT Híbrido com Revogação via DragonflyDB</td>
+         <td><a href="./0003-arquitetura-de-diretorios-scaffolding-adonisjs-e-extensoes-do-projeto.md">ADR-0003</a></td>
+         <td align="left">Arquitetura de Diretórios — Scaffolding do AdonisJS e Extensões do Projeto</td>
          <td>🔵 Em Uso</td>
       </tr>
       <tr>
-         <td><a href="./0022-convencao-de-documentacao-de-codigo-com-jsdoc.md">ADR-0022</a></td>
-         <td align="left">Convenção de Documentação de Código com JSDoc</td>
+         <td><a href="./0004-adocao-do-eslint-e-prettier-para-qualidade-e-formatacao-de-codigo.md">ADR-0004</a></td>
+         <td align="left">Adoção do ESLint e Prettier para Qualidade Estática e Formatação de Código</td>
          <td>🔵 Em Uso</td>
       </tr>
       <tr>
-         <td><a href="./0023-convencoes-de-controllers-e-roteamento-rest.md">ADR-0023</a></td>
-         <td align="left">Convenções de Controllers e Roteamento REST</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0024-adocao-do-adonis-lucid-filter-para-filtragem-de-queries.md">ADR-0024</a></td>
-         <td align="left">Adoção do adonis-lucid-filter para Filtragem Declarativa de Queries</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0025-documentacao-de-endpoints-com-openapi-estatico-e-scalar.md">ADR-0025</a></td>
-         <td align="left">Documentação de Endpoints com OpenAPI Estático e Scalar</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0026-arquitetura-de-validators-reutilizaveis-com-vinejs.md">ADR-0026</a></td>
-         <td align="left">Arquitetura de Validators Reutilizáveis com VineJS</td>
-         <td>🔵 Em Uso</td>
-      </tr>
-      <tr>
-         <td><a href="./0027-adocao-do-fallow-para-analise-estatica-de-codigo-morto.md">ADR-0027</a></td>
+         <td><a href="./0005-adocao-do-fallow-para-analise-estatica-de-codigo-morto.md">ADR-0005</a></td>
          <td align="left">Adoção do Fallow para Análise Estática de Código Morto</td>
          <td>🔵 Em Uso</td>
       </tr>
       <tr>
-         <td><a href="./0028-adocao-do-k6-como-quality-gate-de-performance.md">ADR-0028</a></td>
+         <td><a href="./0006-adocao-do-postgresql-como-banco-de-dados.md">ADR-0006</a></td>
+         <td align="left">Adoção do PostgreSQL como Banco de Dados Relacional</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0007-adocao-do-dragonfly-como-cache-e-armazenamento-temporario.md">ADR-0007</a></td>
+         <td align="left">Adoção do DragonflyDB como Cache, Armazenamento Temporário e Broker de Filas</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0008-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md">ADR-0008</a></td>
+         <td align="left">Uso do MinIO como Emulador de Storage em Ambiente de Desenvolvimento</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0009-adocao-do-elasticsearch-como-mecanismo-de-busca.md">ADR-0009</a></td>
+         <td align="left">Adoção do Elasticsearch como Mecanismo de Busca</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0010-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md">ADR-0010</a></td>
+         <td align="left">Uso do Docker para Padronização de Ambiente de Desenvolvimento e Deploy</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0011-adocao-do-pnpm-como-gerenciador-de-pacotes.md">ADR-0011</a></td>
+         <td align="left">Adoção do pnpm como Gerenciador de Pacotes</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0012-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md">ADR-0012</a></td>
+         <td align="left">Adoção de Arquitetura Orientada a Eventos com BullMQ para Operações Assíncronas</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0013-padronizacao-de-nomenclatura-de-buckets.md">ADR-0013</a></td>
+         <td align="left">Padronização da Nomenclatura de Buckets S3</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0014-adocao-do-resend-como-provedor-de-email-transacional.md">ADR-0014</a></td>
+         <td align="left">Adoção do Resend como Provedor de Email Transacional</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0015-adocao-do-renovate-para-atualizacao-automatica-de-dependencias.md">ADR-0015</a></td>
+         <td align="left">Adoção do Renovate para Atualização Automática de Dependências</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0016-adocao-do-snyk-para-deteccao-de-vulnerabilidades.md">ADR-0016</a></td>
+         <td align="left">Adoção do Snyk para Detecção e Correção de Vulnerabilidades</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0017-padrao-imagem-unica-multiplos-entrypoints-para-workers.md">ADR-0017</a></td>
+         <td align="left">Padrão de Imagem Única com Múltiplos Entrypoints para Workers BullMQ</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0018-adocao-do-ghcr-como-registry-de-imagens-docker.md">ADR-0018</a></td>
+         <td align="left">Adoção do GitHub Container Registry (GHCR) como Registry de Imagens Docker</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0019-adocao-do-bruno-como-cliente-http-oficial.md">ADR-0019</a></td>
+         <td align="left">Adoção do Bruno como Cliente HTTP Oficial do Repositório</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0020-convencoes-de-escrita-de-migracoes.md">ADR-0020</a></td>
+         <td align="left">Convenções de Escrita de Migrações de Banco de Dados</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0021-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md">ADR-0021</a></td>
+         <td align="left">Adoção de UUID v7 como Estratégia de Chave Primária</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0022-padrao-de-composicao-de-mixins-para-comportamentos-compartilhados-em-models.md">ADR-0022</a></td>
+         <td align="left">Padrão de Composição de Mixins para Comportamentos Compartilhados em Models</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0023-estrategia-de-autenticacao-jwt-hibrido-com-revogacao-via-dragonflydb.md">ADR-0023</a></td>
+         <td align="left">Estratégia de Autenticação: JWT Híbrido com Revogação via DragonflyDB</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0024-convencao-de-documentacao-de-codigo-com-jsdoc.md">ADR-0024</a></td>
+         <td align="left">Convenção de Documentação de Código com JSDoc</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0025-convencoes-de-controllers-e-roteamento-rest.md">ADR-0025</a></td>
+         <td align="left">Convenções de Controllers e Roteamento REST</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0026-adocao-do-adonis-lucid-filter-para-filtragem-de-queries.md">ADR-0026</a></td>
+         <td align="left">Adoção do adonis-lucid-filter para Filtragem Declarativa de Queries</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0027-documentacao-de-endpoints-com-openapi-estatico-e-scalar.md">ADR-0027</a></td>
+         <td align="left">Documentação de Endpoints com OpenAPI Estático e Scalar</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0028-arquitetura-de-validators-reutilizaveis-com-vinejs.md">ADR-0028</a></td>
+         <td align="left">Arquitetura de Validators Reutilizáveis com VineJS</td>
+         <td>🔵 Em Uso</td>
+      </tr>
+      <tr>
+         <td><a href="./0029-adocao-do-k6-como-quality-gate-de-performance.md">ADR-0029</a></td>
          <td align="left">Adoção do k6 como Ferramenta de Load Testing e Quality Gate de Performance</td>
          <td>🟢 Aceito</td>
       </tr>
       <tr>
-         <td><a href="./0029-adocao-do-owasp-zap-como-quality-gate-de-seguranca-dast.md">ADR-0029</a></td>
+         <td><a href="./0030-adocao-do-owasp-zap-como-quality-gate-de-seguranca-dast.md">ADR-0030</a></td>
          <td align="left">Adoção do OWASP ZAP como Quality Gate de Segurança DAST</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0031-adocao-do-adonisjs-i18n-para-internacionalizacao-de-mensagens-da-api.md">ADR-0031</a></td>
+         <td align="left">Adoção do @adonisjs/i18n para Internacionalização de Mensagens da API</td>
          <td>🟢 Aceito</td>
       </tr>
    </tbody>

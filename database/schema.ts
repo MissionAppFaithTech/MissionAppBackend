@@ -463,6 +463,8 @@ export class UserSchema extends BaseModel {
     'gender',
     'id',
     'lastLogin',
+    'lockCount',
+    'lockedAt',
     'loginAttempts',
     'membershipStatus',
     'passwordHash',
@@ -502,6 +504,10 @@ export class UserSchema extends BaseModel {
   declare id: string
   @column.dateTime()
   declare lastLogin: DateTime | null
+  @column()
+  declare lockCount: number
+  @column.dateTime()
+  declare lockedAt: DateTime | null
   @column()
   declare loginAttempts: number
   @column()

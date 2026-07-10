@@ -1,5 +1,5 @@
 import { bullMQConnection } from '#config/redis'
-import { purgeExpiredRefreshTokens } from '#jobs/purge_expired_refresh_tokens_job'
+import { purgeExpiredRefreshTokens } from '#jobs/auth/purge_expired_refresh_tokens_job'
 import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 import { Queue, Worker } from 'bullmq'

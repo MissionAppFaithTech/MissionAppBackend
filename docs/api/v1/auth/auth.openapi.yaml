@@ -5,10 +5,10 @@ paths:
       tags: [auth]
       summary: Login
       description: >-
-        Autentica com email e senha. Emite um access token JWT (15 min) e um
+        Autentica com login (email) e senha. Emite um access token JWT (15 min) e um
         refresh token opaco. Ambos sempre voltam no corpo da resposta — não há
         entrega via cookie nesta API, já que o consumidor web é um BFF
-        (Next.js), não um browser. Ver ADR-0021, seção "Entrega de Tokens".
+        (Next.js), não um browser. Ver ADR-0023, seção "Entrega de Tokens".
       security: []
       parameters:
         - $ref: '#/components/parameters/ClientType'
@@ -38,6 +38,84 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
+        '423':
+          description: >-
+            Conta temporariamente bloqueada por excesso de tentativas de
+            login falhadas. A mensagem informa quantos segundos faltam para
+            o desbloqueio.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/forgot-password:
+    post:
+      operationId: authForgotPassword
+      tags: [auth]
+      summary: Solicitar redefinição de senha
+      description: >-
+        Envia um email com link de redefinição de senha, se o login informado
+        corresponder a um usuário cadastrado. Sempre responde 200 com a
+        mesma mensagem genérica, exista ou não o email — evita user
+        enumeration (não revela se um endereço está cadastrado). O link
+        expira em 60 minutos.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Solicitação processada (independente de o email existir).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /auth/reset-password:
+    patch:
+      operationId: authResetPassword
+      tags: [auth]
+      summary: Redefinir senha
+      description: >-
+        Troca a senha mediante apresentação do token recebido por email.
+        Revoga todas as sessões ativas e reseta o bloqueio de força bruta —
+        apresentar o token é prova de controle sobre o email cadastrado. Ver
+        ADR-0023.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Senha redefinida com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Token inexistente ou expirado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
 
   /auth/refresh:
     post:
@@ -48,7 +126,7 @@ paths:
         Rotaciona o refresh token e emite um novo access token. O refresh
         token vai sempre no corpo — não há mais fallback via cookie.
         Reutilizar um refresh token já rotacionado invalida toda a família de
-        tokens da sessão (detecção de roubo — ver ADR-0021). O TTL do novo
+        tokens da sessão (detecção de roubo — ver ADR-0023). O TTL do novo
         refresh token é recalculado a partir de agora (sliding window).
       security: []
       requestBody:
@@ -79,21 +157,37 @@ paths:
       tags: [auth]
       summary: Logout (dispositivo atual)
       description: >-
-        Bloqueia o access token atual (blocklist de `jti` no DragonflyDB) e
-        revoga apenas a família de refresh token da sessão de origem — outras
-        sessões do mesmo usuário não são afetadas. Para logout em todos os
-        dispositivos, ver `DELETE /auth/sessions`. Ver ADR-0021.
+        Revoga a família de refresh token enviada no corpo — outras sessões
+        do mesmo usuário não são afetadas. Para logout em todos os
+        dispositivos, ver `DELETE /auth/sessions`.
+
+
+        Não exige access token válido (RFC 7009 — endpoints de revogação não
+        devem depender de credencial ainda ativa): a fonte primária de
+        revogação é o refresh token, não o access token. Se o header
+        `Authorization` vier com um access token ainda válido, seu `jti`
+        também é bloqueado no DragonflyDB como defesa extra; ausente/expirado/
+        inválido não impede o logout. Resposta sempre 200, mesmo com refresh
+        token desconhecido ou já revogado — idempotente, sem vazar validade
+        do token. Ver ADR-0023.
       security:
         - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '200':
-          description: Logout realizado com sucesso.
+          description: Logout realizado com sucesso (idempotente).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
-        '401':
-          description: Access token ausente, inválido ou já revogado.
+        '422':
+          description: Corpo da requisição inválido (refreshToken ausente).
           content:
             application/json:
               schema:
@@ -138,7 +232,7 @@ paths:
         Encerra todas as sessões do usuário: incrementa o `auth_version`
         (invalida instantaneamente todos os access tokens ativos, de todos os
         dispositivos) e revoga todos os refresh tokens. Ação explícita,
-        distinta do logout comum. Ver ADR-0021.
+        distinta do logout comum. Ver ADR-0023.
       security:
         - bearerAuth: []
       responses:
@@ -165,7 +259,7 @@ paths:
         pelo `id` retornado em `GET /auth/sessions`. O access token daquela
         sessão é rejeitado já na próxima requisição — via blocklist de
         família no DragonflyDB — sem esperar sua expiração natural de 15
-        minutos. Ver ADR-0021.
+        minutos. Ver ADR-0023.
       security:
         - bearerAuth: []
       parameters:
@@ -190,6 +284,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Sessão não encontrada, ou pertence a outro usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: familyId ausente ou não é um UUID válido.
           content:
             application/json:
               schema:
@@ -224,9 +324,9 @@ components:
   schemas:
     LoginRequest:
       type: object
-      required: [email, password]
+      required: [login, password]
       properties:
-        email:
+        login:
           type: string
           format: email
           maxLength: 254
@@ -240,6 +340,28 @@ components:
       required: [refreshToken]
       properties:
         refreshToken:
+          type: string
+
+    ForgotPasswordRequest:
+      type: object
+      required: [login]
+      properties:
+        login:
+          type: string
+          format: email
+          maxLength: 254
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, newPassword, newPasswordConfirmation]
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 32
+        newPasswordConfirmation:
           type: string
 
     LoginResponse:

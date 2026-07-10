@@ -6,7 +6,7 @@ paths:
       summary: Cadastro de conta
       description: >-
         Cria um novo usuário e emite o par de tokens de autenticação, sempre
-        no corpo da resposta — mesmo fluxo de entrega do login (ver ADR-0021).
+        no corpo da resposta — mesmo fluxo de entrega do login (ver ADR-0023).
       security: []
       parameters:
         - $ref: '../auth/auth.openapi.yaml#/components/parameters/ClientType'
@@ -63,7 +63,7 @@ paths:
         Valida a senha atual, atualiza o hash e dispara revogação global:
         incrementa o auth_version do usuário (invalidando todos os access
         tokens ativos, incluindo o da própria requisição na próxima chamada)
-        e revoga todos os refresh tokens. Ver ADR-0021.
+        e revoga todos os refresh tokens. Ver ADR-0023.
       security:
         - bearerAuth: []
       requestBody:

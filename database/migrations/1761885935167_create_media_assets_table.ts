@@ -16,12 +16,12 @@ export default class extends BaseSchema {
         .notNullable()
         .defaultTo(Provider.S3)
         .comment(
-          'Provedor de armazenamento do arquivo (S3/R2/GCS/Azure em produção, MinIO em dev — ADR-0004)'
+          'Provedor de armazenamento do arquivo (S3/R2/GCS/Azure em produção, MinIO em dev — ADR-0006)'
         )
       table
         .string('bucket')
         .notNullable()
-        .comment('Nome do bucket de armazenamento conforme convenção de nomenclatura (ADR-0009)')
+        .comment('Nome do bucket de armazenamento conforme convenção de nomenclatura (ADR-0011)')
       table
         .string('file_key')
         .notNullable()

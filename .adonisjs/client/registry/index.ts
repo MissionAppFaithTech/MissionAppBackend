@@ -30,6 +30,36 @@ const routes = {
     tokens: [{"old":"/api/v1/auth/refresh","type":0,"val":"api","end":""},{"old":"/api/v1/auth/refresh","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/refresh","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/refresh","type":0,"val":"refresh","end":""}],
     types: placeholder as Registry['v1.auth.refresh_tokens.store']['types'],
   },
+  'v1.auth.forgot_password.store': {
+    methods: ["POST"],
+    pattern: '/api/v1/auth/forgot-password',
+    tokens: [{"old":"/api/v1/auth/forgot-password","type":0,"val":"api","end":""},{"old":"/api/v1/auth/forgot-password","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/forgot-password","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/forgot-password","type":0,"val":"forgot-password","end":""}],
+    types: placeholder as Registry['v1.auth.forgot_password.store']['types'],
+  },
+  'v1.auth.reset_password.update': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/auth/reset-password',
+    tokens: [{"old":"/api/v1/auth/reset-password","type":0,"val":"api","end":""},{"old":"/api/v1/auth/reset-password","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/reset-password","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/reset-password","type":0,"val":"reset-password","end":""}],
+    types: placeholder as Registry['v1.auth.reset_password.update']['types'],
+  },
+  'v1.auth.sessions.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/auth/sessions',
+    tokens: [{"old":"/api/v1/auth/sessions","type":0,"val":"api","end":""},{"old":"/api/v1/auth/sessions","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/sessions","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/sessions","type":0,"val":"sessions","end":""}],
+    types: placeholder as Registry['v1.auth.sessions.index']['types'],
+  },
+  'v1.auth.all_sessions.destroy': {
+    methods: ["DELETE"],
+    pattern: '/api/v1/auth/sessions',
+    tokens: [{"old":"/api/v1/auth/sessions","type":0,"val":"api","end":""},{"old":"/api/v1/auth/sessions","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/sessions","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/sessions","type":0,"val":"sessions","end":""}],
+    types: placeholder as Registry['v1.auth.all_sessions.destroy']['types'],
+  },
+  'v1.auth.sessions.destroy': {
+    methods: ["DELETE"],
+    pattern: '/api/v1/auth/sessions/:familyId',
+    tokens: [{"old":"/api/v1/auth/sessions/:familyId","type":0,"val":"api","end":""},{"old":"/api/v1/auth/sessions/:familyId","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/sessions/:familyId","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/sessions/:familyId","type":0,"val":"sessions","end":""},{"old":"/api/v1/auth/sessions/:familyId","type":1,"val":"familyId","end":""}],
+    types: placeholder as Registry['v1.auth.sessions.destroy']['types'],
+  },
   'v1.profile.show': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/account/profile',

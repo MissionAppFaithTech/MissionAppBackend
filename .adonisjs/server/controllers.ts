@@ -4,11 +4,17 @@
  */
 
 export const controllers = {
-  AccessTokens: () => import('#controllers/access_tokens_controller'),
-  Account: () => import('#controllers/account_controller'),
-  AccountPassword: () => import('#controllers/account_password_controller'),
-  AllSessions: () => import('#controllers/all_sessions_controller'),
-  Profile: () => import('#controllers/profile_controller'),
-  RefreshTokens: () => import('#controllers/refresh_tokens_controller'),
-  Sessions: () => import('#controllers/sessions_controller'),
+  auth: {
+    AccessTokens: () => import('#controllers/auth/access_tokens_controller'),
+    AllSessions: () => import('#controllers/auth/all_sessions_controller'),
+    ForgotPassword: () => import('#controllers/auth/forgot_password_controller'),
+    RefreshTokens: () => import('#controllers/auth/refresh_tokens_controller'),
+    ResetPassword: () => import('#controllers/auth/reset_password_controller'),
+    Sessions: () => import('#controllers/auth/sessions_controller'),
+  },
+  user: {
+    Account: () => import('#controllers/user/account_controller'),
+    AccountPassword: () => import('#controllers/user/account_password_controller'),
+    Profile: () => import('#controllers/user/profile_controller'),
+  },
 }

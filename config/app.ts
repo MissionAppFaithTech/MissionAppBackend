@@ -1,3 +1,4 @@
+import { isTrustedProxyAddress } from '#utils/trust_proxy'
 import env from '#start/env'
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/core/http'
@@ -22,6 +23,18 @@ export const appUrl = env.get('APP_URL')
  * As configurações usadas pelo servidor HTTP
  */
 export const http = defineConfig({
+  /**
+   * Confia em `X-Forwarded-For`/`X-Forwarded-Proto` apenas quando a conexão
+   * chega de loopback (127.0.0.1/::1) ou de uma faixa de rede privada
+   * (RFC 1918 — 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16). Cobre tanto um
+   * load balancer na mesma rede privada (ADR-0023) quanto um proxy reverso
+   * (ex: Nginx Proxy Manager) rodando em container Docker separado na mesma
+   * VPS — a rede bridge padrão do Docker cai dentro de 172.16.0.0/12, então
+   * não é loopback do ponto de vista da app. Sem isso, `request.ip()`
+   * retornaria o IP do proxy/LB para todo usuário, não o do cliente real.
+   */
+  trustProxy: isTrustedProxyAddress,
+
   /**
    * Gera um id único de requisição para cada requisição recebida.
    * Útil para correlacionar logs e debugar o fluxo de uma requisição.
