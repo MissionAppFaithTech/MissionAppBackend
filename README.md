@@ -38,6 +38,8 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   │   └── providers
 │   ├── constants
 │   ├── controllers
+│   │   ├── auth
+│   │   └── user
 │   ├── enums
 │   │   ├── authentication_audit
 │   │   ├── financial_config
@@ -46,15 +48,37 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   │   ├── refresh_token
 │   │   ├── user
 │   │   └── user_action_audit
+│   ├── events
+│   │   ├── auth
+│   │   └── user
 │   ├── exceptions
+│   │   └── auth
 │   ├── jobs
+│   │   ├── auth
+│   │   └── user
 │   ├── listeners
+│   │   ├── auth
+│   │   └── user
 │   ├── middleware
 │   ├── models
 │   │   ├── filters
 │   │   └── mixins
+│   ├── queues
 │   ├── services
+│   │   ├── auth
+│   │   ├── search
+│   │   └── shared
+│   │       ├── cache
+│   │       └── search
 │   ├── transformers
+│   ├── types
+│   │   ├── auth
+│   │   ├── events
+│   │   │   ├── auth
+│   │   │   └── user
+│   │   ├── http
+│   │   └── services
+│   │       └── auth
 │   ├── utils
 │   └── validators
 │       ├── shared
@@ -72,7 +96,8 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ├── commands
 ├── config
 ├── database
-│   └── migrations
+│   ├── migrations
+│   └── seeders
 ├── docs
 │   ├── api
 │   │   └── v1
@@ -81,11 +106,16 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── architecture
 │   │   ├── decisions
 │   │   └── templates
-│   ├── business
-│   ├── deployment
-│   └── setup
+│   └── deployment
 ├── providers
-├── server
+├── resources
+│   ├── assets
+│   │   └── emails
+│   └── views
+│       └── emails
+│           ├── auth
+│           ├── components
+│           └── user
 ├── start
 ├── stubs
 │   └── make
@@ -93,12 +123,20 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │       └── util
 ├── tests
 │   ├── functional
-│   │   └── auth
+│   │   ├── auth
+│   │   └── user
 │   └── unit
+│       ├── jobs
+│       │   ├── auth
+│       │   └── user
+│       ├── listeners
+│       │   └── user
 │       └── services
+│           ├── auth
+│           └── search
 └── tmp
 
-66 directories
+104 directories
 ```
 <!-- readme-tree end -->
 
