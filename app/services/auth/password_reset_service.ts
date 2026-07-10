@@ -1,10 +1,10 @@
-import type { AuthRevocationService } from '#services/auth/auth_revocation_service'
-import type { RefreshTokenService } from '#services/auth/refresh_token_service'
-import { LoginAttemptService } from '#services/auth/login_attempt_service'
 import { RESET_TOKEN_BYTES, RESET_TOKEN_TTL_MINUTES } from '#constants/password_reset'
-import PasswordResetRequested from '#events/password_reset_requested'
+import PasswordResetRequested from '#events/auth/password_reset_requested'
 import InvalidPasswordResetTokenException from '#exceptions/auth/invalid_password_reset_token_exception'
 import User from '#models/user'
+import type { AuthRevocationService } from '#services/auth/auth_revocation_service'
+import { LoginAttemptService } from '#services/auth/login_attempt_service'
+import type { RefreshTokenService } from '#services/auth/refresh_token_service'
 import env from '#start/env'
 import { DateTime } from 'luxon'
 import { createHash, randomBytes } from 'node:crypto'
@@ -39,12 +39,16 @@ export class PasswordResetService {
 
     user.recoveryPasswordToken = this.#hashToken(raw)
     user.recoveryPasswordTokenExpiresAt = DateTime.now().plus({ minutes: RESET_TOKEN_TTL_MINUTES })
+
     await user.save()
+
+    const resetUrl = new URL('/reset-password', env.get('FRONTEND_URL'))
+    resetUrl.searchParams.set('token', raw)
 
     await PasswordResetRequested.dispatch(
       user.fullName,
       user.email,
-      `${env.get('FRONTEND_URL')}/reset-password?token=${raw}`,
+      resetUrl.href,
       RESET_TOKEN_TTL_MINUTES
     )
   }
@@ -86,9 +90,11 @@ export class PasswordResetService {
     user.passwordHash = newPassword
     user.recoveryPasswordToken = null
     user.recoveryPasswordTokenExpiresAt = null
+
     await user.save()
 
     const loginAttemptService = new LoginAttemptService()
+
     await Promise.all([
       authRevocationService.revokeAllSessions(user.id, refreshTokenService),
       loginAttemptService.recordSuccess(user),

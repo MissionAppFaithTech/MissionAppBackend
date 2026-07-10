@@ -30,6 +30,12 @@ services:
       - '--proactor_threads=2'
       - '--dir=/data'
       - '--dbfilename=dump'
+      # BullMQ usa scripts Lua com chaves construídas dinamicamente
+      # (ex: id do job só existe depois do INCR dentro do próprio script) —
+      # Dragonfly, ao contrário do Redis padrão, rejeita isso por padrão
+      # ("script tried accessing undeclared key"). Necessário para
+      # commands/queue_*.ts (BullMQ) funcionarem.
+      - '--default_lua_flags=allow-undeclared-keys'
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:

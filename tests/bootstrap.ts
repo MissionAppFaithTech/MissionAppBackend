@@ -8,6 +8,9 @@ import testUtils from '@adonisjs/core/services/test_utils'
 import { authApiClient } from '@adonisjs/auth/plugins/api_client'
 import { sessionApiClient } from '@adonisjs/session/plugins/api_client'
 import cache from '#services/shared/cache/cache'
+import searchClient from '#services/shared/search/search_client'
+import { emailQueue } from '#queues/email_queue'
+import { searchIndexingQueue } from '#queues/search_indexing_queue'
 import type { Registry } from '../.adonisjs/client/registry/schema.d.ts'
 
 /**
@@ -43,9 +46,14 @@ export const plugins: Config['plugins'] = [
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
   setup: [],
-  // NOTE: fecha a conexão ioredis compartilhada — sem isso o processo nunca
+  // NOTE: fecha as conexões ioredis compartilhadas — sem isso o processo nunca
   // encerra sozinho (forceExit: false + socket aberto mantêm o event loop vivo).
-  teardown: [() => cache.quit()],
+  teardown: [
+    () => cache.quit(),
+    () => searchClient.close(),
+    () => emailQueue.close(),
+    () => searchIndexingQueue.close(),
+  ],
 }
 
 /**

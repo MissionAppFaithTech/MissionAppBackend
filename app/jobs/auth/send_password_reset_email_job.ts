@@ -1,26 +1,5 @@
-import { bullMQConnection } from '#config/redis'
+import type { PasswordResetRequestedPayload } from '#types/events/auth/password_reset_requested'
 import mail from '@adonisjs/mail/services/main'
-import { Queue } from 'bullmq'
-
-export const PASSWORD_RESET_EMAIL_QUEUE_NAME = 'password-reset-emails'
-export const PASSWORD_RESET_EMAIL_JOB_NAME = 'send-password-reset-email'
-
-export type SendPasswordResetEmailPayload = {
-  fullName: string
-  email: string
-  resetUrl: string
-  expiresInMinutes: number
-}
-
-/**
- * Fila de produção — usada por `SendPasswordResetEmailListener` para
- * enfileirar o envio sem bloquear o request HTTP que gerou o token. O
- * worker consumidor roda em processo separado (`queue:password-reset-emails-worker`).
- */
-export const passwordResetEmailQueue = new Queue<SendPasswordResetEmailPayload>(
-  PASSWORD_RESET_EMAIL_QUEUE_NAME,
-  { connection: bullMQConnection }
-)
 
 /**
  * Envia o email de redefinição de senha — chamado pelo worker ao processar
@@ -31,8 +10,13 @@ export const passwordResetEmailQueue = new Queue<SendPasswordResetEmailPayload>(
  * @example
  * await sendPasswordResetEmail(job.data)
  */
-export async function sendPasswordResetEmail(payload: SendPasswordResetEmailPayload): Promise<void> {
+export async function sendPasswordResetEmail(
+  payload: PasswordResetRequestedPayload
+): Promise<void> {
   await mail.send((message) => {
-    message.to(payload.email).subject('Redefinição de senha').htmlView('emails/forgot_password', payload)
+    message
+      .to(payload.email)
+      .subject('Redefinição de senha')
+      .htmlView('emails/auth/forgot_password', payload)
   })
 }

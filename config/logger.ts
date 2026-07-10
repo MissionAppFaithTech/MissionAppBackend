@@ -36,6 +36,30 @@ const loggerConfig = defineConfig({
       transport: {
         targets: [targets.file({ destination: 1 })],
       },
+
+      /**
+       * Defesa em camadas: se algum código no futuro logar um objeto bruto
+       * (request, body, headers) em vez de um payload já filtrado (como faz
+       * `RequestLoggerMiddleware`), esses caminhos saem como `[Redacted]` em
+       * vez de vazar credencial. Não substitui escolher com cuidado o que se
+       * loga — só cobre o esquecimento.
+       */
+      redact: {
+        paths: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          '*.password',
+          '*.newPassword',
+          '*.currentPassword',
+          '*.passwordConfirmation',
+          '*.newPasswordConfirmation',
+          '*.passwordHash',
+          '*.token',
+          '*.accessToken',
+          '*.refreshToken',
+        ],
+        censor: '[Redacted]',
+      },
     },
   },
 })

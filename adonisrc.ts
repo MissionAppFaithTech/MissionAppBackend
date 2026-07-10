@@ -57,6 +57,7 @@ export default defineConfig({
     () => import('#providers/api_provider'),
     () => import('@dirupt/adonis-lucid-filter/provider'),
     () => import('#providers/cache_provider'),
+    () => import('#providers/elasticsearch_provider'),
     () => import('@adonisjs/mail/mail_provider'),
     () => import('@adonisjs/core/providers/edge_provider'),
   ],

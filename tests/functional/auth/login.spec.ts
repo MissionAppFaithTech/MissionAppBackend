@@ -1,4 +1,6 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
+import { AuthenticationStatus } from '#enums/authentication_audit/authentication_status'
+import AuthenticationAudit from '#models/authentication_audit'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
@@ -20,6 +22,9 @@ test.group('Auth - login', (group) => {
 
     response.assertStatus(200)
     assert.isString((response.body() as TokensBody).data.accessToken)
+
+    const audit = await AuthenticationAudit.query().where('userId', user.id).firstOrFail()
+    assert.equal(audit.status, AuthenticationStatus.SUCCESS)
   })
 
   test('refresh token sempre vem no corpo da resposta, independente do cliente', async ({
@@ -46,7 +51,7 @@ test.group('Auth - login', (group) => {
     assert.isString((mobileResponse.body() as TokensBody).data.refreshToken)
   })
 
-  test('rejeita credenciais inválidas', async ({ client }) => {
+  test('rejeita credenciais inválidas', async ({ client, assert }) => {
     const { user } = await createTestUser()
 
     const response = await client
@@ -54,5 +59,26 @@ test.group('Auth - login', (group) => {
       .json({ login: user.email, password: 'wrong-password' })
 
     response.assertStatus(400)
+
+    const audit = await AuthenticationAudit.query().where('userId', user.id).firstOrFail()
+    assert.equal(audit.status, AuthenticationStatus.INCORRECT_PASSWORD)
+  })
+
+  test('registra auditoria de usuário inexistente sem vincular a nenhum usuário', async ({
+    client,
+    assert,
+  }) => {
+    const response = await client
+      .post(router.builder().make('v1.auth.access_tokens.store')!)
+      .json({ login: 'ninguem-cadastrado@example.com', password: 'wrong-password' })
+
+    response.assertStatus(400)
+
+    const audit = await AuthenticationAudit.query()
+      .whereNull('userId')
+      .where('status', AuthenticationStatus.USER_NOT_EXISTS)
+      .orderBy('createdAt', 'desc')
+      .firstOrFail()
+    assert.isNull(audit.userId)
   })
 })

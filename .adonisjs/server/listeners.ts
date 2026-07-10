@@ -3,4 +3,13 @@
  * DO NOT EDIT manually
  */
 
-export const listeners = {}
+export const listeners = {
+  auth: {
+    RecordAuthenticationAuditListener: () => import('#listeners/auth/record_authentication_audit_listener'),
+    SendPasswordResetEmailListener: () => import('#listeners/auth/send_password_reset_email_listener'),
+  },
+  user: {
+    IndexMissionaryListener: () => import('#listeners/user/index_missionary_listener'),
+    SendWelcomeEmailListener: () => import('#listeners/user/send_welcome_email_listener'),
+  },
+}

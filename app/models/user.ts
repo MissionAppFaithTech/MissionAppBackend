@@ -1,9 +1,11 @@
 // fallow-ignore-file circular-dependency -- relacionamento Lucid com lazy loading via callback; ciclo inexistente em runtime
 import { AUTH_UIDS } from '#constants/user'
 import { UserSchema } from '#database/schema'
+import { AuthenticationStatus } from '#enums/authentication_audit/authentication_status'
 import { Gender } from '#enums/user/gender'
 import { MembershipStatus } from '#enums/user/membership_status'
 import { UserRole } from '#enums/user/user_role'
+import LoginAttempted from '#events/auth/login_attempted'
 import { LoginAttemptService } from '#services/auth/login_attempt_service'
 import { compose } from '@adonisjs/core/helpers'
 import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
@@ -84,17 +86,32 @@ export default class User extends compose(
     const user = (await super.findForAuth([...AUTH_UIDS], uid)) as User | null
 
     if (user) {
-      await loginAttemptService.assertNotLocked(user)
+      try {
+        await loginAttemptService.assertNotLocked(user)
+      } catch (error) {
+        await LoginAttempted.dispatch(user.id, AuthenticationStatus.BLOCKED)
+        throw error
+      }
     }
 
     try {
       const verified = (await super.verifyCredentials(uid, password)) as User
+
       await loginAttemptService.recordSuccess(verified)
+
+      await LoginAttempted.dispatch(verified.id, AuthenticationStatus.SUCCESS)
+
       return verified
     } catch (error) {
       if (user) {
         await loginAttemptService.recordFailure(user)
       }
+
+      await LoginAttempted.dispatch(
+        user?.id ?? null,
+        user ? AuthenticationStatus.INCORRECT_PASSWORD : AuthenticationStatus.USER_NOT_EXISTS
+      )
+
       throw error
     }
   }

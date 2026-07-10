@@ -23,6 +23,7 @@ server.errorHandler(() => import('#exceptions/handler'))
  * a URL da requisição.
  */
 server.use([
+  () => import('#middleware/request_logger_middleware'),
   () => import('#middleware/force_json_response_middleware'),
   () => import('#middleware/container_bindings_middleware'),
   () => import('@adonisjs/cors/cors_middleware'),
