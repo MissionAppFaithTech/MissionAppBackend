@@ -304,6 +304,7 @@ node ace serve --hmr
 - **Design Figma do Projeto**: <a href="https://www.figma.com/design/uMAwJPYKaEoN7ScjAmgZ6O/Mission-app?node-id=902-4759&p=f&t=HoAfNbpnftTUdkHA-0" target="_blank">Clique Aqui</a>
 - **Diagrama ER do Banco de Dados**: <a href="https://dbdocs.io/missionapp.faithtech/Mission-App-DB?view=relationships" target="_blank">Clique Aqui</a>
 - **Trello do Projeto**: <a href="https://trello.com/b/3lhDRlzx/mission-app" target="_blank">Clique Aqui</a>
+- **Roadmap do Projeto**: <a href="https://miro.com/app/board/uXjVH9kycnw=" target="_blank">Clique Aqui</a>
 - **Requisitos do Projeto**: <a href="https://missionappfaithtech.github.io/MissionAppRequirementsList/" target="_blank">Clique Aqui</a>
 - **Configuração do Mend Renovate**: <a href="https://developer.mend.io" target="_blank">Clique Aqui</a>
 - **Configuração do Snyk**: <a href="https://app.snyk.io/login" target="_blank">Clique Aqui</a>
