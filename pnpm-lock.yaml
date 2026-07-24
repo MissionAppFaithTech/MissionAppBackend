@@ -123,6 +123,9 @@ importers:
       fallow:
         specifier: 3.3.0
         version: 3.3.0
+      hot-hook:
+        specifier: ^1.0.0
+        version: 1.0.0
       husky:
         specifier: 9.1.7
         version: 9.1.7
@@ -2124,6 +2127,9 @@ packages:
   hosted-git-info@9.0.3:
     resolution: {integrity: sha512-Hc+ghLoSt6QaYZUv0WBiIvmMDZuZZ7oaDvdH8MbfOO4lOsxdXLEvuC6ePoGs9H1X9oCLyq6+NVN0MKqD+ydxyg==}
     engines: {node: ^20.17.0 || >=22.9.0}
+
+  hot-hook@1.0.0:
+    resolution: {integrity: sha512-OkZm5tTE4ej8ur8VlcQwMm8G9sFxu4D+shM+ol/h4mrUhuZvFkjk5n/nWKmLq3COmy6epLN7XIIQJ75tnqCGIw==}
 
   hpagent@1.2.0:
     resolution: {integrity: sha512-A91dYTeIB6NoXG+PxTQpCCDDnfHsW9kc06Lvpu1TEe9gnd6ZFeiBoRO9JvzEv6xK7EX97/dUE8g/vBMTqTS3CA==}
@@ -5179,6 +5185,14 @@ snapshots:
   hosted-git-info@9.0.3:
     dependencies:
       lru-cache: 11.5.1
+
+  hot-hook@1.0.0:
+    dependencies:
+      chokidar: 5.0.0
+      fast-glob: 3.3.3
+      parse-imports: 3.0.0
+      picomatch: 4.0.4
+      read-package-up: 12.0.0
 
   hpagent@1.2.0: {}
 

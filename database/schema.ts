@@ -8,16 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AuthenticationAuditSchema extends BaseModel {
-  static $columns = [
-    'browser',
-    'createdAt',
-    'id',
-    'ipAddress',
-    'remotePort',
-    'status',
-    'userAgent',
-    'userId',
-  ] as const
+  static $columns = ['browser', 'createdAt', 'id', 'ipAddress', 'remotePort', 'status', 'userAgent', 'userId'] as const
   $columns = AuthenticationAuditSchema.$columns
   @column()
   declare browser: string | null
@@ -51,15 +42,7 @@ export class CampaignProjectSchema extends BaseModel {
 }
 
 export class CampaignSchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'endDate',
-    'id',
-    'isActive',
-    'name',
-    'startDate',
-    'suspendedAt',
-  ] as const
+  static $columns = ['createdAt', 'endDate', 'id', 'isActive', 'name', 'startDate', 'suspendedAt'] as const
   $columns = CampaignSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -110,21 +93,7 @@ export class FaithCommunitySchema extends BaseModel {
 }
 
 export class FinancialConfigSchema extends BaseModel {
-  static $columns = [
-    'accountNumber',
-    'accountType',
-    'agency',
-    'bankName',
-    'bankNumber',
-    'createdAt',
-    'holderDocument',
-    'holderName',
-    'id',
-    'missionaryId',
-    'pixKey',
-    'qrCodeAssetId',
-    'updatedAt',
-  ] as const
+  static $columns = ['accountNumber', 'accountType', 'agency', 'bankName', 'bankNumber', 'createdAt', 'holderDocument', 'holderName', 'id', 'missionaryId', 'pixKey', 'qrCodeAssetId', 'updatedAt'] as const
   $columns = FinancialConfigSchema.$columns
   @column()
   declare accountNumber: string | null
@@ -168,16 +137,7 @@ export class FollowerSchema extends BaseModel {
 }
 
 export class ImpactProjectSchema extends BaseModel {
-  static $columns = [
-    'coverImageAssetId',
-    'createdAt',
-    'description',
-    'id',
-    'missionaryId',
-    'title',
-    'updatedAt',
-    'videoAssetId',
-  ] as const
+  static $columns = ['coverImageAssetId', 'createdAt', 'description', 'id', 'missionaryId', 'title', 'updatedAt', 'videoAssetId'] as const
   $columns = ImpactProjectSchema.$columns
   @column()
   declare coverImageAssetId: string
@@ -211,15 +171,7 @@ export class LikeSchema extends BaseModel {
 }
 
 export class MediaAssetSchema extends BaseModel {
-  static $columns = [
-    'bucket',
-    'createdAt',
-    'fileKey',
-    'fileSizeBytes',
-    'id',
-    'mimeType',
-    'provider',
-  ] as const
+  static $columns = ['bucket', 'createdAt', 'fileKey', 'fileSizeBytes', 'id', 'mimeType', 'provider'] as const
   $columns = MediaAssetSchema.$columns
   @column()
   declare bucket: string
@@ -238,23 +190,16 @@ export class MediaAssetSchema extends BaseModel {
 }
 
 export class MissionarySchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'donationMessage',
-    'id',
-    'identityDocument',
-    'identityType',
-    'missionaryAgencyId',
-    'publicEmail',
-    'publicPhone',
-    'status',
-    'userId',
-  ] as const
+  static $columns = ['aboutMe', 'createdAt', 'donationMessage', 'faithCommunityId', 'id', 'identityDocument', 'identityType', 'lifeVerse', 'missionStorySummary', 'missionaryAgencyId', 'originLocation', 'prayerRequest', 'publicEmail', 'publicPhone', 'status', 'userId'] as const
   $columns = MissionarySchema.$columns
+  @column()
+  declare aboutMe: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
   declare donationMessage: string | null
+  @column()
+  declare faithCommunityId: string | null
   @column({ isPrimary: true })
   declare id: string
   @column()
@@ -262,7 +207,15 @@ export class MissionarySchema extends BaseModel {
   @column()
   declare identityType: string | null
   @column()
+  declare lifeVerse: string | null
+  @column()
+  declare missionStorySummary: string | null
+  @column()
   declare missionaryAgencyId: string
+  @column()
+  declare originLocation: string | null
+  @column()
+  declare prayerRequest: string | null
   @column()
   declare publicEmail: string | null
   @column()
@@ -289,16 +242,7 @@ export class MissionaryAgencySchema extends BaseModel {
 }
 
 export class MissionaryWorkAddressSchema extends BaseModel {
-  static $columns = [
-    'city',
-    'country',
-    'createdAt',
-    'district',
-    'id',
-    'missionaryId',
-    'state',
-    'zip',
-  ] as const
+  static $columns = ['city', 'country', 'createdAt', 'district', 'id', 'missionaryId', 'state', 'zip'] as const
   $columns = MissionaryWorkAddressSchema.$columns
   @column()
   declare city: string
@@ -381,20 +325,7 @@ export class RedirectSchema extends BaseModel {
 }
 
 export class RefreshTokenSchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'deviceName',
-    'deviceType',
-    'expiresAt',
-    'familyId',
-    'id',
-    'ipAddress',
-    'lastUsedAt',
-    'revokedAt',
-    'tokenHash',
-    'updatedAt',
-    'userId',
-  ] as const
+  static $columns = ['createdAt', 'deviceName', 'deviceType', 'expiresAt', 'familyId', 'id', 'ipAddress', 'lastUsedAt', 'revokedAt', 'tokenHash', 'updatedAt', 'userId'] as const
   $columns = RefreshTokenSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -423,15 +354,7 @@ export class RefreshTokenSchema extends BaseModel {
 }
 
 export class UserActionAuditSchema extends BaseModel {
-  static $columns = [
-    'actionType',
-    'actorId',
-    'createdAt',
-    'id',
-    'ipAddress',
-    'metadata',
-    'targetId',
-  ] as const
+  static $columns = ['actionType', 'actorId', 'createdAt', 'id', 'ipAddress', 'metadata', 'targetId'] as const
   $columns = UserActionAuditSchema.$columns
   @column()
   declare actionType: string
@@ -450,35 +373,7 @@ export class UserActionAuditSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = [
-    'activedAt',
-    'biography',
-    'createdAt',
-    'deletedAt',
-    'email',
-    'emailVerifiedAt',
-    'followersCount',
-    'followingCount',
-    'fullName',
-    'gender',
-    'id',
-    'lastLogin',
-    'lockCount',
-    'lockedAt',
-    'loginAttempts',
-    'membershipStatus',
-    'passwordHash',
-    'pendingEmail',
-    'pendingEmailToken',
-    'pendingEmailTokenExpiresAt',
-    'phoneNumber',
-    'profilePictureId',
-    'recoveryPasswordToken',
-    'recoveryPasswordTokenExpiresAt',
-    'role',
-    'updatedAt',
-    'username',
-  ] as const
+  static $columns = ['activedAt', 'biography', 'createdAt', 'deletedAt', 'email', 'emailVerifiedAt', 'followersCount', 'followingCount', 'fullName', 'gender', 'id', 'lastLogin', 'loginAttempts', 'membershipStatus', 'passwordHash', 'pendingEmail', 'pendingEmailToken', 'pendingEmailTokenExpiresAt', 'phoneNumber', 'profilePictureId', 'recoveryPasswordToken', 'recoveryPasswordTokenExpiresAt', 'role', 'updatedAt', 'username'] as const
   $columns = UserSchema.$columns
   @column.dateTime()
   declare activedAt: DateTime | null
@@ -504,10 +399,6 @@ export class UserSchema extends BaseModel {
   declare id: string
   @column.dateTime()
   declare lastLogin: DateTime | null
-  @column()
-  declare lockCount: number
-  @column.dateTime()
-  declare lockedAt: DateTime | null
   @column()
   declare loginAttempts: number
   @column()

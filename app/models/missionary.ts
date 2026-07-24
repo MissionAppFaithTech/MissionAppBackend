@@ -5,6 +5,7 @@ import { MissionaryStatus } from '#enums/missionary/missionary_status'
 import { compose } from '@adonisjs/core/helpers'
 import { belongsTo, hasMany, hasOne } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
+import FaithCommunity from './faith_community.ts'
 import FinancialConfig from './financial_config.ts'
 import ImpactProject from './impact_project.ts'
 import MissionaryAgency from './missionary_agency.ts'
@@ -23,6 +24,9 @@ export default class Missionary extends compose(MissionarySchema, WithPrimaryUui
 
   @belongsTo(() => MissionaryAgency)
   declare agency: BelongsTo<typeof MissionaryAgency>
+
+  @belongsTo(() => FaithCommunity)
+  declare faithCommunity: BelongsTo<typeof FaithCommunity>
 
   @hasOne(() => ImpactProject)
   declare impactProject: HasOne<typeof ImpactProject>

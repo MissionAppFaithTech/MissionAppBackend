@@ -53,6 +53,52 @@ paths:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+    patch:
+      operationId: accountProfileUpdate
+      tags: [user]
+      summary: Atualiza perfil do usuário autenticado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Perfil atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '422':
+          description: Erro de validação dos campos de perfil.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /media-assets:
+    post:
+      operationId: mediaAssetStore
+      tags: [user]
+      summary: Registra metadata de um arquivo enviado ao storage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterMediaAssetRequest'
+      responses:
+        '200':
+          description: Media asset registrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetResponse'
 
   /account/password:
     patch:
@@ -128,3 +174,54 @@ components:
           type: string
           minLength: 8
           maxLength: 32
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-z0-9_]+$'
+        biography:
+          type: string
+          maxLength: 200
+        profilePictureId:
+          type: string
+          format: uuid
+
+    UserProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+
+    RegisterMediaAssetRequest:
+      type: object
+      required: [bucket, fileKey, mimeType, fileSizeBytes]
+      properties:
+        provider:
+          type: string
+          enum: [S3, R2, GCS, AZURE]
+        bucket:
+          type: string
+          maxLength: 255
+        fileKey:
+          type: string
+          maxLength: 1024
+        mimeType:
+          type: string
+          maxLength: 255
+        fileSizeBytes:
+          type: integer
+          minimum: 1
+
+    MediaAssetResponse:
+      type: object
+      properties:
+        data:
+          type: object

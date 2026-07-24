@@ -1,0 +1,271 @@
+paths:
+  /missionaries/about:
+    patch:
+      operationId: missionaryAboutUpdate
+      tags: [missionary]
+      summary: Atualiza seção sobre do missionário autenticado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryAboutRequest'
+      responses:
+        '200':
+          description: Dados atualizados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryResponse'
+        '403':
+          description: Perfil sem permissão para editar dados missionários.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+  /missionaries/profile:
+    patch:
+      operationId: missionaryProfileUpdate
+      tags: [missionary]
+      summary: Atualiza contatos públicos do missionário autenticado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryProfileRequest'
+      responses:
+        '200':
+          description: Dados públicos atualizados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryResponse'
+
+  /missionaries/identity:
+    patch:
+      operationId: missionaryIdentityUpdate
+      tags: [missionary]
+      summary: Atualiza dados de identidade do missionário autenticado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryIdentityRequest'
+      responses:
+        '200':
+          description: Identidade atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryResponse'
+
+  /missionaries/work-address:
+    patch:
+      operationId: missionaryWorkAddressUpdate
+      tags: [missionary]
+      summary: Cria ou atualiza endereço de atuação do missionário autenticado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryWorkAddressRequest'
+      responses:
+        '200':
+          description: Endereço de atuação atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+
+  /missionaries/{id}/about:
+    patch:
+      operationId: missionaryAdminAboutUpdate
+      tags: [missionary]
+      summary: Atualiza seção sobre de um missionário (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryAboutRequest'
+      responses:
+        '200':
+          description: Dados atualizados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryResponse'
+
+  /missionaries/{id}/profile:
+    patch:
+      operationId: missionaryAdminProfileUpdate
+      tags: [missionary]
+      summary: Atualiza contatos públicos de um missionário (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryProfileRequest'
+      responses:
+        '200':
+          description: Dados atualizados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryResponse'
+
+  /missionaries/{id}/identity:
+    patch:
+      operationId: missionaryAdminIdentityUpdate
+      tags: [missionary]
+      summary: Atualiza dados de identidade de um missionário (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryIdentityRequest'
+      responses:
+        '200':
+          description: Dados atualizados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryResponse'
+
+  /missionaries/{id}/work-address:
+    patch:
+      operationId: missionaryAdminWorkAddressUpdate
+      tags: [missionary]
+      summary: Cria ou atualiza endereço de atuação de um missionário (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryWorkAddressRequest'
+      responses:
+        '200':
+          description: Endereço atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+
+components:
+  parameters:
+    MissionaryId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    MissionaryResponse:
+      type: object
+      properties:
+        data:
+          type: object
+
+    MissionaryWorkAddressResponse:
+      type: object
+      properties:
+        data:
+          type: object
+
+    UpdateMissionaryAboutRequest:
+      type: object
+      properties:
+        aboutMe:
+          type: string
+          maxLength: 5000
+        missionStorySummary:
+          type: string
+          maxLength: 5000
+        originLocation:
+          type: string
+          maxLength: 255
+        faithCommunityId:
+          type: string
+          format: uuid
+        prayerRequest:
+          type: string
+          maxLength: 5000
+        lifeVerse:
+          type: string
+          maxLength: 255
+
+    UpdateMissionaryProfileRequest:
+      type: object
+      properties:
+        publicEmail:
+          type: string
+          format: email
+        publicPhone:
+          type: string
+          example: '+5511912345678'
+        donationMessage:
+          type: string
+          maxLength: 5000
+
+    UpdateMissionaryIdentityRequest:
+      type: object
+      required: [identityType, identityDocument]
+      properties:
+        identityType:
+          type: string
+          enum: [CPF, PASSPORT]
+        identityDocument:
+          type: string
+          maxLength: 50
+
+    UpdateMissionaryWorkAddressRequest:
+      type: object
+      required: [zip, district, city, state, country]
+      properties:
+        zip:
+          type: string
+          maxLength: 20
+        district:
+          type: string
+          maxLength: 255
+        city:
+          type: string
+          maxLength: 255
+        state:
+          type: string
+          maxLength: 255
+        country:
+          type: string
+          maxLength: 255
