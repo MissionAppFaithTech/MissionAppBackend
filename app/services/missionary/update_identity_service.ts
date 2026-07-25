@@ -1,6 +1,6 @@
-import Missionary from '#models/missionary'
-import User from '#models/user'
-import { IdentityType } from '#enums/missionary/identity_type'
+import type Missionary from '#models/missionary'
+import type User from '#models/user'
+import type { IdentityType } from '#enums/missionary/identity_type'
 import db from '@adonisjs/lucid/services/db'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'
 

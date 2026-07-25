@@ -9,11 +9,15 @@ export default class ProfileController {
   async store({ auth, request, serialize }: HttpContext) {
     const payload = await request.validateUsing(createMissionaryProfileValidator)
 
-    const missionary = await new CreateMissionaryProfileService().execute(auth.getUserOrFail(), payload)
+    const missionary = await new CreateMissionaryProfileService().execute(
+      auth.getUserOrFail(),
+      payload
+    )
 
     return serialize({
       missionary: MissionaryTransformer.transform(missionary),
-      message: 'Perfil missionário criado com sucesso. Faça login novamente para aplicar o novo role.',
+      message:
+        'Perfil missionário criado com sucesso. Faça login novamente para aplicar o novo role.',
     })
   }
 

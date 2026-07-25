@@ -3,6 +3,14 @@ import { BaseTransformer } from '@adonisjs/core/transformers'
 
 export default class MissionaryWorkAddressTransformer extends BaseTransformer<MissionaryWorkAddress> {
   toObject() {
-    return this.pick(this.resource, ['id', 'missionaryId', 'zip', 'district', 'city', 'state', 'country'])
+    return this.pick(this.resource, [
+      'id',
+      'missionaryId',
+      'zip',
+      'district',
+      'city',
+      'state',
+      'country',
+    ])
   }
 }

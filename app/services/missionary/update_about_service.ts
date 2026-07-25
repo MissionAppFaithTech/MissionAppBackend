@@ -1,6 +1,6 @@
 import FaithCommunity from '#models/faith_community'
-import Missionary from '#models/missionary'
-import User from '#models/user'
+import type Missionary from '#models/missionary'
+import type User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import { Exception } from '@adonisjs/core/exceptions'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'

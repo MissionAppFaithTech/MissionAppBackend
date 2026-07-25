@@ -1,7 +1,7 @@
 import MissionaryProfileForbiddenException from '#exceptions/missionary/missionary_profile_forbidden_exception'
 import MissionaryProfileNotFoundException from '#exceptions/missionary/missionary_profile_not_found_exception'
 import Missionary from '#models/missionary'
-import User from '#models/user'
+import type User from '#models/user'
 import { UserRole } from '#enums/user/user_role'
 
 /**
@@ -11,7 +11,9 @@ export class ResolveMissionaryService {
   async execute(actor: User, targetMissionaryId?: string): Promise<Missionary> {
     if (actor.role === UserRole.ADMIN) {
       if (!targetMissionaryId) {
-        throw new MissionaryProfileForbiddenException('Admin deve informar o id do missionário alvo')
+        throw new MissionaryProfileForbiddenException(
+          'Admin deve informar o id do missionário alvo'
+        )
       }
 
       const missionary = await Missionary.find(targetMissionaryId)
@@ -23,16 +25,22 @@ export class ResolveMissionaryService {
     }
 
     if (actor.role !== UserRole.MISSIONARY) {
-      throw new MissionaryProfileForbiddenException('Somente missionários ou administradores podem editar este perfil')
+      throw new MissionaryProfileForbiddenException(
+        'Somente missionários ou administradores podem editar este perfil'
+      )
     }
 
     const missionary = await Missionary.findBy('userId', actor.id)
     if (!missionary) {
-      throw new MissionaryProfileNotFoundException('Perfil missionário não encontrado para o usuário autenticado')
+      throw new MissionaryProfileNotFoundException(
+        'Perfil missionário não encontrado para o usuário autenticado'
+      )
     }
 
     if (targetMissionaryId && missionary.id !== targetMissionaryId) {
-      throw new MissionaryProfileForbiddenException('Missionário não pode editar perfil de outro missionário')
+      throw new MissionaryProfileForbiddenException(
+        'Missionário não pode editar perfil de outro missionário'
+      )
     }
 
     return missionary

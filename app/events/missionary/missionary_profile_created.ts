@@ -1,4 +1,4 @@
-import { UserRole } from '#enums/user/user_role'
+import type { UserRole } from '#enums/user/user_role'
 import { BaseEvent } from '@adonisjs/core/events'
 
 /**

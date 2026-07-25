@@ -5,7 +5,7 @@ import MissionaryProfileAlreadyExistsException from '#exceptions/missionary/miss
 import MissionaryProfileForbiddenException from '#exceptions/missionary/missionary_profile_forbidden_exception'
 import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
-import User from '#models/user'
+import type User from '#models/user'
 import { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import { RefreshTokenService } from '#services/auth/refresh_token_service'
 import db from '@adonisjs/lucid/services/db'
@@ -28,7 +28,9 @@ export class CreateMissionaryProfileService {
 
     const existingProfile = await Missionary.findBy('userId', actor.id)
     if (existingProfile) {
-      throw new MissionaryProfileAlreadyExistsException('Perfil missionário já existe para este usuário')
+      throw new MissionaryProfileAlreadyExistsException(
+        'Perfil missionário já existe para este usuário'
+      )
     }
 
     const agency = await MissionaryAgency.find(payload.missionaryAgencyId)
@@ -54,7 +56,12 @@ export class CreateMissionaryProfileService {
     // global força reautenticação com novo role no token.
     await new AuthRevocationService().revokeAllSessions(actor.id, new RefreshTokenService())
 
-    await MissionaryProfileCreated.dispatch(actor.id, actor.fullName, actor.email, UserRole.MISSIONARY)
+    await MissionaryProfileCreated.dispatch(
+      actor.id,
+      actor.fullName,
+      actor.email,
+      UserRole.MISSIONARY
+    )
 
     return missionary
   }

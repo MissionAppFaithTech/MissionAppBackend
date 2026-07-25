@@ -65,7 +65,9 @@ router.get('/', () => {
 router
   .group(() => {
     router.post('accounts', [controllers.user.Account, 'store'])
-    router.post('media-assets', [controllers.mediaAsset.MediaAssets, 'store']).use(middleware.auth())
+    router
+      .post('media-assets', [controllers.mediaAsset.MediaAssets, 'store'])
+      .use(middleware.auth())
 
     router
       .group(() => {

@@ -1,5 +1,5 @@
 import MissionaryWorkAddress from '#models/missionary_work_address'
-import User from '#models/user'
+import type User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'
 

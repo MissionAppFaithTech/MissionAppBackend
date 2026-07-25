@@ -9,7 +9,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 export default class ProfileController {
   async show({ auth, serialize }: HttpContext) {
     const user = auth.getUserOrFail()
-    const missionary = await Missionary.query().where('userId', user.id).preload('workAddresses').first()
+    const missionary = await Missionary.query()
+      .where('userId', user.id)
+      .preload('workAddresses')
+      .first()
 
     return serialize({
       user: UserTransformer.transform(user),
