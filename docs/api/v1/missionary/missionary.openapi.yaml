@@ -27,6 +27,65 @@ paths:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
 
   /missionaries/profile:
+    post:
+      operationId: missionaryProfileStore
+      tags: [missionary]
+      summary: Converte usuário autenticado para missionário
+      description: >-
+        Cria o perfil missionário para o usuário autenticado e altera seu role
+        para MISSIONARY. Requer nova autenticação após a conversão para que os
+        novos claims de role sejam refletidos no JWT.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMissionaryProfileRequest'
+      responses:
+        '200':
+          description: Perfil missionário criado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  missionary:
+                    $ref: '#/components/schemas/MissionaryResponse'
+                  message:
+                    type: string
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Role sem permissão para conversão.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agência missionária informada não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Usuário já possui perfil missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
     patch:
       operationId: missionaryProfileUpdate
       tags: [missionary]
@@ -192,6 +251,14 @@ components:
         format: uuid
 
   schemas:
+    CreateMissionaryProfileRequest:
+      type: object
+      required: [missionaryAgencyId]
+      properties:
+        missionaryAgencyId:
+          type: string
+          format: uuid
+
     MissionaryResponse:
       type: object
       properties:

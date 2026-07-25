@@ -1,0 +1,27 @@
+meta {
+  name: Admin Update Missionary Public Profile
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/{{missionary_id}}/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "publicEmail": "admin.contato.missionario@example.com",
+    "publicPhone": "+5511988888888",
+    "donationMessage": "Mensagem ajustada por admin."
+  }
+}
+
+docs {
+  Atualiza contatos publicos de missionario alvo em contexto administrativo.
+}

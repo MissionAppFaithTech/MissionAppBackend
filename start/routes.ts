@@ -95,6 +95,7 @@ router
     router
       .group(() => {
         router.patch('about', [controllers.missionary.About, 'update'])
+        router.post('profile', [controllers.missionary.Profile, 'store'])
         router.patch('profile', [controllers.missionary.Profile, 'update'])
         router.patch('identity', [controllers.missionary.Identity, 'update'])
         router.patch('work-address', [controllers.missionary.WorkAddress, 'update'])

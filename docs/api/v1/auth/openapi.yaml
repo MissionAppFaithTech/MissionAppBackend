@@ -4,6 +4,10 @@
 paths:
   /auth/login:
     $ref: './auth.openapi.yaml#/paths/~1auth~1login'
+  /auth/forgot-password:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1forgot-password'
+  /auth/reset-password:
+    $ref: './auth.openapi.yaml#/paths/~1auth~1reset-password'
   /auth/refresh:
     $ref: './auth.openapi.yaml#/paths/~1auth~1refresh'
   /auth/logout:

@@ -1,0 +1,26 @@
+meta {
+  name: Update Missionary Identity
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/identity
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "identityType": "CPF",
+    "identityDocument": "12345678901"
+  }
+}
+
+docs {
+  Atualiza o par de identidade do missionario (tipo e documento).
+}

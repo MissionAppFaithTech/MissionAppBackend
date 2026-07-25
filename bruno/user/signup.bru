@@ -12,15 +12,17 @@ post {
 
 body:json {
   {
-    "fullName": "Nome Completo",
-    "email": "novo-usuario@example.com",
-    "password": "senha12345",
-    "passwordConfirmation": "senha12345"
+    "fullName": "QA Missionario",
+    "username": "qa_missionario_01",
+    "phoneNumber": "+5511911111111",
+    "gender": "MALE",
+    "email": "{{test_email}}",
+    "password": "{{test_password}}",
+    "passwordConfirmation": "{{test_password}}"
   }
 }
 
 docs {
-  Cria um novo usuário e emite o par de tokens de autenticação, seguindo o
-  mesmo fluxo de entrega do login (cookie para web, corpo para mobile via
-  `x-client-type: mobile`).
+  Cria um novo usuário e emite o par de tokens de autenticação no corpo da
+  resposta (access token + refresh token).
 }

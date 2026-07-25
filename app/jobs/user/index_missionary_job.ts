@@ -1,3 +1,4 @@
+import type { MissionaryProfileCreatedPayload } from '#types/events/missionary/missionary_profile_created'
 import type { UserRegisteredPayload } from '#types/events/user/user_registered'
 import { MissionarySearchService } from '#services/search/missionary_search_service'
 
@@ -10,7 +11,9 @@ import { MissionarySearchService } from '#services/search/missionary_search_serv
  * @example
  * await indexMissionary(job.data)
  */
-export async function indexMissionary(payload: UserRegisteredPayload): Promise<void> {
+export async function indexMissionary(
+  payload: UserRegisteredPayload | MissionaryProfileCreatedPayload
+): Promise<void> {
   await new MissionarySearchService().index(payload.id, {
     fullName: payload.fullName,
     email: payload.email,

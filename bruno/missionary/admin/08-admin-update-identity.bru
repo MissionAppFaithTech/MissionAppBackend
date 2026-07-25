@@ -1,0 +1,26 @@
+meta {
+  name: Admin Update Missionary Identity
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/{{missionary_id}}/identity
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "identityType": "CPF",
+    "identityDocument": "98765432100"
+  }
+}
+
+docs {
+  Atualiza identidade de missionario alvo em contexto administrativo.
+}
