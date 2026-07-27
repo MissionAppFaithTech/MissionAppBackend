@@ -1,0 +1,27 @@
+meta {
+  name: Update Missionary Public Profile
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "publicEmail": "contato.missionario@example.com",
+    "publicPhone": "+5511999999999",
+    "donationMessage": "Obrigado por apoiar esta missao."
+  }
+}
+
+docs {
+  Atualiza dados publicos de contato e mensagem de doacao.
+}

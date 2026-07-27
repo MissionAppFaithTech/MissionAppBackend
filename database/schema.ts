@@ -239,22 +239,32 @@ export class MediaAssetSchema extends BaseModel {
 
 export class MissionarySchema extends BaseModel {
   static $columns = [
+    'aboutMe',
     'createdAt',
     'donationMessage',
+    'faithCommunityId',
     'id',
     'identityDocument',
     'identityType',
+    'lifeVerse',
+    'missionStorySummary',
     'missionaryAgencyId',
+    'originLocation',
+    'prayerRequest',
     'publicEmail',
     'publicPhone',
     'status',
     'userId',
   ] as const
   $columns = MissionarySchema.$columns
+  @column()
+  declare aboutMe: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
   declare donationMessage: string | null
+  @column()
+  declare faithCommunityId: string | null
   @column({ isPrimary: true })
   declare id: string
   @column()
@@ -262,7 +272,15 @@ export class MissionarySchema extends BaseModel {
   @column()
   declare identityType: string | null
   @column()
+  declare lifeVerse: string | null
+  @column()
+  declare missionStorySummary: string | null
+  @column()
   declare missionaryAgencyId: string
+  @column()
+  declare originLocation: string | null
+  @column()
+  declare prayerRequest: string | null
   @column()
   declare publicEmail: string | null
   @column()
@@ -463,8 +481,6 @@ export class UserSchema extends BaseModel {
     'gender',
     'id',
     'lastLogin',
-    'lockCount',
-    'lockedAt',
     'loginAttempts',
     'membershipStatus',
     'passwordHash',
@@ -504,10 +520,6 @@ export class UserSchema extends BaseModel {
   declare id: string
   @column.dateTime()
   declare lastLogin: DateTime | null
-  @column()
-  declare lockCount: number
-  @column.dateTime()
-  declare lockedAt: DateTime | null
   @column()
   declare loginAttempts: number
   @column()

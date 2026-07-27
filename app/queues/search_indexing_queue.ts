@@ -1,5 +1,6 @@
 import { bullMQConnection } from '#config/redis'
 import { SEARCH_INDEXING_QUEUE_NAME } from '#constants/search'
+import type { MissionaryProfileCreatedPayload } from '#types/events/missionary/missionary_profile_created'
 import type { UserRegisteredPayload } from '#types/events/user/user_registered'
 import { Queue } from 'bullmq'
 
@@ -14,6 +15,8 @@ import { Queue } from 'bullmq'
  * indexação — acrescente aqui (`| NovoEventoPayload`) ao adicionar a
  * indexação de um novo modelo.
  */
-export const searchIndexingQueue = new Queue<UserRegisteredPayload>(SEARCH_INDEXING_QUEUE_NAME, {
+export const searchIndexingQueue = new Queue<
+  UserRegisteredPayload | MissionaryProfileCreatedPayload
+>(SEARCH_INDEXING_QUEUE_NAME, {
   connection: bullMQConnection,
 })

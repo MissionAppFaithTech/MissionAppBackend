@@ -1,0 +1,29 @@
+meta {
+  name: Update Missionary About
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/about
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "aboutMe": "Sou missionario em teste local",
+    "missionStorySummary": "Resumo da historia missionaria",
+    "originLocation": "Sao Paulo - SP",
+    "prayerRequest": "Orar por sabedoria",
+    "lifeVerse": "Joao 3:16"
+  }
+}
+
+docs {
+  Atualiza a secao de apresentacao do missionario autenticado.
+}

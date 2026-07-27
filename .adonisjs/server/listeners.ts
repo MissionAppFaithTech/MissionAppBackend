@@ -8,6 +8,9 @@ export const listeners = {
     RecordAuthenticationAuditListener: () => import('#listeners/auth/record_authentication_audit_listener'),
     SendPasswordResetEmailListener: () => import('#listeners/auth/send_password_reset_email_listener'),
   },
+  missionary: {
+    IndexMissionaryOnProfileCreatedListener: () => import('#listeners/missionary/index_missionary_on_profile_created_listener'),
+  },
   user: {
     IndexMissionaryListener: () => import('#listeners/user/index_missionary_listener'),
     SendWelcomeEmailListener: () => import('#listeners/user/send_welcome_email_listener'),

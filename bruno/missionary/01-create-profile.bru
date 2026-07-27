@@ -1,0 +1,27 @@
+meta {
+  name: Create Missionary Profile
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/v1/missionaries/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "missionaryAgencyId": "{{missionary_agency_id}}"
+  }
+}
+
+docs {
+  Converte o usuario autenticado de SUPPORTER para MISSIONARY e cria o perfil
+  missionary. Depois desta chamada, faca login novamente para obter token com
+  role atualizado.
+}

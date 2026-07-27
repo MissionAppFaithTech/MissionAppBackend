@@ -25,10 +25,18 @@ tags:
     description: >-
       Conta do usuário — cadastro, leitura de perfil, troca de senha. Mesmo
       quando o atributo é sensível (senha), a operação é sobre o recurso User.
+  - name: missionary
+    description: >-
+      Perfil estendido de missionários — informações públicas, identidade e
+      endereço de atuação.
 
 paths:
   /auth/login:
     $ref: './auth/openapi.yaml#/paths/~1auth~1login'
+  /auth/forgot-password:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1forgot-password'
+  /auth/reset-password:
+    $ref: './auth/openapi.yaml#/paths/~1auth~1reset-password'
   /auth/refresh:
     $ref: './auth/openapi.yaml#/paths/~1auth~1refresh'
   /auth/logout:
@@ -43,6 +51,24 @@ paths:
     $ref: './user/openapi.yaml#/paths/~1account~1profile'
   /account/password:
     $ref: './user/openapi.yaml#/paths/~1account~1password'
+  /media-assets:
+    $ref: './user/openapi.yaml#/paths/~1media-assets'
+  /missionaries/about:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1about'
+  /missionaries/profile:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1profile'
+  /missionaries/identity:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1identity'
+  /missionaries/work-address:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1work-address'
+  /missionaries/{id}/about:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1{id}~1about'
+  /missionaries/{id}/profile:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1{id}~1profile'
+  /missionaries/{id}/identity:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1{id}~1identity'
+  /missionaries/{id}/work-address:
+    $ref: './missionary/openapi.yaml#/paths/~1missionaries~1{id}~1work-address'
 
 components:
   securitySchemes:

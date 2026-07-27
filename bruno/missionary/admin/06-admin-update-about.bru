@@ -1,0 +1,29 @@
+meta {
+  name: Admin Update Missionary About
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/{{missionary_id}}/about
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "aboutMe": "Atualizado por admin",
+    "missionStorySummary": "Resumo validado por admin",
+    "originLocation": "Campinas - SP",
+    "prayerRequest": "Pedido atualizado por admin",
+    "lifeVerse": "Romanos 8:28"
+  }
+}
+
+docs {
+  Atualiza secao about de um missionario especifico usando credencial admin.
+}

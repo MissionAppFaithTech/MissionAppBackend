@@ -8,3 +8,5 @@ paths:
     $ref: './user.openapi.yaml#/paths/~1account~1profile'
   /account/password:
     $ref: './user.openapi.yaml#/paths/~1account~1password'
+  /media-assets:
+    $ref: './user.openapi.yaml#/paths/~1media-assets'

@@ -1,0 +1,29 @@
+meta {
+  name: Upsert Missionary Work Address
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/work-address
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "zip": "01310-100",
+    "district": "Bela Vista",
+    "city": "Sao Paulo",
+    "state": "SP",
+    "country": "Brasil"
+  }
+}
+
+docs {
+  Cria ou atualiza (upsert) o endereco de atuacao missionaria.
+}

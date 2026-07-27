@@ -1,0 +1,219 @@
+PLANO DE TESTE LOCAL - FLUXO COMPLETO DO MISSIONARIO
+
+OBJETIVO
+1. Validar conversao de SUPPORTER para MISSIONARY.
+2. Validar atualizacao das secoes do perfil missionario.
+3. Validar revogacao de sessao apos troca de role.
+4. Validar operacoes admin sobre missionario existente.
+
+BASE URL
+http://127.0.0.1:3333/api/v1
+
+PRE-REQUISITOS
+1. pnpm install
+2. just up
+3. just _wait-infra
+4. just migrate
+5. just db-shell
+
+DADOS DE TESTE SUGERIDOS
+EMAIL_SUP=qa.missionario@example.com
+PASSWORD_SUP=SenhaForte123!
+USERNAME_SUP=qa_missionario_01
+AGENCY_ID=0197412f-4e70-7f96-b6eb-84f87554bf6d
+
+SEED DE AGENCIA (SE NECESSARIO)
+INSERT INTO missionary_agencies (id, name, phone_number, created_at, user_id)
+VALUES (
+  '0197412f-4e70-7f96-b6eb-84f87554bf6d',
+  'Agencia Local QA',
+  '+5511912345678',
+  NOW(),
+  NULL
+)
+ON CONFLICT (id) DO NOTHING;
+
+ORDEM DE EXECUCAO DOS ENDPOINTS
+1) POST /accounts
+Payload:
+{
+  "fullName": "QA Missionario",
+  "username": "qa_missionario_01",
+  "phoneNumber": "+5511911111111",
+  "gender": "MALE",
+  "email": "qa.missionario@example.com",
+  "password": "SenhaForte123!",
+  "passwordConfirmation": "SenhaForte123!"
+}
+Esperado: 200
+
+2) POST /auth/login
+Payload:
+{
+  "login": "qa.missionario@example.com",
+  "password": "SenhaForte123!"
+}
+Esperado: 200 e salvar ACCESS_TOKEN_1 + REFRESH_TOKEN_1
+
+3) POST /missionaries/profile
+Header: Authorization Bearer ACCESS_TOKEN_1
+Payload:
+{
+  "missionaryAgencyId": "0197412f-4e70-7f96-b6eb-84f87554bf6d"
+}
+Esperado: 200, cria perfil missionary, troca role para MISSIONARY
+
+4) GET /account/profile (com ACCESS_TOKEN_1 antigo)
+Esperado: 401
+
+5) POST /auth/login (novo login)
+Payload:
+{
+  "login": "qa.missionario@example.com",
+  "password": "SenhaForte123!"
+}
+Esperado: 200 e salvar ACCESS_TOKEN_2 + REFRESH_TOKEN_2
+
+6) PATCH /missionaries/about
+Header: Authorization Bearer ACCESS_TOKEN_2
+Payload:
+{
+  "aboutMe": "Sou missionario em teste local",
+  "missionStorySummary": "Resumo da historia missionaria",
+  "originLocation": "Sao Paulo - SP",
+  "prayerRequest": "Orar por sabedoria",
+  "lifeVerse": "Joao 3:16"
+}
+Esperado: 200
+
+7) PATCH /missionaries/profile
+Header: Authorization Bearer ACCESS_TOKEN_2
+Payload:
+{
+  "publicEmail": "contato.missionario@example.com",
+  "publicPhone": "+5511999999999",
+  "donationMessage": "Obrigado por apoiar esta missao."
+}
+Esperado: 200
+
+8) PATCH /missionaries/identity
+Header: Authorization Bearer ACCESS_TOKEN_2
+Payload:
+{
+  "identityType": "CPF",
+  "identityDocument": "12345678901"
+}
+Esperado: 200
+
+9) PATCH /missionaries/work-address
+Header: Authorization Bearer ACCESS_TOKEN_2
+Payload:
+{
+  "zip": "01310-100",
+  "district": "Bela Vista",
+  "city": "Sao Paulo",
+  "state": "SP",
+  "country": "Brasil"
+}
+Esperado: 200
+
+10) GET /account/profile
+Header: Authorization Bearer ACCESS_TOKEN_2
+Esperado: 200 com user + missionary + workAddress
+
+11) GET /auth/sessions
+Header: Authorization Bearer ACCESS_TOKEN_2
+Esperado: 200
+
+12) POST /auth/refresh
+Payload:
+{
+  "refreshToken": "REFRESH_TOKEN_2"
+}
+Esperado: 200 com novo par de tokens
+
+13) DELETE /auth/logout
+Header: Authorization Bearer ACCESS_TOKEN_2
+Payload:
+{
+  "refreshToken": "REFRESH_TOKEN_2"
+}
+Esperado: 200
+
+FLUXO ADMIN
+14) POST /auth/login (admin)
+Payload:
+{
+  "login": "admin@missionapp.test",
+  "password": "password123"
+}
+Esperado: 200 e salvar ACCESS_TOKEN_ADMIN
+
+15) Buscar missionary_id alvo
+SQL:
+SELECT m.id, u.email
+FROM missionaries m
+JOIN users u ON u.id = m.user_id
+WHERE u.email = 'qa.missionario@example.com';
+
+16) PATCH /missionaries/{id}/about
+17) PATCH /missionaries/{id}/profile
+18) PATCH /missionaries/{id}/identity
+19) PATCH /missionaries/{id}/work-address
+Header: Authorization Bearer ACCESS_TOKEN_ADMIN
+Esperado: 200 em todos
+
+QUERIES SQL DE VALIDACAO
+1) Usuario e role
+SELECT id, email, role, membership_status, created_at
+FROM users
+WHERE email = 'qa.missionario@example.com';
+
+2) Perfil missionary
+SELECT m.id, m.user_id, m.status, m.missionary_agency_id, m.created_at
+FROM missionaries m
+JOIN users u ON u.id = m.user_id
+WHERE u.email = 'qa.missionario@example.com';
+
+3) Campos about/contatos/identidade
+SELECT
+  m.about_me,
+  m.mission_story_summary,
+  m.origin_location,
+  m.prayer_request,
+  m.life_verse,
+  m.public_email,
+  m.public_phone,
+  m.donation_message,
+  m.identity_type,
+  m.identity_document
+FROM missionaries m
+JOIN users u ON u.id = m.user_id
+WHERE u.email = 'qa.missionario@example.com';
+
+4) Endereco de atuacao
+SELECT mwa.id, mwa.missionary_id, mwa.zip, mwa.district, mwa.city, mwa.state, mwa.country
+FROM missionary_work_addresses mwa
+JOIN missionaries m ON m.id = mwa.missionary_id
+JOIN users u ON u.id = m.user_id
+WHERE u.email = 'qa.missionario@example.com';
+
+5) Garantir relacao 1:1 no endereco
+SELECT missionary_id, COUNT(*) AS total
+FROM missionary_work_addresses
+GROUP BY missionary_id
+HAVING COUNT(*) > 1;
+
+6) Sessoes/tokens
+SELECT rt.id, rt.user_id, rt.family_id, rt.revoked_at, rt.expires_at, rt.device_type, rt.last_used_at
+FROM refresh_tokens rt
+JOIN users u ON u.id = rt.user_id
+WHERE u.email = 'qa.missionario@example.com'
+ORDER BY rt.created_at DESC;
+
+CENARIOS NEGATIVOS MINIMOS
+1) POST /missionaries/profile com agency inexistente => 404
+2) POST /missionaries/profile com usuario ja convertido => 409
+3) PATCH /missionaries/about com token SUPPORTER => 403
+4) PATCH /missionaries/identity sem identityDocument => 422
+5) PATCH /missionaries/work-address sem country => 422

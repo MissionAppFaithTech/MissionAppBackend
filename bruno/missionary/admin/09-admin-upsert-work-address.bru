@@ -1,0 +1,29 @@
+meta {
+  name: Admin Upsert Missionary Work Address
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/{{missionary_id}}/work-address
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "zip": "13010-001",
+    "district": "Centro",
+    "city": "Campinas",
+    "state": "SP",
+    "country": "Brasil"
+  }
+}
+
+docs {
+  Cria/atualiza endereco de atuacao de missionario alvo no fluxo admin.
+}

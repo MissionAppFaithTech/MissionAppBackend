@@ -1,0 +1,20 @@
+# Arquivo de agrupamento da pasta missionary/ (ADR-0027). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /missionaries/about:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1about'
+  /missionaries/profile:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1profile'
+  /missionaries/identity:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1identity'
+  /missionaries/work-address:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1work-address'
+  /missionaries/{id}/about:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1{id}~1about'
+  /missionaries/{id}/profile:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1{id}~1profile'
+  /missionaries/{id}/identity:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1{id}~1identity'
+  /missionaries/{id}/work-address:
+    $ref: './missionary.openapi.yaml#/paths/~1missionaries~1{id}~1work-address'
