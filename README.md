@@ -9,8 +9,6 @@
 5. [Ferramentas Necessárias](#ferramentas-necessarias)
 6. [Versões de Tecnologias Utilizadas](#versoes-de-tecnologias-utilizadas)
 7. [Como Executar o Servidor](#como-executar-o-servidor)
-8. [Links Externos](#links-externos)
-9. [Equipe de Desenvolvimento](#equipe-de-desenvolvimento)
 
 ---
 
@@ -294,28 +292,3 @@ node ace migration:run
 ```bash
 node ace serve --hmr
 ```
-
----
-
-<a name="links-externos"></a>
-
-## 🔗 Links Externos
-
-- **Design Figma do Projeto**: <a href="https://www.figma.com/design/uMAwJPYKaEoN7ScjAmgZ6O/Mission-app?node-id=902-4759&p=f&t=HoAfNbpnftTUdkHA-0" target="_blank">Clique Aqui</a>
-- **Diagrama ER do Banco de Dados**: <a href="https://dbdocs.io/missionapp.faithtech/Mission-App-DB?view=relationships" target="_blank">Clique Aqui</a>
-- **Trello do Projeto**: <a href="https://trello.com/b/3lhDRlzx/mission-app" target="_blank">Clique Aqui</a>
-- **Roadmap do Projeto**: <a href="https://miro.com/app/board/uXjVH9kycnw=" target="_blank">Clique Aqui</a>
-- **Requisitos do Projeto**: <a href="https://missionappfaithtech.github.io/MissionAppRequirementsList/" target="_blank">Clique Aqui</a>
-- **Configuração do Mend Renovate**: <a href="https://developer.mend.io" target="_blank">Clique Aqui</a>
-- **Configuração do Snyk**: <a href="https://app.snyk.io/login" target="_blank">Clique Aqui</a>
-- **Configuração do Resend**: <a href="https://resend.com/login" target="_blank">Clique Aqui</a>
-
----
-
-<a name="equipe-de-desenvolvimento"></a>
-
-## 👥 Equipe de Desenvolvimento
-
-- **Dev Backend**: <a href="https://github.com/Amaro-peter" target="_blank">Pedro Amaro</a>
-- **Dev Backend**: <a href="https://github.com/allanacaoliveira" target="_blank">Allana Oliveira</a>
-- **Dev Backend**: <a href="https://github.com/AFSFerreira" target="_blank">Allber Ferreira</a>
