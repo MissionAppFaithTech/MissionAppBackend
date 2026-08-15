@@ -82,7 +82,7 @@
     "@types/luxon": "3.7.2",
     "@types/node": "25.9.4",
     "commitlint": "21.2.1",
-    "eslint": "10.7.0",
+    "eslint": "10.8.1",
     "eslint-plugin-import-x": "4.17.1",
     "fallow": "3.3.0",
     "hot-hook": "^1.0.0",
