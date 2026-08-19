@@ -95,8 +95,29 @@ export class CommentSchema extends BaseModel {
 }
 
 export class FaithCommunitySchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'name', 'phoneNumber', 'userId'] as const
+  static $columns = [
+    'addressLine1',
+    'addressLine2',
+    'city',
+    'country',
+    'createdAt',
+    'id',
+    'name',
+    'phoneNumber',
+    'postalCode',
+    'state',
+    'userId',
+    'website',
+  ] as const
   $columns = FaithCommunitySchema.$columns
+  @column()
+  declare addressLine1: string | null
+  @column()
+  declare addressLine2: string | null
+  @column()
+  declare city: string | null
+  @column()
+  declare country: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
@@ -104,9 +125,15 @@ export class FaithCommunitySchema extends BaseModel {
   @column()
   declare name: string
   @column()
-  declare phoneNumber: string
+  declare phoneNumber: string | null
+  @column()
+  declare postalCode: string | null
+  @column()
+  declare state: string | null
   @column()
   declare userId: string | null
+  @column()
+  declare website: string | null
 }
 
 export class FinancialConfigSchema extends BaseModel {
@@ -292,8 +319,29 @@ export class MissionarySchema extends BaseModel {
 }
 
 export class MissionaryAgencySchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'name', 'phoneNumber', 'userId'] as const
+  static $columns = [
+    'addressLine1',
+    'addressLine2',
+    'city',
+    'country',
+    'createdAt',
+    'id',
+    'name',
+    'phoneNumber',
+    'postalCode',
+    'state',
+    'userId',
+    'website',
+  ] as const
   $columns = MissionaryAgencySchema.$columns
+  @column()
+  declare addressLine1: string | null
+  @column()
+  declare addressLine2: string | null
+  @column()
+  declare city: string | null
+  @column()
+  declare country: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
@@ -303,7 +351,13 @@ export class MissionaryAgencySchema extends BaseModel {
   @column()
   declare phoneNumber: string | null
   @column()
+  declare postalCode: string | null
+  @column()
+  declare state: string | null
+  @column()
   declare userId: string | null
+  @column()
+  declare website: string | null
 }
 
 export class MissionaryWorkAddressSchema extends BaseModel {
@@ -348,7 +402,7 @@ export class PastorSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: string
   @column()
-  declare phoneNumber: string
+  declare phoneNumber: string | null
 }
 
 export class PostImageSchema extends BaseModel {
@@ -481,6 +535,8 @@ export class UserSchema extends BaseModel {
     'gender',
     'id',
     'lastLogin',
+    'lockCount',
+    'lockedAt',
     'loginAttempts',
     'membershipStatus',
     'passwordHash',
@@ -520,6 +576,10 @@ export class UserSchema extends BaseModel {
   declare id: string
   @column.dateTime()
   declare lastLogin: DateTime | null
+  @column()
+  declare lockCount: number
+  @column.dateTime()
+  declare lockedAt: DateTime | null
   @column()
   declare loginAttempts: number
   @column()
