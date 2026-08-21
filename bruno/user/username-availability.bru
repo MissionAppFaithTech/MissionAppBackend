@@ -1,0 +1,21 @@
+meta {
+  name: Check Username Availability
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/api/v1/accounts/username-availability?username=qa_missionario_01
+  body: none
+  auth: none
+}
+
+params:query {
+  username: qa_missionario_01
+}
+
+docs {
+  Consulta pública usada durante o cadastro, antes de a conta existir.
+  Quando o username já está em uso, sugere até 3 variações com sufixo
+  numérico que ainda estão livres.
+}
