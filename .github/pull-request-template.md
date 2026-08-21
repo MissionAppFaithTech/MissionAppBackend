@@ -62,7 +62,7 @@ Proponho a seguinte mudança ...
 - [ ] Rota criada/alterada: documentação OpenAPI atualizada em `docs/api/v1/<domínio>/` (ADR-0027) — _sem fix automático, edição manual do YAML_ (se possível e preferível, utilize auxílio de ferramentas de IA)
 - [ ] Rota criada/alterada: coleção Bruno atualizada/criada em `bruno/` (ADR-0019) — _sem fix automático, crie/edite o `.bru` correspondente_ (se possível e preferível, utilize auxílio de ferramentas de IA)
 - [ ] JSDoc adicionado apenas onde a convenção exige — Services, Providers, Middlewares e etc (ADR-0024) — _sem fix automático_
-- [ ] Comentários revisados: só o *porquê* não-óbvio, tags corretas (`NOTE`/`TODO`/`FIXME`/`WARNING` e etc), sem JSDoc substituído por `//`, idioma correto (identificadores em inglês, comentários/JSDoc em português) — ver [CONTRIBUTING.md](../CONTRIBUTING.md#padroes-de-codigo) — _sem fix automático_
+- [ ] Comentários revisados: só o _porquê_ não-óbvio, tags corretas (`NOTE`/`TODO`/`FIXME`/`WARNING` e etc), sem JSDoc substituído por `//`, idioma correto (identificadores em inglês, comentários/JSDoc em português) — ver [CONTRIBUTING.md](../CONTRIBUTING.md#padroes-de-codigo) — _sem fix automático_
 
 **Banco de dados**
 

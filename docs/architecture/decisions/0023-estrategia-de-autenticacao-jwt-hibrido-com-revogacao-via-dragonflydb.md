@@ -90,7 +90,7 @@ Um contador por usuário (`user:<id>:auth_version`) é incrementado no Dragonfly
 
 ### Bloqueio de Conta por Força Bruta (Login Attempt Lockout)
 
-Complementar ao `withAuthFinder`: um mecanismo de bloqueio temporário de conta após tentativas de login falhas consecutivas, para mitigar ataques de força bruta e credential stuffing contra o endpoint de login — algo que o mixin oficial não cobre (ele só resolve *uma* verificação segura, não *quantas* podem ser tentadas).
+Complementar ao `withAuthFinder`: um mecanismo de bloqueio temporário de conta após tentativas de login falhas consecutivas, para mitigar ataques de força bruta e credential stuffing contra o endpoint de login — algo que o mixin oficial não cobre (ele só resolve _uma_ verificação segura, não _quantas_ podem ser tentadas).
 
 **Colunas em `users`:** `login_attempts` (contador de falhas consecutivas), `locked_at` (timestamp do último bloqueio; `null` = conta nunca foi bloqueada — mas não-nulo **não** significa bloqueada agora, ver decaimento abaixo) e `lock_count` (quantas vezes a conta já foi bloqueada; usado no cálculo de backoff).
 
