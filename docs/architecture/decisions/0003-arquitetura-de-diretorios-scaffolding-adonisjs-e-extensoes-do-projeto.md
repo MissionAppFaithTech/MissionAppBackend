@@ -24,20 +24,20 @@ A questão central é: **qual convenção de diretórios — além do que o scaf
 
 As pastas abaixo seguem exatamente a convenção do scaffold `api` oficial do AdonisJS v7 (ver [ADR-0001](./0001-adocao-do-adonisjs-como-framework-backend.md) para a decisão de adoção do framework). Este ADR não redefine o propósito delas — só lista para dar visão completa da árvore antes de detalhar as extensões:
 
-| Diretório | Propósito (padrão AdonisJS) |
-| --- | --- |
-| `bin/` | Entrypoints do processo — `server.ts` (HTTP), `console.ts` (Ace), `test.ts` (Japa) |
-| `config/` | Arquivos de configuração de cada pacote instalado (`app.ts`, `auth.ts`, `database.ts` etc.) |
-| `start/` | Bootstrap da aplicação — `routes.ts`, `kernel.ts` (middleware), `env.ts` (schema de variáveis de ambiente), `validator.ts` |
-| `database/` | `migrations/` (fonte da verdade do schema) e `schema.ts` (auto-gerado, nunca editado à mão) |
-| `providers/` | Service providers customizados, registrados em `adonisrc.ts` |
-| `commands/` | Comandos Ace customizados (`node ace make:command`) |
-| `tests/` | Suítes Japa — `unit/` e `functional/`, configuradas em `adonisrc.ts` |
-| `app/controllers/` | Handlers HTTP finos |
-| `app/models/` | Models Lucid ORM |
-| `app/validators/` | Schemas VineJS |
-| `app/middleware/` | Middleware HTTP |
-| `app/exceptions/` | Handler global de erros |
+| Diretório          | Propósito (padrão AdonisJS)                                                                                                |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `bin/`             | Entrypoints do processo — `server.ts` (HTTP), `console.ts` (Ace), `test.ts` (Japa)                                         |
+| `config/`          | Arquivos de configuração de cada pacote instalado (`app.ts`, `auth.ts`, `database.ts` etc.)                                |
+| `start/`           | Bootstrap da aplicação — `routes.ts`, `kernel.ts` (middleware), `env.ts` (schema de variáveis de ambiente), `validator.ts` |
+| `database/`        | `migrations/` (fonte da verdade do schema) e `schema.ts` (auto-gerado, nunca editado à mão)                                |
+| `providers/`       | Service providers customizados, registrados em `adonisrc.ts`                                                               |
+| `commands/`        | Comandos Ace customizados (`node ace make:command`)                                                                        |
+| `tests/`           | Suítes Japa — `unit/` e `functional/`, configuradas em `adonisrc.ts`                                                       |
+| `app/controllers/` | Handlers HTTP finos                                                                                                        |
+| `app/models/`      | Models Lucid ORM                                                                                                           |
+| `app/validators/`  | Schemas VineJS                                                                                                             |
+| `app/middleware/`  | Middleware HTTP                                                                                                            |
+| `app/exceptions/`  | Handler global de erros                                                                                                    |
 
 Para o significado detalhado de cada uma — e de qualquer outra pasta do scaffold não usada de forma não-convencional neste projeto — a fonte de verdade é a [documentação oficial do AdonisJS](https://docs.adonisjs.com/guides/getting-started/folder-structure). Divergências desse padrão só acontecem nos pontos descritos a seguir, e são deliberadas.
 
@@ -140,7 +140,7 @@ Parcialmente descartada. Funciona para tipos usados só dentro daquele domínio,
 - Domínio errado na hora de criar a subpasta é um erro de julgamento que só aparece depois — mitigado por seguir o mesmo domínio já documentado em `docs/api/v1/<domínio>/` (ADR-0027), que existe antes do código
 - Subpastas de domínio ou contexto acompanhando desde o primeiro arquivo significa que um domínio com um único service futuro, por exemplo, ainda ganha uma pasta com um arquivo só — aceito conscientemente (ver Justificativa) em troca de nunca precisar de um PR só de reorganização
 - Espelhar a árvore de `app/` dentro de `app/types/` significa que mover um arquivo de camada (ex: um service de subpasta) exige lembrar de mover o tipo correspondente junto — não há verificação automática dessa correspondência
-- Este ADR precisa ser revisado e atualizado se o scaffold do AdonisJS mudar de forma relevante em versões futuras ou se alguma nova convenção estrutural do projeto for criada eventualmente  — a seção 1 é um resumo, não uma cópia, mas ainda é uma superfície que pode divergir da versão real instalada
+- Este ADR precisa ser revisado e atualizado se o scaffold do AdonisJS mudar de forma relevante em versões futuras ou se alguma nova convenção estrutural do projeto for criada eventualmente — a seção 1 é um resumo, não uma cópia, mas ainda é uma superfície que pode divergir da versão real instalada
 
 ## Referências
 

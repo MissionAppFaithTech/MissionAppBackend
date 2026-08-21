@@ -246,19 +246,19 @@ Não adicione comentários que expliquem _o que_ o código faz — nomes bem esc
 
 Todo comentário que sobreviver a essa regra deve vir marcado com uma tag, pra deixar a intenção escaneável:
 
-| Tag | Quando usar |
-| --- | --- |
-| `NOTE:` | Informação relevante e não-óbvia — invariante, comportamento esperado, motivo de segurança/design |
-| `TODO:` | Trabalho ainda não feito, proposto por quem está lendo/escrevendo o código agora |
-| `FIXME:` / `BUG:` | Comportamento incorreto conhecido que precisa ser corrigido |
-| `HACK:` | Contorno deliberado e temporário — não é a solução ideal |
-| `OPTIMIZE:` | Funciona corretamente, mas poderia ser mais rápido/barato |
-| `REVIEW:` / `CHECK:` | Precisa de uma segunda revisão ou validação técnica |
-| `DEPRECATED:` | Código antigo mantido só por compatibilidade — aponta pro substituto |
-| `WARNING:` | Código sensível ou arriscado — mudar sem cuidado quebra algo |
-| `LEGACY:` | Código herdado mantido só por retrocompatibilidade |
-| `UNDONE:` | Uma funcionalidade foi revertida e pode precisar ser reimplementada |
-| `#region` / `#endregion` | Agrupa um bloco de código em editores que suportam folding |
+| Tag                      | Quando usar                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
+| `NOTE:`                  | Informação relevante e não-óbvia — invariante, comportamento esperado, motivo de segurança/design |
+| `TODO:`                  | Trabalho ainda não feito, proposto por quem está lendo/escrevendo o código agora                  |
+| `FIXME:` / `BUG:`        | Comportamento incorreto conhecido que precisa ser corrigido                                       |
+| `HACK:`                  | Contorno deliberado e temporário — não é a solução ideal                                          |
+| `OPTIMIZE:`              | Funciona corretamente, mas poderia ser mais rápido/barato                                         |
+| `REVIEW:` / `CHECK:`     | Precisa de uma segunda revisão ou validação técnica                                               |
+| `DEPRECATED:`            | Código antigo mantido só por compatibilidade — aponta pro substituto                              |
+| `WARNING:`               | Código sensível ou arriscado — mudar sem cuidado quebra algo                                      |
+| `LEGACY:`                | Código herdado mantido só por retrocompatibilidade                                                |
+| `UNDONE:`                | Uma funcionalidade foi revertida e pode precisar ser reimplementada                               |
+| `#region` / `#endregion` | Agrupa um bloco de código em editores que suportam folding                                        |
 
 Essas tags valem para uma linha ou bloco não-óbvio dentro do corpo de uma função — nunca substituem JSDoc na declaração da função/classe/método. Documentação de função/classe/método é sempre um bloco `/** */` (ver [ADR-0024](./docs/architecture/decisions/0024-convencao-de-documentacao-de-codigo-com-jsdoc.md) para as regras de rigor por camada).
 

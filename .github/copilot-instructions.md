@@ -133,19 +133,19 @@ All inline code comments must be written in **Portuguese (pt-BR)**.
 
 **Tag every comment that survives the rule above** — a bare `//` explanation is a code smell; tag it so its intent is scannable:
 
-| Tag | When to use |
-| --- | --- |
-| `NOTE:` | Important, non-obvious information — invariant, expected behavior, security/design rationale |
-| `TODO:` | Work not yet done, proposed by whoever is reading/writing the code right now |
-| `FIXME:` / `BUG:` | Known incorrect behavior that needs fixing |
-| `HACK:` | Deliberate, temporary workaround — not the ideal solution |
-| `OPTIMIZE:` | Works correctly but could be faster/cheaper |
-| `REVIEW:` / `CHECK:` | Needs a second pair of eyes or technical validation |
-| `DEPRECATED:` | Old code kept only for compatibility — points to the replacement |
-| `WARNING:` | Risky or sensitive code — changing it carelessly breaks something |
-| `LEGACY:` | Inherited code kept only for backwards compatibility |
-| `UNDONE:` | A feature was reverted and may need reimplementing |
-| `#region` / `#endregion` | Groups a block of code in editors that support folding |
+| Tag                      | When to use                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `NOTE:`                  | Important, non-obvious information — invariant, expected behavior, security/design rationale |
+| `TODO:`                  | Work not yet done, proposed by whoever is reading/writing the code right now                 |
+| `FIXME:` / `BUG:`        | Known incorrect behavior that needs fixing                                                   |
+| `HACK:`                  | Deliberate, temporary workaround — not the ideal solution                                    |
+| `OPTIMIZE:`              | Works correctly but could be faster/cheaper                                                  |
+| `REVIEW:` / `CHECK:`     | Needs a second pair of eyes or technical validation                                          |
+| `DEPRECATED:`            | Old code kept only for compatibility — points to the replacement                             |
+| `WARNING:`               | Risky or sensitive code — changing it carelessly breaks something                            |
+| `LEGACY:`                | Inherited code kept only for backwards compatibility                                         |
+| `UNDONE:`                | A feature was reverted and may need reimplementing                                           |
+| `#region` / `#endregion` | Groups a block of code in editors that support folding                                       |
 
 ```typescript
 // NOTE: fail-closed — Dragonfly indisponível nunca deve virar "aceitar o token"
