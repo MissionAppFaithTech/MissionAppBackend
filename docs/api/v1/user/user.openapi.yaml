@@ -242,7 +242,7 @@ components:
               type: array
               items:
                 type: string
-              description: Até 3 variações livres, presente só quando available é false.
+              description: Até 3 variações livres quando available é false; caso contrário, retorna um array vazio.
 
     UserProfileResponse:
       type: object
