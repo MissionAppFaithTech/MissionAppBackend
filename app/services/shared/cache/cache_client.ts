@@ -55,6 +55,20 @@ export class CacheClient {
   }
 
   /**
+   * Define (ou atualiza) o TTL de uma chave já existente.
+   *
+   * @param key Chave alvo.
+   * @param ttlSeconds Tempo de vida em segundos.
+   * @returns `true` quando o TTL foi aplicado; `false` quando a chave não existe.
+   * @example
+   * await cache.expire('rate-limit:ip:127.0.0.1', 60)
+   */
+  async expire(key: string, ttlSeconds: number): Promise<boolean> {
+    const result = await this.#redis.expire(key, ttlSeconds)
+    return result === 1
+  }
+
+  /**
    * Verifica se uma chave existe.
    *
    * @param key Chave a verificar.

@@ -47,4 +47,6 @@ router.use([
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
+  usernameAvailabilityRateLimit: () =>
+    import('#middleware/username_availability_rate_limit_middleware'),
 })

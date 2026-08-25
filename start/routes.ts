@@ -65,7 +65,9 @@ router.get('/', () => {
 router
   .group(() => {
     router.post('accounts', [controllers.user.Account, 'store'])
-    router.get('accounts/username-availability', [controllers.user.UsernameAvailability, 'show'])
+    router
+      .get('accounts/username-availability', [controllers.user.UsernameAvailability, 'show'])
+      .use(middleware.usernameAvailabilityRateLimit())
     router
       .post('media-assets', [controllers.mediaAsset.MediaAssets, 'store'])
       .use(middleware.auth())
