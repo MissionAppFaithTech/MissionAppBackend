@@ -106,7 +106,7 @@
     "@tuyau/core": "1.2.2",
     "@vinejs/vine": "4.4.0",
     "argon2": "0.45.1",
-    "bullmq": "5.80.1",
+    "bullmq": "5.81.3",
     "edge.js": "6.5.1",
     "ioredis": "6.0.0",
     "jose": "6.2.3",
