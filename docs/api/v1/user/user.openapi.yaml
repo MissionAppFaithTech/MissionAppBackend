@@ -30,6 +30,39 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
+  /accounts/username-availability:
+    get:
+      operationId: accountUsernameAvailability
+      tags: [user]
+      summary: Verifica disponibilidade de nome de usuário
+      description: >-
+        Consulta pública usada durante o cadastro, antes de a conta existir.
+        Quando o username já está em uso, sugere até 3 variações com sufixo
+        numérico que ainda estão livres.
+      security: []
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[a-z0-9_]+$'
+      responses:
+        '200':
+          description: Resultado da checagem de disponibilidade.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsernameAvailabilityResponse'
+        '422':
+          description: Nome de usuário fora do formato esperado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
   /account/profile:
     get:
       operationId: accountProfileShow
@@ -193,6 +226,23 @@ components:
         profilePictureId:
           type: string
           format: uuid
+
+    UsernameAvailabilityResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [available, username, suggestions]
+          properties:
+            available:
+              type: boolean
+            username:
+              type: string
+            suggestions:
+              type: array
+              items:
+                type: string
+              description: Até 3 variações livres quando available é false; caso contrário, retorna um array vazio.
 
     UserProfileResponse:
       type: object

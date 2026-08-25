@@ -25,5 +25,6 @@ export const controllers = {
     Account: () => import('#controllers/user/account_controller'),
     AccountPassword: () => import('#controllers/user/account_password_controller'),
     Profile: () => import('#controllers/user/profile_controller'),
+    UsernameAvailability: () => import('#controllers/user/username_availability_controller'),
   },
 }
