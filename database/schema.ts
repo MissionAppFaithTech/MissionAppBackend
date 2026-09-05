@@ -529,6 +529,7 @@ export class UserSchema extends BaseModel {
     'deletedAt',
     'email',
     'emailVerifiedAt',
+    'faithCommunityId',
     'followersCount',
     'followingCount',
     'fullName',
@@ -564,6 +565,8 @@ export class UserSchema extends BaseModel {
   declare email: string
   @column.dateTime()
   declare emailVerifiedAt: DateTime | null
+  @column()
+  declare faithCommunityId: string | null
   @column()
   declare followersCount: number
   @column()

@@ -8,4 +8,5 @@ export const updateProfileValidator = vine.create({
   username: username().optional(),
   biography: vine.string().trim().maxLength(200).optional(),
   profilePictureId: id().optional(),
+  faithCommunityId: id().optional(),
 })

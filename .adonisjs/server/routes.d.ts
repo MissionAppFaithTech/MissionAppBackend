@@ -16,7 +16,12 @@ export type ScannedRoutes = {
     'v1.auth.sessions.destroy': { paramsTuple: [ParamValue]; params: {'familyId': ParamValue} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
     'v1.profile.update': { paramsTuple?: []; params?: {} }
+    'v1.account.destroy': { paramsTuple?: []; params?: {} }
     'v1.account_password.update': { paramsTuple?: []; params?: {} }
+    'v1.account.following.index': { paramsTuple?: []; params?: {} }
+    'v1.account.following.store': { paramsTuple: [ParamValue]; params: {'missionaryId': ParamValue} }
+    'v1.account.following.destroy': { paramsTuple: [ParamValue]; params: {'missionaryId': ParamValue} }
+    'v1.supporter.profile.show': { paramsTuple: [ParamValue]; params: {'username': ParamValue} }
     'v1.missionary.about.update': { paramsTuple?: []; params?: {} }
     'v1.missionary.profile.store': { paramsTuple?: []; params?: {} }
     'v1.missionary.profile.update': { paramsTuple?: []; params?: {} }
@@ -30,10 +35,14 @@ export type ScannedRoutes = {
   GET: {
     'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
+    'v1.account.following.index': { paramsTuple?: []; params?: {} }
+    'v1.supporter.profile.show': { paramsTuple: [ParamValue]; params: {'username': ParamValue} }
   }
   HEAD: {
     'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
+    'v1.account.following.index': { paramsTuple?: []; params?: {} }
+    'v1.supporter.profile.show': { paramsTuple: [ParamValue]; params: {'username': ParamValue} }
   }
   POST: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
@@ -42,11 +51,14 @@ export type ScannedRoutes = {
     'v1.auth.refresh_tokens.store': { paramsTuple?: []; params?: {} }
     'v1.auth.forgot_password.store': { paramsTuple?: []; params?: {} }
     'v1.missionary.profile.store': { paramsTuple?: []; params?: {} }
+    'v1.account.following.store': { paramsTuple: [ParamValue]; params: {'missionaryId': ParamValue} }
   }
   DELETE: {
     'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'v1.auth.all_sessions.destroy': { paramsTuple?: []; params?: {} }
     'v1.auth.sessions.destroy': { paramsTuple: [ParamValue]; params: {'familyId': ParamValue} }
+    'v1.account.destroy': { paramsTuple?: []; params?: {} }
+    'v1.account.following.destroy': { paramsTuple: [ParamValue]; params: {'missionaryId': ParamValue} }
   }
   PATCH: {
     'v1.auth.reset_password.update': { paramsTuple?: []; params?: {} }

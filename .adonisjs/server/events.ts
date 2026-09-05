@@ -5,6 +5,8 @@
 
 import AuthLoginAttempted from '#events/auth/login_attempted'
 import AuthPasswordResetRequested from '#events/auth/password_reset_requested'
+import FollowerUserFollowed from '#events/follower/user_followed'
+import FollowerUserUnfollowed from '#events/follower/user_unfollowed'
 import MissionaryMissionaryProfileCreated from '#events/missionary/missionary_profile_created'
 import UserUserRegistered from '#events/user/user_registered'
 
@@ -12,6 +14,10 @@ export const events = {
   auth: {
     LoginAttempted: AuthLoginAttempted,
     PasswordResetRequested: AuthPasswordResetRequested,
+  },
+  follower: {
+    UserFollowed: FollowerUserFollowed,
+    UserUnfollowed: FollowerUserUnfollowed,
   },
   missionary: {
     MissionaryProfileCreated: MissionaryMissionaryProfileCreated,
