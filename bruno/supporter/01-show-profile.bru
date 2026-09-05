@@ -1,0 +1,16 @@
+meta {
+  name: Show Supporter Public Profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/supporters/{{supporter_username}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retorna o perfil público de um apoiador pelo username (RF 11.1/11.2) —
+  leitura sem autenticação, visível a visitantes (RF 1.4).
+}

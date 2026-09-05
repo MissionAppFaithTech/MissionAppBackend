@@ -1,9 +1,11 @@
 import { PASSWORD_RESET_EMAIL_JOB_NAME } from '#constants/password_reset'
 import { EMAIL_QUEUE_NAME } from '#constants/mail'
+import { FOLLOWER_QUEUE_NAME, RECOMPUTE_FOLLOWER_COUNTS_JOB_NAME } from '#constants/follower'
 import { MISSIONARY_INDEXING_JOB_NAME } from '#constants/missionary_search'
 import { SEARCH_INDEXING_QUEUE_NAME } from '#constants/search'
 import { WELCOME_EMAIL_JOB_NAME } from '#constants/welcome_email'
 import { sendPasswordResetEmail } from '#jobs/auth/send_password_reset_email_job'
+import { recomputeFollowerCounts } from '#jobs/follower/recompute_follower_counts_job'
 import { indexMissionary } from '#jobs/user/index_missionary_job'
 import { sendWelcomeEmail } from '#jobs/user/send_welcome_email_job'
 
@@ -47,5 +49,10 @@ export const workerRegistry: WorkerRegistryEntry[] = [
     queueName: SEARCH_INDEXING_QUEUE_NAME,
     jobName: MISSIONARY_INDEXING_JOB_NAME,
     handle: indexMissionary,
+  },
+  {
+    queueName: FOLLOWER_QUEUE_NAME,
+    jobName: RECOMPUTE_FOLLOWER_COUNTS_JOB_NAME,
+    handle: recomputeFollowerCounts,
   },
 ]

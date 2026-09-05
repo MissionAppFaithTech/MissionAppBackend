@@ -1,0 +1,36 @@
+paths:
+  /supporters/{username}:
+    get:
+      operationId: supporterProfileShow
+      tags: [supporter]
+      summary: Perfil público de um apoiador
+      description: >-
+        RF 11.1/11.2/1.4. Leitura pública — não exige autenticação. Retorna o
+        mesmo recorte de campos exibido a visitantes (sem `email`/
+        `phoneNumber`).
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[a-z0-9_]+$'
+      responses:
+        '200':
+          description: Perfil público do apoiador.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '../auth/auth.openapi.yaml#/components/schemas/UserPublicSummary'
+        '404':
+          description: Nenhum apoiador encontrado com o username informado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'

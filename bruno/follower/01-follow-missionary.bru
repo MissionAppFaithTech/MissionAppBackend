@@ -1,0 +1,20 @@
+meta {
+  name: Follow Missionary
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/v1/account/following/{{missionary_user_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Apoiador autenticado passa a seguir o missionário informado (RF 5.2.1).
+  Apoiadores nunca podem seguir outros apoiadores (RF 5.2.2).
+}

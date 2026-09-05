@@ -1,0 +1,6 @@
+# Arquivo de agrupamento da pasta supporter/ (ADR-0027). Não contém paths
+# nem schemas próprios — apenas $refs para os arquivos de conteúdo desta
+# pasta. É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /supporters/{username}:
+    $ref: './supporter.openapi.yaml#/paths/~1supporters~1{username}'

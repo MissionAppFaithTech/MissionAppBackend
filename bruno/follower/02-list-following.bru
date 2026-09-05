@@ -1,0 +1,25 @@
+meta {
+  name: List Following
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/v1/account/following?page=1&perPage=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  perPage: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista paginada dos missionários seguidos pelo apoiador autenticado (RF
+  11.3/11.6), do mais recente para o mais antigo.
+}
