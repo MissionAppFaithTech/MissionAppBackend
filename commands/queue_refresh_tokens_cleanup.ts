@@ -19,9 +19,11 @@ export default class QueueRefreshTokensCleanup extends BaseCommand {
   async run() {
     const queue = new Queue(QUEUE_NAME, { connection: bullMQConnection })
 
-    // NOTE: repeatable job — BullMQ deduplica pelo jobId determinístico do
-    // agendador, então reiniciar o worker não cria entradas duplicadas na fila.
-    await queue.add(JOB_NAME, {}, { repeat: { pattern: CLEANUP_CRON_SCHEDULE } })
+    // NOTE: repeatable job — desde o BullMQ v6, `repeat` não é mais aceito em
+    // `.add()` (ver JobSchedulerJobOptions); `upsertJobScheduler` é idempotente
+    // pelo id do scheduler, então reiniciar o worker não cria entradas
+    // duplicadas na fila.
+    await queue.upsertJobScheduler(JOB_NAME, { pattern: CLEANUP_CRON_SCHEDULE }, { name: JOB_NAME })
 
     const worker = new Worker(
       QUEUE_NAME,
