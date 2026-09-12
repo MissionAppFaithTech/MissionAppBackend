@@ -29,6 +29,14 @@ tags:
     description: >-
       Perfil estendido de missionários — informações públicas, identidade e
       endereço de atuação.
+  - name: follower
+    description: >-
+      Relacionamento de seguimento entre a conta autenticada (apoiador) e
+      missionários — seguir, deixar de seguir e listar quem é seguido.
+  - name: supporter
+    description: >-
+      Leitura pública do perfil de um apoiador, por username — visível a
+      visitantes não autenticados.
 
 paths:
   /auth/login:
@@ -53,8 +61,16 @@ paths:
     $ref: './user/openapi.yaml#/paths/~1account~1profile'
   /account/password:
     $ref: './user/openapi.yaml#/paths/~1account~1password'
+  /account:
+    $ref: './user/openapi.yaml#/paths/~1account'
   /media-assets:
     $ref: './user/openapi.yaml#/paths/~1media-assets'
+  /account/following:
+    $ref: './follower/openapi.yaml#/paths/~1account~1following'
+  /account/following/{missionaryId}:
+    $ref: './follower/openapi.yaml#/paths/~1account~1following~1{missionaryId}'
+  /supporters/{username}:
+    $ref: './supporter/openapi.yaml#/paths/~1supporters~1{username}'
   /missionaries/about:
     $ref: './missionary/openapi.yaml#/paths/~1missionaries~1about'
   /missionaries/profile:

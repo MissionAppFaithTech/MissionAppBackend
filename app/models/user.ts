@@ -13,6 +13,8 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { Filterable } from '@dirupt/adonis-lucid-filter'
 import type { DateTime } from 'luxon'
 import AuthenticationAudit from './authentication_audit.ts'
+import FaithCommunity from './faith_community.ts'
+import Follower from './follower.ts'
 import UserFilter from './filters/user_filter.ts'
 import MediaAsset from './media_asset.ts'
 import { AuthFinder } from './mixins/auth_finder.ts'
@@ -53,14 +55,23 @@ export default class User extends compose(
   declare lockedAt: DateTime | null
   declare lockCount: number
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'profile_picture_id' })
+  @belongsTo(() => MediaAsset, { foreignKey: 'profilePictureId' })
   declare profilePicture: BelongsTo<typeof MediaAsset>
+
+  @belongsTo(() => FaithCommunity)
+  declare faithCommunity: BelongsTo<typeof FaithCommunity>
 
   @hasMany(() => AuthenticationAudit)
   declare authenticationAudits: HasMany<typeof AuthenticationAudit>
 
   @hasMany(() => UserActionAudit)
   declare userActionAudit: HasMany<typeof UserActionAudit>
+
+  @hasMany(() => Follower, { foreignKey: 'followerId' })
+  declare following: HasMany<typeof Follower>
+
+  @hasMany(() => Follower, { foreignKey: 'followingId' })
+  declare followers: HasMany<typeof Follower>
 
   /**
    * Sobrescreve `verifyCredentials()` do mixin `AuthFinder` para impor

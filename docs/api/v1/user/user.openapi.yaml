@@ -112,6 +112,27 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
+  /account:
+    delete:
+      operationId: accountDestroy
+      tags: [user]
+      summary: Encerra a conta do usuário autenticado
+      description: >-
+        RF 15.5. Apoiadores são excluídos permanentemente; missionários
+        recebem exclusão lógica (`deletedAt`), preservando conteúdo já
+        publicado. Em ambos os casos todas as sessões ativas são revogadas.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Conta encerrada com sucesso.
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
   /media-assets:
     post:
       operationId: mediaAssetStore
@@ -226,6 +247,12 @@ components:
         profilePictureId:
           type: string
           format: uuid
+        faithCommunityId:
+          type: string
+          format: uuid
+          description: >-
+            Comunidade de fé associada ao perfil (RF 11.5). Deve existir em
+            `faith_communities`; campo opcional, omitido não altera o valor atual.
 
     UsernameAvailabilityResponse:
       type: object

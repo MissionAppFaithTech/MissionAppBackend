@@ -1,0 +1,8 @@
+# Arquivo de agrupamento da pasta follower/ (ADR-0027). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /account/following:
+    $ref: './follower.openapi.yaml#/paths/~1account~1following'
+  /account/following/{missionaryId}:
+    $ref: './follower.openapi.yaml#/paths/~1account~1following~1{missionaryId}'

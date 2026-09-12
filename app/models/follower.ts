@@ -7,9 +7,9 @@ import { WithCreatedAt } from './mixins/with_created_at.ts'
 import { WithPrimaryUuid } from './mixins/with_primary_uuid.ts'
 
 export default class Follower extends compose(FollowerSchema, WithPrimaryUuid, WithCreatedAt) {
-  @belongsTo(() => User, { foreignKey: 'follower_id' })
+  @belongsTo(() => User, { foreignKey: 'followerId' })
   declare follower: BelongsTo<typeof User>
 
-  @belongsTo(() => User, { foreignKey: 'following_id' })
+  @belongsTo(() => User, { foreignKey: 'followingId' })
   declare following: BelongsTo<typeof User>
 }

@@ -1,0 +1,19 @@
+meta {
+  name: Unfollow Missionary
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{base_url}}/api/v1/account/following/{{missionary_user_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Apoiador autenticado deixa de seguir o missionário informado.
+}

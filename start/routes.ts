@@ -93,9 +93,27 @@ router
 
     router.get('account/profile', [controllers.user.Profile, 'show']).use(middleware.auth())
     router.patch('account/profile', [controllers.user.Profile, 'update']).use(middleware.auth())
+    router.delete('account', [controllers.user.Account, 'destroy']).use(middleware.auth())
     router
       .patch('account/password', [controllers.user.AccountPassword, 'update'])
       .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('following', [controllers.user.Following, 'index'])
+        router.post('following/:missionaryId', [controllers.user.Following, 'store'])
+        router.delete('following/:missionaryId', [controllers.user.Following, 'destroy'])
+      })
+      .prefix('account')
+      .as('account')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get(':username', [controllers.supporter.Profile, 'show'])
+      })
+      .prefix('supporters')
+      .as('supporter')
 
     router
       .group(() => {

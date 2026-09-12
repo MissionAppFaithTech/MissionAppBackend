@@ -55,6 +55,7 @@
     "#validators/shared/*": "./app/validators/shared/*.js",
     "#validators/missionary/*": "./app/validators/missionary/*.js",
     "#validators/user/*": "./app/validators/user/*.js",
+    "#validators/follower/*": "./app/validators/follower/*.js",
     "#providers/*": "./providers/*.js",
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",

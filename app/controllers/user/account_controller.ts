@@ -2,6 +2,7 @@ import UserRegistered from '#events/user/user_registered'
 import User from '#models/user'
 import { RefreshTokenService } from '#services/auth/refresh_token_service'
 import { TokenIssuanceService } from '#services/auth/token_issuance_service'
+import { DestroyAccountService } from '#services/user/destroy_account_service'
 import { toDeviceMetadata } from '#utils/client_metadata'
 import { signupValidator } from '#validators/user/signup'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -35,5 +36,13 @@ export default class AccountController {
       user: UserTransformer.transform(user),
       ...tokens,
     })
+  }
+
+  async destroy({ auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    await new DestroyAccountService().execute(user)
+
+    return response.noContent()
   }
 }

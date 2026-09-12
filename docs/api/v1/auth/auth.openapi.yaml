@@ -389,13 +389,67 @@ components:
           format: uuid
         fullName:
           type: string
+        username:
+          type: string
         email:
           type: string
           format: email
+        phoneNumber:
+          type: string
+        biography:
+          type: [string, 'null']
+        profilePictureId:
+          type: [string, 'null']
+          format: uuid
+        faithCommunityId:
+          type: [string, 'null']
+          format: uuid
+          description: Comunidade de fé associada ao perfil, exibida no cabeçalho (RF 11.1).
+        followersCount:
+          type: integer
+          description: Contador em cache do número de seguidores.
+        followingCount:
+          type: integer
+          description: Contador em cache do número de missionários seguidos.
+        role:
+          type: string
+          enum: [ADMIN, MISSIONARY, SUPPORTER]
         createdAt:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+
+    UserPublicSummary:
+      type: object
+      description: >-
+        Recorte público do usuário — mesmos campos exibidos a visitantes não
+        autenticados (RF 11.1/11.2), sem `email`/`phoneNumber`.
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        username:
+          type: string
+        biography:
+          type: [string, 'null']
+        profilePictureId:
+          type: [string, 'null']
+          format: uuid
+        faithCommunityId:
+          type: [string, 'null']
+          format: uuid
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        role:
+          type: string
+          enum: [ADMIN, MISSIONARY, SUPPORTER]
+        createdAt:
           type: string
           format: date-time
 

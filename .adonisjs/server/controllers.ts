@@ -21,9 +21,13 @@ export const controllers = {
     Profile: () => import('#controllers/missionary/profile_controller'),
     WorkAddress: () => import('#controllers/missionary/work_address_controller'),
   },
+  supporter: {
+    Profile: () => import('#controllers/supporter/profile_controller'),
+  },
   user: {
     Account: () => import('#controllers/user/account_controller'),
     AccountPassword: () => import('#controllers/user/account_password_controller'),
+    Following: () => import('#controllers/user/following_controller'),
     Profile: () => import('#controllers/user/profile_controller'),
     UsernameAvailability: () => import('#controllers/user/username_availability_controller'),
   },

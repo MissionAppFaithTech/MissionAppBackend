@@ -1,0 +1,158 @@
+paths:
+  /account/following:
+    get:
+      operationId: accountFollowingIndex
+      tags: [follower]
+      summary: Lista os missionários seguidos pelo apoiador autenticado
+      description: >-
+        RF 11.3/11.6. Lista paginada, do seguimento mais recente para o mais
+        antigo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Página de missionários seguidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowingPage'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+  /account/following/{missionaryId}:
+    post:
+      operationId: accountFollowingStore
+      tags: [follower]
+      summary: Segue um missionário
+      description: >-
+        RF 5.2.1. Somente apoiadores podem seguir, e somente perfis com papel
+        MISSIONARY podem ser seguidos — apoiadores nunca podem seguir outros
+        apoiadores (RF 5.2.2).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryId'
+      responses:
+        '200':
+          description: Relacionamento de seguimento criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowerResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Ator não é um apoiador.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Nenhum missionário encontrado com o id informado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: O apoiador já segue este missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+    delete:
+      operationId: accountFollowingDestroy
+      tags: [follower]
+      summary: Deixa de seguir um missionário
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryId'
+      responses:
+        '204':
+          description: Relacionamento de seguimento removido.
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Ator não é um apoiador.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: O apoiador não segue este missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    MissionaryId:
+      name: missionaryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    FollowerResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/FollowerSummary'
+
+    FollowingPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FollowerSummary'
+        metadata:
+          type: object
+          properties:
+            total:
+              type: integer
+            perPage:
+              type: integer
+            currentPage:
+              type: integer
+            lastPage:
+              type: integer
+
+    FollowerSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        missionary:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/UserPublicSummary'

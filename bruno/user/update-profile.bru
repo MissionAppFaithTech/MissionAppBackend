@@ -1,0 +1,30 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{base_url}}/api/v1/account/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "fullName": "Novo Nome",
+    "username": "novo_username",
+    "biography": "Biografia atualizada",
+    "faithCommunityId": "{{faith_community_id}}"
+  }
+}
+
+docs {
+  Atualiza os campos editáveis do perfil do usuário autenticado (RF 11.5):
+  nome completo, username (único), mini-biografia (max 200 chars) e
+  comunidade de fé associada.
+}

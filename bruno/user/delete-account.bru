@@ -1,0 +1,21 @@
+meta {
+  name: Delete Account
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{base_url}}/api/v1/account
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Encerra a conta do usuário autenticado (RF 15.5). Apoiadores são excluídos
+  permanentemente; missionários recebem exclusão lógica. Revoga todas as
+  sessões ativas.
+}
