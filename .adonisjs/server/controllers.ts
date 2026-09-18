@@ -17,7 +17,9 @@ export const controllers = {
   },
   missionary: {
     About: () => import('#controllers/missionary/about_controller'),
+    FaithCommunities: () => import('#controllers/missionary/faith_communities_controller'),
     Identity: () => import('#controllers/missionary/identity_controller'),
+    MissionaryAgencies: () => import('#controllers/missionary/missionary_agencies_controller'),
     Profile: () => import('#controllers/missionary/profile_controller'),
     WorkAddress: () => import('#controllers/missionary/work_address_controller'),
   },

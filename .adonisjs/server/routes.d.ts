@@ -6,6 +6,16 @@ export type ScannedRoutes = {
   ALL: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
     'v1.media_assets.store': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.store': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.missionary_agencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
+    'v1.faith_communities.store': { paramsTuple?: []; params?: {} }
+    'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.auth.access_tokens.store': { paramsTuple?: []; params?: {} }
     'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'v1.auth.refresh_tokens.store': { paramsTuple?: []; params?: {} }
@@ -30,14 +40,24 @@ export type ScannedRoutes = {
   GET: {
     'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
+    'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   HEAD: {
     'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
+    'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   POST: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
     'v1.media_assets.store': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.store': { paramsTuple?: []; params?: {} }
+    'v1.faith_communities.store': { paramsTuple?: []; params?: {} }
     'v1.auth.access_tokens.store': { paramsTuple?: []; params?: {} }
     'v1.auth.refresh_tokens.store': { paramsTuple?: []; params?: {} }
     'v1.auth.forgot_password.store': { paramsTuple?: []; params?: {} }
@@ -47,6 +67,8 @@ export type ScannedRoutes = {
     'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'v1.auth.all_sessions.destroy': { paramsTuple?: []; params?: {} }
     'v1.auth.sessions.destroy': { paramsTuple: [ParamValue]; params: {'familyId': ParamValue} }
+    'v1.missionary_agencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   PATCH: {
     'v1.auth.reset_password.update': { paramsTuple?: []; params?: {} }
@@ -56,6 +78,8 @@ export type ScannedRoutes = {
     'v1.missionary.profile.update': { paramsTuple?: []; params?: {} }
     'v1.missionary.identity.update': { paramsTuple?: []; params?: {} }
     'v1.missionary.work_address.update': { paramsTuple?: []; params?: {} }
+    'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.about.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.profile.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.identity.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

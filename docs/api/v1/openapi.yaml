@@ -71,6 +71,14 @@ paths:
     $ref: './missionary/openapi.yaml#/paths/~1missionaries~1{id}~1identity'
   /missionaries/{id}/work-address:
     $ref: './missionary/openapi.yaml#/paths/~1missionaries~1{id}~1work-address'
+  /missionary-agencies:
+    $ref: './missionary/openapi.yaml#/paths/~1missionary-agencies'
+  /missionary-agencies/{id}:
+    $ref: './missionary/openapi.yaml#/paths/~1missionary-agencies~1{id}'
+  /faith-communities:
+    $ref: './missionary/openapi.yaml#/paths/~1faith-communities'
+  /faith-communities/{id}:
+    $ref: './missionary/openapi.yaml#/paths/~1faith-communities~1{id}'
 
 components:
   securitySchemes:

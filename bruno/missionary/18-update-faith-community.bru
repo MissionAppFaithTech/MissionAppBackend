@@ -1,0 +1,26 @@
+meta {
+  name: Update Faith Community
+  type: http
+  seq: 18
+}
+
+patch {
+  url: {{base_url}}/api/v1/faith-communities/{{faith_community_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "Igreja Batista Esperanca",
+    "phoneNumber": "+5511944455566"
+  }
+}
+
+docs {
+  Atualiza uma comunidade de fe existente.
+}
