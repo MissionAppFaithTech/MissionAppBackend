@@ -240,9 +240,415 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
 
+  /missionary-agencies:
+    get:
+      operationId: missionaryAgencyIndex
+      tags: [missionary]
+      summary: Lista agências missionárias
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Busca parcial (sem diferenciar maiúsculas) pelo nome da agência.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: city
+          in: query
+          required: false
+          description: Filtra por cidade (busca parcial).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: state
+          in: query
+          required: false
+          description: Filtra por estado/província (busca parcial).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: country
+          in: query
+          required: false
+          description: Filtra por país (busca parcial).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        '200':
+          description: Lista de agências missionárias.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryAgenciesResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      operationId: missionaryAgencyStore
+      tags: [missionary]
+      summary: Cria agência missionária
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMissionaryAgencyRequest'
+      responses:
+        '200':
+          description: Agência missionária criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryAgencyResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /missionary-agencies/{id}:
+    get:
+      operationId: missionaryAgencyShow
+      tags: [missionary]
+      summary: Exibe uma agência missionária
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryAgencyId'
+      responses:
+        '200':
+          description: Agência missionária encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryAgencyResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agência missionária não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    patch:
+      operationId: missionaryAgencyUpdate
+      tags: [missionary]
+      summary: Atualiza uma agência missionária
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryAgencyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissionaryAgencyRequest'
+      responses:
+        '200':
+          description: Agência missionária atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionaryAgencyResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para atualizar a agência.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agência missionária não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    delete:
+      operationId: missionaryAgencyDestroy
+      tags: [missionary]
+      summary: Remove uma agência missionária
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MissionaryAgencyId'
+      responses:
+        '200':
+          description: Agência missionária removida com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para remover a agência.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agência missionária não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+  /faith-communities:
+    get:
+      operationId: faithCommunityIndex
+      tags: [missionary]
+      summary: Lista comunidades de fé
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Busca parcial (sem diferenciar maiúsculas) pelo nome da comunidade de fé.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: city
+          in: query
+          required: false
+          description: Filtra por cidade (busca parcial).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: state
+          in: query
+          required: false
+          description: Filtra por estado/província (busca parcial).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: country
+          in: query
+          required: false
+          description: Filtra por país (busca parcial).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        '200':
+          description: Lista de comunidades de fé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaithCommunitiesResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      operationId: faithCommunityStore
+      tags: [missionary]
+      summary: Cria comunidade de fé
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFaithCommunityRequest'
+      responses:
+        '200':
+          description: Comunidade de fé criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaithCommunityResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /faith-communities/{id}:
+    get:
+      operationId: faithCommunityShow
+      tags: [missionary]
+      summary: Exibe uma comunidade de fé
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FaithCommunityId'
+      responses:
+        '200':
+          description: Comunidade de fé encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaithCommunityResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Comunidade de fé não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    patch:
+      operationId: faithCommunityUpdate
+      tags: [missionary]
+      summary: Atualiza uma comunidade de fé
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FaithCommunityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFaithCommunityRequest'
+      responses:
+        '200':
+          description: Comunidade de fé atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaithCommunityResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para atualizar a comunidade.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Comunidade de fé não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação do corpo da requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    delete:
+      operationId: faithCommunityDestroy
+      tags: [missionary]
+      summary: Remove uma comunidade de fé
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FaithCommunityId'
+      responses:
+        '200':
+          description: Comunidade de fé removida com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para remover a comunidade.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Comunidade de fé não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
 components:
   parameters:
     MissionaryId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    MissionaryAgencyId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    FaithCommunityId:
       name: id
       in: path
       required: true
@@ -270,6 +676,254 @@ components:
       properties:
         data:
           type: object
+
+    MissionaryAgency:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phoneNumber:
+          type: [string, 'null']
+        addressLine1:
+          type: [string, 'null']
+        addressLine2:
+          type: [string, 'null']
+        city:
+          type: [string, 'null']
+        state:
+          type: [string, 'null']
+        country:
+          type: [string, 'null']
+        postalCode:
+          type: [string, 'null']
+        website:
+          type: [string, 'null']
+        userId:
+          type: [string, 'null']
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    MissionaryAgencyResponse:
+      type: object
+      properties:
+        missionaryAgency:
+          $ref: '#/components/schemas/MissionaryAgency'
+
+    MissionaryAgenciesResponse:
+      type: object
+      properties:
+        missionaryAgencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/MissionaryAgency'
+
+    CreateMissionaryAgencyRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phoneNumber:
+          type: string
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        addressLine1:
+          type: string
+          minLength: 1
+          maxLength: 255
+        addressLine2:
+          type: string
+          minLength: 1
+          maxLength: 255
+        city:
+          type: string
+          minLength: 1
+          maxLength: 255
+        state:
+          type: string
+          minLength: 1
+          maxLength: 255
+        country:
+          type: string
+          minLength: 1
+          maxLength: 255
+        postalCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 255
+
+    UpdateMissionaryAgencyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phoneNumber:
+          type: string
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        addressLine1:
+          type: string
+          minLength: 1
+          maxLength: 255
+        addressLine2:
+          type: string
+          minLength: 1
+          maxLength: 255
+        city:
+          type: string
+          minLength: 1
+          maxLength: 255
+        state:
+          type: string
+          minLength: 1
+          maxLength: 255
+        country:
+          type: string
+          minLength: 1
+          maxLength: 255
+        postalCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 255
+
+    FaithCommunity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phoneNumber:
+          type: string
+        addressLine1:
+          type: [string, 'null']
+        addressLine2:
+          type: [string, 'null']
+        city:
+          type: [string, 'null']
+        state:
+          type: [string, 'null']
+        country:
+          type: [string, 'null']
+        postalCode:
+          type: [string, 'null']
+        website:
+          type: [string, 'null']
+        userId:
+          type: [string, 'null']
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    FaithCommunityResponse:
+      type: object
+      properties:
+        faithCommunity:
+          $ref: '#/components/schemas/FaithCommunity'
+
+    FaithCommunitiesResponse:
+      type: object
+      properties:
+        faithCommunities:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaithCommunity'
+
+    CreateFaithCommunityRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phoneNumber:
+          type: string
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        addressLine1:
+          type: string
+          minLength: 1
+          maxLength: 255
+        addressLine2:
+          type: string
+          minLength: 1
+          maxLength: 255
+        city:
+          type: string
+          minLength: 1
+          maxLength: 255
+        state:
+          type: string
+          minLength: 1
+          maxLength: 255
+        country:
+          type: string
+          minLength: 1
+          maxLength: 255
+        postalCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 255
+
+    UpdateFaithCommunityRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phoneNumber:
+          type: string
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        addressLine1:
+          type: string
+          minLength: 1
+          maxLength: 255
+        addressLine2:
+          type: string
+          minLength: 1
+          maxLength: 255
+        city:
+          type: string
+          minLength: 1
+          maxLength: 255
+        state:
+          type: string
+          minLength: 1
+          maxLength: 255
+        country:
+          type: string
+          minLength: 1
+          maxLength: 255
+        postalCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 255
 
     UpdateMissionaryAboutRequest:
       type: object

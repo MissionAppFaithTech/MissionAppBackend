@@ -1,0 +1,26 @@
+meta {
+  name: Update Missionary Agency
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionary-agencies/{{missionary_agency_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "JOCUM Brasil",
+    "phoneNumber": "+5511987654321"
+  }
+}
+
+docs {
+  Atualiza uma agencia missionaria existente.
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Create Faith Community
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{base_url}}/api/v1/faith-communities
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "Igreja Batista Central",
+    "phoneNumber": "+5511933344455"
+  }
+}
+
+docs {
+  Cria uma nova comunidade de fe.
+}

@@ -1,0 +1,18 @@
+meta {
+  name: Show Faith Community
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{base_url}}/api/v1/faith-communities/{{faith_community_id}}
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Exibe os dados de uma comunidade de fe especifica por id.
+}
