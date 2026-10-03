@@ -1,0 +1,26 @@
+meta {
+  name: Create Missionary Agency
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{base_url}}/api/v1/missionary-agencies
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "JOCUM (Jovens com uma Missao)",
+    "phoneNumber": "+5511912345678"
+  }
+}
+
+docs {
+  Cria uma nova agencia missionaria.
+}

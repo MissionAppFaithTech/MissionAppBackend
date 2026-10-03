@@ -1,0 +1,18 @@
+meta {
+  name: Delete Faith Community
+  type: http
+  seq: 19
+}
+
+delete {
+  url: {{base_url}}/api/v1/faith-communities/{{faith_community_id}}
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Remove uma comunidade de fe por id.
+}

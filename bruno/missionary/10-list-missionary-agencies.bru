@@ -1,0 +1,25 @@
+meta {
+  name: List Missionary Agencies
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/missionary-agencies
+  auth: bearer
+}
+
+params:query {
+  ~search: 
+  ~city: 
+  ~state: 
+  ~country: 
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista as agencias missionarias disponiveis para vinculacao de perfil.
+}

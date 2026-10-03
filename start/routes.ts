@@ -73,6 +73,16 @@ router
       .use(middleware.auth())
 
     router
+      .resource('missionary-agencies', controllers.missionary.MissionaryAgencies)
+      .apiOnly()
+      .use('*', middleware.auth())
+
+    router
+      .resource('faith-communities', controllers.missionary.FaithCommunities)
+      .apiOnly()
+      .use('*', middleware.auth())
+
+    router
       .group(() => {
         router.post('login', [controllers.auth.AccessTokens, 'store'])
         router.delete('logout', [controllers.auth.AccessTokens, 'destroy'])

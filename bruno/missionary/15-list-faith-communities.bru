@@ -1,0 +1,25 @@
+meta {
+  name: List Faith Communities
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{base_url}}/api/v1/faith-communities
+  auth: bearer
+}
+
+params:query {
+  ~search: 
+  ~city: 
+  ~state: 
+  ~country: 
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista as comunidades de fe disponiveis para vinculacao de perfil missionario.
+}

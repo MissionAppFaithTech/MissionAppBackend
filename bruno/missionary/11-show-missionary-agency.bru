@@ -1,0 +1,18 @@
+meta {
+  name: Show Missionary Agency
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{base_url}}/api/v1/missionary-agencies/{{missionary_agency_id}}
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Exibe os dados de uma agencia missionaria especifica por id.
+}
