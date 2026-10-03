@@ -711,16 +711,22 @@ components:
     MissionaryAgencyResponse:
       type: object
       properties:
-        missionaryAgency:
-          $ref: '#/components/schemas/MissionaryAgency'
+        data:
+          type: object
+          properties:
+            missionaryAgency:
+              $ref: '#/components/schemas/MissionaryAgency'
 
     MissionaryAgenciesResponse:
       type: object
       properties:
-        missionaryAgencies:
-          type: array
-          items:
-            $ref: '#/components/schemas/MissionaryAgency'
+        data:
+          type: object
+          properties:
+            missionaryAgencies:
+              type: array
+              items:
+                $ref: '#/components/schemas/MissionaryAgency'
 
     CreateMissionaryAgencyRequest:
       type: object
@@ -810,7 +816,7 @@ components:
         name:
           type: string
         phoneNumber:
-          type: string
+          type: [string, 'null']
         addressLine1:
           type: [string, 'null']
         addressLine2:
@@ -835,16 +841,22 @@ components:
     FaithCommunityResponse:
       type: object
       properties:
-        faithCommunity:
-          $ref: '#/components/schemas/FaithCommunity'
+        data:
+          type: object
+          properties:
+            faithCommunity:
+              $ref: '#/components/schemas/FaithCommunity'
 
     FaithCommunitiesResponse:
       type: object
       properties:
-        faithCommunities:
-          type: array
-          items:
-            $ref: '#/components/schemas/FaithCommunity'
+        data:
+          type: object
+          properties:
+            faithCommunities:
+              type: array
+              items:
+                $ref: '#/components/schemas/FaithCommunity'
 
     CreateFaithCommunityRequest:
       type: object
