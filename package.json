@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457",
+  "packageManager": "pnpm@12.12.0+sha512.2ee06ac86db554cf384421461220f0e336a487bfd41b2acd04e17a86b1487832fe45e8d1743f7fc52acc77de12d2356b536fedf8229fc483239e40b13d474449",
   "engines": {
     "node": ">=24.16.0",
     "npm": ">=11.13.0",
