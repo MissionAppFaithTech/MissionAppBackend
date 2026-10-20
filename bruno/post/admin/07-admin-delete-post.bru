@@ -1,0 +1,18 @@
+meta {
+  name: Admin Delete Post
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{base_url}}/api/v1/posts/{{post_id}}
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+docs {
+  Remove a postagem de qualquer missionario usando credencial admin (moderacao).
+}

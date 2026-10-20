@@ -22,10 +22,16 @@ body:json {
   }
 }
 
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("media_asset_id", res.getBody().data.mediaAsset.id);
+  }
+}
+
 docs {
   Reserva um media asset e devolve a URL pre-assinada (PUT, 15 min).
   Envie o arquivo direto ao storage com os headers devolvidos em upload.headers
   (Content-Type e Content-Length fazem parte da assinatura), por exemplo:
     curl -X PUT -H "Content-Type: image/jpeg" --data-binary @foto.jpg "<upload.url>"
-  Depois copie mediaAsset.id para a variavel media_asset_id e confirme o upload.
+  O id do asset e salvo automaticamente na variavel media_asset_id; depois confirme o upload.
 }

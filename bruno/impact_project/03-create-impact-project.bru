@@ -22,6 +22,12 @@ body:json {
   }
 }
 
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("impact_project_id", res.getBody().data.impactProject.id);
+  }
+}
+
 docs {
   Cria o projeto de impacto do missionario autenticado (um por missionario).
   A capa precisa ser um asset IMPACT_PROJECT_COVER enviado pelo proprio usuario
