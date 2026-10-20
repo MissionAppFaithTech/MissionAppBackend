@@ -1,0 +1,317 @@
+paths:
+  /posts:
+    get:
+      operationId: postIndex
+      tags: [post]
+      summary: Lista postagens (paginado, mais recentes primeiro)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelas postagens de um missionário.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/Page'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Página de postagens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      operationId: postStore
+      tags: [post]
+      summary: Cria uma postagem
+      description: >-
+        Apenas missionários (ou ADMIN informando `missionaryId`) publicam. As
+        imagens devem ter finalidade `POST_IMAGE`, ter sido enviadas pelo
+        próprio usuário e ter o upload confirmado. **Limite rotativo:** cada
+        missionário mantém no máximo 50 imagens somando todas as postagens.
+        Ao ultrapassar, as imagens vinculadas há mais tempo são desvinculadas
+        dos posts (o texto permanece) e os arquivos são removidos do storage
+        de forma assíncrona.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '200':
+          description: Postagem criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Perfil missionário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação, ou imagem inválida para vínculo
+            (`E_MEDIA_ASSET_NOT_ATTACHABLE`).
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /posts/{id}:
+    get:
+      operationId: postShow
+      tags: [post]
+      summary: Exibe uma postagem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Postagem não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    patch:
+      operationId: postUpdate
+      tags: [post]
+      summary: Atualiza uma postagem
+      description: >-
+        O slug é imutável. Quando `imageAssetIds` é enviado, ele substitui a
+        galeria inteira na ordem informada: imagens ausentes da lista são
+        removidas do storage; imagens mantidas preservam a antiguidade para
+        fins do limite rotativo de 50 imagens por missionário.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Postagem atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para alterar a postagem.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Postagem não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação ou imagem inválida para vínculo.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    delete:
+      operationId: postDestroy
+      tags: [post]
+      summary: Remove uma postagem
+      description: As imagens da postagem são removidas do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem removida com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para remover a postagem.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Postagem não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    PostId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    PostImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order:
+          type: integer
+          minimum: 0
+        imageAssetId:
+          type: string
+          format: uuid
+        image:
+          $ref: '../media_asset/media_asset.openapi.yaml#/components/schemas/MediaAsset'
+        createdAt:
+          type: string
+          format: date-time
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        highlightLink:
+          type: [string, 'null']
+          format: uri
+        slug:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostImage'
+        createdAt:
+          type: string
+          format: date-time
+
+    PostResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            post:
+              $ref: '#/components/schemas/Post'
+
+    PostsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        metadata:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/PaginationMetadata'
+
+    CreatePostRequest:
+      type: object
+      required: [content]
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários publicam em nome próprio.
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        highlightLink:
+          type: string
+          format: uri
+          maxLength: 255
+        imageAssetIds:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          description: Ids de assets `POST_IMAGE`, na ordem de exibição da galeria.
+          items:
+            type: string
+            format: uuid
+
+    UpdatePostRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        highlightLink:
+          type: [string, 'null']
+          format: uri
+          maxLength: 255
+        imageAssetIds:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          description: Substitui a galeria inteira, na ordem informada.
+          items:
+            type: string
+            format: uuid

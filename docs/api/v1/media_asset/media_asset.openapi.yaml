@@ -1,0 +1,229 @@
+paths:
+  /media-assets/uploads:
+    post:
+      operationId: mediaUploadStore
+      tags: [media_asset]
+      summary: Solicita URL pré-assinada para upload direto ao storage
+      description: >-
+        Reserva um media asset em `PENDING_UPLOAD` e devolve uma URL pré-assinada
+        (validade de 15 min) para o cliente enviar o arquivo direto ao storage
+        com `PUT`. A chave no bucket é gerada pelo servidor. Os headers
+        `Content-Type` e `Content-Length` fazem parte da assinatura: o envio
+        precisa usar exatamente o tipo e o tamanho declarados, senão o storage
+        rejeita. Depois do envio, o cliente confirma em
+        `POST /media-assets/{id}/completion`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMediaUploadRequest'
+      responses:
+        '200':
+          description: Asset reservado e URL de upload emitida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaUploadResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação, ou mime type/tamanho não permitido para a
+            finalidade informada (`E_MEDIA_UPLOAD_NOT_ALLOWED`).
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /media-assets/{id}:
+    get:
+      operationId: mediaAssetShow
+      tags: [media_asset]
+      summary: Exibe um media asset enviado pelo usuário autenticado
+      description: >-
+        Usado para acompanhar o processamento após a confirmação do upload:
+        `PROCESSING` enquanto o worker valida/comprime, `READY` quando a `url`
+        pública já está disponível e `FAILED` quando o conteúdo foi rejeitado.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MediaAssetId'
+      responses:
+        '200':
+          description: Media asset encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDetailResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: O arquivo não foi enviado pelo usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Media asset não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+  /media-assets/{id}/completion:
+    post:
+      operationId: mediaUploadCompletionStore
+      tags: [media_asset]
+      summary: Confirma o upload e dispara validação e compressão
+      description: >-
+        Move o asset de `PENDING_UPLOAD` para `PROCESSING` e enfileira o
+        processamento no worker. Imagens são redimensionadas (capa: até
+        1920px; post: até 1600px no maior lado), convertidas para WebP e têm
+        os metadados (EXIF/GPS) removidos. Vídeos são apenas validados. A
+        partir de `PROCESSING` o asset já pode ser vinculado a um projeto ou
+        post; a `url` fica disponível quando o status vira `READY`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MediaAssetId'
+      responses:
+        '202':
+          description: Upload confirmado; processamento enfileirado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDetailResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: O arquivo não foi enviado pelo usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Media asset não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: O upload deste asset já foi confirmado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    MediaAssetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    MediaAsset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [S3, R2, GCS, AZURE]
+        bucket:
+          type: string
+        fileKey:
+          type: string
+        mimeType:
+          type: string
+        fileSizeBytes:
+          type: integer
+        purpose:
+          type: [string, 'null']
+          enum: [IMPACT_PROJECT_COVER, IMPACT_PROJECT_VIDEO, POST_IMAGE, null]
+        status:
+          type: string
+          enum: [PENDING_UPLOAD, PROCESSING, READY, FAILED]
+        url:
+          type: [string, 'null']
+          format: uri
+          description: URL pública do arquivo; `null` enquanto o status não for `READY`.
+        createdAt:
+          type: string
+          format: date-time
+
+    RequestMediaUploadRequest:
+      type: object
+      required: [purpose, mimeType, fileSizeBytes]
+      properties:
+        purpose:
+          type: string
+          enum: [IMPACT_PROJECT_COVER, IMPACT_PROJECT_VIDEO, POST_IMAGE]
+          description: >-
+            Finalidade do arquivo. Imagens (`IMPACT_PROJECT_COVER`, `POST_IMAGE`)
+            aceitam image/jpeg, image/png e image/webp até 10 MB;
+            `IMPACT_PROJECT_VIDEO` aceita video/mp4, video/quicktime e
+            video/webm até 200 MB.
+        mimeType:
+          type: string
+          maxLength: 255
+        fileSizeBytes:
+          type: integer
+          minimum: 1
+
+    MediaUploadResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            mediaAsset:
+              $ref: '#/components/schemas/MediaAsset'
+            upload:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                method:
+                  type: string
+                  enum: [PUT]
+                headers:
+                  type: object
+                  description: Headers que devem ser enviados exatamente como estão no PUT.
+                  properties:
+                    Content-Type:
+                      type: string
+                    Content-Length:
+                      type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+
+    MediaAssetDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            mediaAsset:
+              $ref: '#/components/schemas/MediaAsset'

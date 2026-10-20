@@ -1,0 +1,19 @@
+meta {
+  name: Delete Impact Project
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/api/v1/impact-projects/{{impact_project_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Remove o projeto; capa e video sao removidos do storage de forma assincrona.
+}

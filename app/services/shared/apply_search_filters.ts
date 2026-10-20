@@ -1,3 +1,4 @@
+import { escapeLike } from '#utils/escape_like'
 import type { LucidModel, ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 export type SearchFilters = {
@@ -6,8 +7,6 @@ export type SearchFilters = {
   state?: string
   country?: string
 }
-
-const escapeLike = (value: string): string => value.replace(/[\%_]/g, '\$&')
 
 /**
  * Aplica busca parcial (case-insensitive) por nome e por localidade

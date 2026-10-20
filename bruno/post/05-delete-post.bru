@@ -1,0 +1,19 @@
+meta {
+  name: Delete Post
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/api/v1/posts/{{post_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Remove a postagem; as imagens sao removidas do storage de forma assincrona.
+}

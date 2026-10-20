@@ -17,12 +17,12 @@ export default class ImpactProject extends compose(
   @belongsTo(() => Missionary)
   declare missionary: BelongsTo<typeof Missionary>
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'cover_image_asset_id' })
+  @belongsTo(() => MediaAsset, { foreignKey: 'coverImageAssetId' })
   declare coverImage: BelongsTo<typeof MediaAsset>
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'video_asset_id' })
+  @belongsTo(() => MediaAsset, { foreignKey: 'videoAssetId' })
   declare video: BelongsTo<typeof MediaAsset>
 
-  @hasMany(() => CampaignProject, { foreignKey: 'project_id' })
+  @hasMany(() => CampaignProject, { foreignKey: 'projectId' })
   declare campaignProjects: HasMany<typeof CampaignProject>
 }

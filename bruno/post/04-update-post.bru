@@ -1,0 +1,26 @@
+meta {
+  name: Update Post
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{base_url}}/api/v1/posts/{{post_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "content": "Atualizacao do campo missionario"
+  }
+}
+
+docs {
+  Atualiza a postagem. imageAssetIds, quando enviado, substitui a galeria inteira
+  na ordem informada; imagens removidas da lista sao apagadas do storage.
+}

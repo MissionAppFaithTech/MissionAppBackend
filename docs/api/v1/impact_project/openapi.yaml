@@ -1,0 +1,8 @@
+# Arquivo de agrupamento da pasta impact_project/ (ADR-0027). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /impact-projects:
+    $ref: './impact_project.openapi.yaml#/paths/~1impact-projects'
+  /impact-projects/{id}:
+    $ref: './impact_project.openapi.yaml#/paths/~1impact-projects~1{id}'

@@ -8,6 +8,10 @@ export const listeners = {
     RecordAuthenticationAuditListener: () => import('#listeners/auth/record_authentication_audit_listener'),
     SendPasswordResetEmailListener: () => import('#listeners/auth/send_password_reset_email_listener'),
   },
+  mediaAsset: {
+    DeleteDiscardedMediaAssetsListener: () => import('#listeners/media_asset/delete_discarded_media_assets_listener'),
+    ProcessMediaAssetListener: () => import('#listeners/media_asset/process_media_asset_listener'),
+  },
   missionary: {
     IndexMissionaryOnProfileCreatedListener: () => import('#listeners/missionary/index_missionary_on_profile_created_listener'),
   },

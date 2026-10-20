@@ -246,6 +246,9 @@ export class MediaAssetSchema extends BaseModel {
     'id',
     'mimeType',
     'provider',
+    'purpose',
+    'status',
+    'uploadedByUserId',
   ] as const
   $columns = MediaAssetSchema.$columns
   @column()
@@ -262,6 +265,12 @@ export class MediaAssetSchema extends BaseModel {
   declare mimeType: string
   @column()
   declare provider: string
+  @column()
+  declare purpose: string | null
+  @column()
+  declare status: string
+  @column()
+  declare uploadedByUserId: string | null
 }
 
 export class MissionarySchema extends BaseModel {

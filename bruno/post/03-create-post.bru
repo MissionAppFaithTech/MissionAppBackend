@@ -1,0 +1,29 @@
+meta {
+  name: Create Post
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/v1/posts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "content": "Noticias do campo missionario",
+    "highlightLink": "https://example.com",
+    "imageAssetIds": ["{{media_asset_id}}"]
+  }
+}
+
+docs {
+  Cria uma postagem. Limite rotativo: o missionario mantem no maximo 50 imagens
+  somando todas as postagens; ao ultrapassar, as mais antigas sao desvinculadas e
+  removidas do storage (o texto do post permanece).
+}

@@ -1,0 +1,25 @@
+meta {
+  name: List Posts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/posts
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~missionaryId: 
+  ~page: 1
+  ~perPage: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista paginada de postagens, mais recentes primeiro.
+}

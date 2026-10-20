@@ -1,0 +1,31 @@
+meta {
+  name: Request Media Upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/v1/media-assets/uploads
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "purpose": "POST_IMAGE",
+    "mimeType": "image/jpeg",
+    "fileSizeBytes": 204800
+  }
+}
+
+docs {
+  Reserva um media asset e devolve a URL pre-assinada (PUT, 15 min).
+  Envie o arquivo direto ao storage com os headers devolvidos em upload.headers
+  (Content-Type e Content-Length fazem parte da assinatura), por exemplo:
+    curl -X PUT -H "Content-Type: image/jpeg" --data-binary @foto.jpg "<upload.url>"
+  Depois copie mediaAsset.id para a variavel media_asset_id e confirme o upload.
+}

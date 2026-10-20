@@ -45,6 +45,12 @@ export default await Env.create(new URL('../', import.meta.url), {
   S3_BUCKET: Env.schema.string(),
   S3_ACCESS_KEY: Env.schema.string(),
   S3_SECRET_KEY: Env.schema.string(),
+  // NOTE: MinIO exige path-style (`endpoint/bucket/key`); o S3 da AWS aceita os dois formatos
+  S3_FORCE_PATH_STYLE: Env.schema.boolean.optional(),
+  // NOTE: base pública (CDN ou endpoint) para montar a URL dos arquivos; ausente, a URL
+  // é derivada de `S3_ENDPOINT/S3_BUCKET`
+  S3_PUBLIC_URL: Env.schema.string.optional({ format: 'url', tld: false }),
+  DRIVE_DISK: Env.schema.enum(['s3'] as const),
 
   ELASTIC_NODE: Env.schema.string(),
 

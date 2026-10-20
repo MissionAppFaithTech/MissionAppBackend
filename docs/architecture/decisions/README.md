@@ -519,5 +519,10 @@ flowchart LR
          <td align="left">Adoção do @adonisjs/i18n para Internacionalização de Mensagens da API</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0032-upload-direto-via-url-pre-assinada-e-compressao-de-imagens-com-sharp.md">ADR-0032</a></td>
+         <td align="left">Upload Direto via URL Pré-Assinada e Compressão de Imagens com sharp em Worker</td>
+         <td>🟡 Proposto</td>
+      </tr>
    </tbody>
 </table>

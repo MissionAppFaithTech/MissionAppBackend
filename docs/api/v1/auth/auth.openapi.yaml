@@ -321,6 +321,25 @@ components:
         type: string
         maxLength: 120
 
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PerPage:
+      name: perPage
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
   schemas:
     LoginRequest:
       type: object
@@ -449,3 +468,26 @@ components:
                 type: string
               field:
                 type: string
+
+    PaginationMetadata:
+      type: object
+      description: Metadados de paginação do Lucid devolvidos junto de listagens paginadas.
+      properties:
+        total:
+          type: integer
+        perPage:
+          type: integer
+        currentPage:
+          type: integer
+        lastPage:
+          type: integer
+        firstPage:
+          type: integer
+        firstPageUrl:
+          type: string
+        lastPageUrl:
+          type: string
+        nextPageUrl:
+          type: [string, 'null']
+        previousPageUrl:
+          type: [string, 'null']
