@@ -157,8 +157,13 @@ install:
 
 # Sobe a infraestrutura, aguarda, migra e inicia o servidor de desenvolvimento
 [group('dev')]
-start: up _wait-infra migrate
+start: up _wait-infra migrate storage-setup
     pnpm dev
+
+# Cria o bucket de assets no MinIO (se ausente) com leitura pública e CORS — idempotente
+[group('infra')]
+storage-setup:
+    node ace storage:setup
 
 # Inicia servidor de desenvolvimento com HMR
 [group('dev')]

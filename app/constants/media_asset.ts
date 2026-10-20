@@ -14,6 +14,16 @@ export const PROCESS_MEDIA_ASSET_JOB_NAME = 'process-media-asset'
 /** Nome do job que remove do storage e do banco arquivos que deixaram de ser referenciados. */
 export const DELETE_MEDIA_ASSETS_JOB_NAME = 'delete-media-assets'
 
+/**
+ * Idade (em horas) a partir da qual um asset em `PENDING_UPLOAD` (upload
+ * nunca confirmado) ou `FAILED` é considerado abandonado e removido pela
+ * limpeza periódica — folga ampla sobre a validade da URL de upload.
+ */
+export const ABANDONED_MEDIA_ASSET_TTL_HOURS = 24
+
+/** Diariamente às 4h — fora da janela da limpeza de refresh tokens (3h). */
+export const MEDIA_ASSETS_CLEANUP_CRON_SCHEDULE = '0 4 * * *'
+
 /** Validade da URL pré-assinada de upload direto ao storage. */
 export const MEDIA_UPLOAD_URL_TTL_SECONDS = 15 * 60
 

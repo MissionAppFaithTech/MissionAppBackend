@@ -74,9 +74,9 @@ Descartado porque adiciona um fornecedor externo pago com dados pessoais de usu�
 ### Negativas / Riscos
 
 - **Fluxo em três passos para o cliente** (reservar → `PUT` → confirmar), e a URL pública só existe quando o status vira `READY`. O frontend precisa acompanhar o status (`GET /media-assets/:id`).
-- **Uploads abandonados:** assets em `PENDING_UPLOAD` que nunca são confirmados ficam órfãos. Um job de limpeza periódica (padrão do `queue:refresh-tokens-cleanup`) ainda precisa ser criado.
+- **Uploads abandonados:** assets em `PENDING_UPLOAD` que nunca são confirmados (ou que terminam em `FAILED`) exigem limpeza periódica — feita pelo worker `queue:media-assets-cleanup`, que precisa estar em execução em todos os ambientes.
 - **Binário nativo:** o sharp depende de binários por plataforma. Uma imagem Docker em plataforma sem binário pré-compilado (ex: Alpine/musl em arquitetura incomum) exigiria compilar a libvips.
-- **CORS no bucket:** para o `PUT` direto do browser, o bucket precisa liberar a origem do frontend para `PUT` com os headers `Content-Type`/`Content-Length`. Isso é configuração de infraestrutura fora deste repositório.
+- **CORS e leitura pública no bucket:** para o `PUT` direto do browser e a exibição das imagens, o bucket precisa liberar a origem do frontend e permitir `s3:GetObject` público. Em dev, `node ace storage:setup` (executado por `just start`) aplica isso no MinIO; em staging/produção é configuração de infraestrutura — ver [`docs/deployment/storage.md`](../../deployment/storage.md).
 - O endpoint legado `POST /media-assets` (registro com chave escolhida pelo cliente) continua existindo e deve ser descontinuado quando nenhum cliente o usar.
 
 ## Referências
