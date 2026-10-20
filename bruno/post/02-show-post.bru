@@ -1,0 +1,19 @@
+meta {
+  name: Show Post
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/v1/posts/{{post_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Exibe uma postagem com a galeria de imagens ordenada.
+}

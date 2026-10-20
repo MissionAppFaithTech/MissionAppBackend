@@ -16,6 +16,12 @@ tags:
     description: Conta do usuário — cadastro, leitura de perfil, troca de senha. Mesmo quando o atributo é sensível (senha), a operação é sobre o recurso User.
   - name: missionary
     description: Perfil estendido de missionários — informações públicas, identidade e endereço de atuação.
+  - name: media_asset
+    description: Upload direto ao storage via URL pré-assinada e acompanhamento do processamento (validação e compressão em background) dos arquivos.
+  - name: impact_project
+    description: Projeto de impacto do missionário — vitrine principal da causa, com capa e vídeo opcional. Um por missionário.
+  - name: post
+    description: Postagens de missionários para o feed, com galeria de imagens sujeita ao limite rotativo de 50 imagens por missionário.
 paths:
   /auth/login:
     post:
@@ -431,6 +437,506 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MediaAssetResponse'
+  /media-assets/uploads:
+    post:
+      operationId: mediaUploadStore
+      tags:
+        - media_asset
+      summary: Solicita URL pré-assinada para upload direto ao storage
+      description: 'Reserva um media asset em `PENDING_UPLOAD` e devolve uma URL pré-assinada (validade de 15 min) para o cliente enviar o arquivo direto ao storage com `PUT`. A chave no bucket é gerada pelo servidor. Os headers `Content-Type` e `Content-Length` fazem parte da assinatura: o envio precisa usar exatamente o tipo e o tamanho declarados, senão o storage rejeita. Depois do envio, o cliente confirma em `POST /media-assets/{id}/completion`.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMediaUploadRequest'
+      responses:
+        '200':
+          description: Asset reservado e URL de upload emitida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaUploadResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação, ou mime type/tamanho não permitido para a finalidade informada (`E_MEDIA_UPLOAD_NOT_ALLOWED`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /media-assets/{id}:
+    get:
+      operationId: mediaAssetShow
+      tags:
+        - media_asset
+      summary: Exibe um media asset enviado pelo usuário autenticado
+      description: 'Usado para acompanhar o processamento após a confirmação do upload: `PROCESSING` enquanto o worker valida/comprime, `READY` quando a `url` pública já está disponível e `FAILED` quando o conteúdo foi rejeitado.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MediaAssetId'
+      responses:
+        '200':
+          description: Media asset encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDetailResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: O arquivo não foi enviado pelo usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Media asset não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /media-assets/{id}/completion:
+    post:
+      operationId: mediaUploadCompletionStore
+      tags:
+        - media_asset
+      summary: Confirma o upload e dispara validação e compressão
+      description: 'Move o asset de `PENDING_UPLOAD` para `PROCESSING` e enfileira o processamento no worker. Imagens são redimensionadas (capa: até 1920px; post: até 1600px no maior lado), convertidas para WebP e têm os metadados (EXIF/GPS) removidos. Vídeos são apenas validados. A partir de `PROCESSING` o asset já pode ser vinculado a um projeto ou post; a `url` fica disponível quando o status vira `READY`.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MediaAssetId'
+      responses:
+        '202':
+          description: Upload confirmado; processamento enfileirado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDetailResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: O arquivo não foi enviado pelo usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Media asset não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: O upload deste asset já foi confirmado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /impact-projects:
+    get:
+      operationId: impactProjectIndex
+      tags:
+        - impact_project
+      summary: Lista projetos de impacto (paginado)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Busca parcial (sem diferenciar maiúsculas) pelo título do projeto.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelo missionário dono do projeto.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Página de projetos de impacto, do mais recente para o mais antigo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectsResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: impactProjectStore
+      tags:
+        - impact_project
+      summary: Cria o projeto de impacto do missionário
+      description: Cada missionário tem no máximo um projeto. Missionários criam o próprio projeto; ADMIN informa `missionaryId`. A capa (e o vídeo, se houver) deve ter sido enviada pelo próprio usuário autenticado via `POST /media-assets/uploads` e ter o upload confirmado.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Perfil missionário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Missionário já possui um projeto de impacto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: 'Erro de validação, ou arquivo inválido para vínculo (`E_MEDIA_ASSET_NOT_ATTACHABLE`: de outro usuário, com outra finalidade, upload não confirmado ou já vinculado).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /impact-projects/{id}:
+    get:
+      operationId: impactProjectShow
+      tags:
+        - impact_project
+      summary: Exibe um projeto de impacto
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Projeto de impacto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: impactProjectUpdate
+      tags:
+        - impact_project
+      summary: Atualiza um projeto de impacto
+      description: Ao trocar a capa ou o vídeo (ou remover o vídeo com `null`), o arquivo anterior é removido do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para alterar o projeto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Projeto de impacto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação ou arquivo inválido para vínculo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    delete:
+      operationId: impactProjectDestroy
+      tags:
+        - impact_project
+      summary: Remove um projeto de impacto
+      description: Capa e vídeo do projeto são removidos do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto removido com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para remover o projeto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Projeto de impacto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /posts:
+    get:
+      operationId: postIndex
+      tags:
+        - post
+      summary: Lista postagens (paginado, mais recentes primeiro)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelas postagens de um missionário.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Página de postagens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: postStore
+      tags:
+        - post
+      summary: Cria uma postagem
+      description: Apenas missionários (ou ADMIN informando `missionaryId`) publicam. As imagens devem ter finalidade `POST_IMAGE`, ter sido enviadas pelo próprio usuário e ter o upload confirmado. **Limite rotativo:** cada missionário mantém no máximo 50 imagens somando todas as postagens. Ao ultrapassar, as imagens vinculadas há mais tempo são desvinculadas dos posts (o texto permanece) e os arquivos são removidos do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '200':
+          description: Postagem criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Perfil missionário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação, ou imagem inválida para vínculo (`E_MEDIA_ASSET_NOT_ATTACHABLE`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /posts/{id}:
+    get:
+      operationId: postShow
+      tags:
+        - post
+      summary: Exibe uma postagem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Postagem não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: postUpdate
+      tags:
+        - post
+      summary: Atualiza uma postagem
+      description: 'O slug é imutável. Quando `imageAssetIds` é enviado, ele substitui a galeria inteira na ordem informada: imagens ausentes da lista são removidas do storage; imagens mantidas preservam a antiguidade para fins do limite rotativo de 50 imagens por missionário.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Postagem atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para alterar a postagem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Postagem não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação ou imagem inválida para vínculo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    delete:
+      operationId: postDestroy
+      tags:
+        - post
+      summary: Remove uma postagem
+      description: As imagens da postagem são removidas do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem removida com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para remover a postagem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Postagem não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /missionaries/about:
     patch:
       operationId: missionaryAboutUpdate
@@ -1084,6 +1590,44 @@ components:
       schema:
         type: string
         maxLength: 120
+    MediaAssetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: perPage
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    ImpactProjectId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PostId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     MissionaryId:
       name: id
       in: path
@@ -1279,7 +1823,7 @@ components:
               type: array
               items:
                 type: string
-              description: Até 3 variações livres, presente só quando available é false.
+              description: Até 3 variações livres quando available é false; caso contrário, retorna um array vazio.
     UpdateProfileRequest:
       type: object
       properties:
@@ -1352,6 +1896,337 @@ components:
       properties:
         data:
           type: object
+    RequestMediaUploadRequest:
+      type: object
+      required:
+        - purpose
+        - mimeType
+        - fileSizeBytes
+      properties:
+        purpose:
+          type: string
+          enum:
+            - IMPACT_PROJECT_COVER
+            - IMPACT_PROJECT_VIDEO
+            - POST_IMAGE
+          description: Finalidade do arquivo. Imagens (`IMPACT_PROJECT_COVER`, `POST_IMAGE`) aceitam image/jpeg, image/png e image/webp até 10 MB; `IMPACT_PROJECT_VIDEO` aceita video/mp4, video/quicktime e video/webm até 200 MB.
+        mimeType:
+          type: string
+          maxLength: 255
+        fileSizeBytes:
+          type: integer
+          minimum: 1
+    MediaAsset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum:
+            - S3
+            - R2
+            - GCS
+            - AZURE
+        bucket:
+          type: string
+        fileKey:
+          type: string
+        mimeType:
+          type: string
+        fileSizeBytes:
+          type: integer
+        purpose:
+          type:
+            - string
+            - 'null'
+          enum:
+            - IMPACT_PROJECT_COVER
+            - IMPACT_PROJECT_VIDEO
+            - POST_IMAGE
+            - null
+        status:
+          type: string
+          enum:
+            - PENDING_UPLOAD
+            - PROCESSING
+            - READY
+            - FAILED
+        url:
+          type:
+            - string
+            - 'null'
+          format: uri
+          description: URL pública do arquivo; `null` enquanto o status não for `READY`.
+        createdAt:
+          type: string
+          format: date-time
+    MediaUploadResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            mediaAsset:
+              $ref: '#/components/schemas/MediaAsset'
+            upload:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                method:
+                  type: string
+                  enum:
+                    - PUT
+                headers:
+                  type: object
+                  description: Headers que devem ser enviados exatamente como estão no PUT.
+                  properties:
+                    Content-Type:
+                      type: string
+                    Content-Length:
+                      type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+    MediaAssetDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            mediaAsset:
+              $ref: '#/components/schemas/MediaAsset'
+    ImpactProject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        coverImageAssetId:
+          type: string
+          format: uuid
+        videoAssetId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        coverImage:
+          $ref: '#/components/schemas/MediaAsset'
+        video:
+          oneOf:
+            - $ref: '#/components/schemas/MediaAsset'
+            - type: 'null'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaginationMetadata:
+      type: object
+      description: Metadados de paginação do Lucid devolvidos junto de listagens paginadas.
+      properties:
+        total:
+          type: integer
+        perPage:
+          type: integer
+        currentPage:
+          type: integer
+        lastPage:
+          type: integer
+        firstPage:
+          type: integer
+        firstPageUrl:
+          type: string
+        lastPageUrl:
+          type: string
+        nextPageUrl:
+          type:
+            - string
+            - 'null'
+        previousPageUrl:
+          type:
+            - string
+            - 'null'
+    ImpactProjectsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImpactProject'
+        metadata:
+          $ref: '#/components/schemas/PaginationMetadata'
+    CreateImpactProjectRequest:
+      type: object
+      required:
+        - title
+        - description
+        - coverImageAssetId
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários criam o próprio projeto.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+          description: Asset com finalidade `IMPACT_PROJECT_COVER`.
+        videoAssetId:
+          type: string
+          format: uuid
+          description: Asset com finalidade `IMPACT_PROJECT_VIDEO`.
+    ImpactProjectResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            impactProject:
+              $ref: '#/components/schemas/ImpactProject'
+    UpdateImpactProjectRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+        videoAssetId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: '`null` remove o vídeo do projeto.'
+    PostImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order:
+          type: integer
+          minimum: 0
+        imageAssetId:
+          type: string
+          format: uuid
+        image:
+          $ref: '#/components/schemas/MediaAsset'
+        createdAt:
+          type: string
+          format: date-time
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        highlightLink:
+          type:
+            - string
+            - 'null'
+          format: uri
+        slug:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostImage'
+        createdAt:
+          type: string
+          format: date-time
+    PostsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        metadata:
+          $ref: '#/components/schemas/PaginationMetadata'
+    CreatePostRequest:
+      type: object
+      required:
+        - content
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários publicam em nome próprio.
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        highlightLink:
+          type: string
+          format: uri
+          maxLength: 255
+        imageAssetIds:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          description: Ids de assets `POST_IMAGE`, na ordem de exibição da galeria.
+          items:
+            type: string
+            format: uuid
+    PostResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            post:
+              $ref: '#/components/schemas/Post'
+    UpdatePostRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        highlightLink:
+          type:
+            - string
+            - 'null'
+          format: uri
+          maxLength: 255
+        imageAssetIds:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          description: Substitui a galeria inteira, na ordem informada.
+          items:
+            type: string
+            format: uuid
     UpdateMissionaryAboutRequest:
       type: object
       properties:
@@ -1454,19 +2329,33 @@ components:
             - string
             - 'null'
         addressLine1:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         addressLine2:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         city:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         state:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         country:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         postalCode:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         website:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         userId:
           type:
             - string
@@ -1475,14 +2364,6 @@ components:
         createdAt:
           type: string
           format: date-time
-    MissionaryAgencyResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            missionaryAgency:
-              $ref: '#/components/schemas/MissionaryAgency'
     MissionaryAgenciesResponse:
       type: object
       properties:
@@ -1504,7 +2385,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\+[1-9]\d{1,14}$
+          pattern: ^\\+[1-9]\\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -1533,6 +2414,14 @@ components:
           type: string
           format: uri
           maxLength: 255
+    MissionaryAgencyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            missionaryAgency:
+              $ref: '#/components/schemas/MissionaryAgency'
     UpdateMissionaryAgencyRequest:
       type: object
       properties:
@@ -1542,7 +2431,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\+[1-9]\d{1,14}$
+          pattern: ^\\+[1-9]\\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -1580,21 +2469,37 @@ components:
         name:
           type: string
         phoneNumber:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         addressLine1:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         addressLine2:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         city:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         state:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         country:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         postalCode:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         website:
-          type: [string, 'null']
+          type:
+            - string
+            - 'null'
         userId:
           type:
             - string
@@ -1603,14 +2508,6 @@ components:
         createdAt:
           type: string
           format: date-time
-    FaithCommunityResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            faithCommunity:
-              $ref: '#/components/schemas/FaithCommunity'
     FaithCommunitiesResponse:
       type: object
       properties:
@@ -1632,7 +2529,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\+[1-9]\d{1,14}$
+          pattern: ^\\+[1-9]\\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -1661,6 +2558,14 @@ components:
           type: string
           format: uri
           maxLength: 255
+    FaithCommunityResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            faithCommunity:
+              $ref: '#/components/schemas/FaithCommunity'
     UpdateFaithCommunityRequest:
       type: object
       properties:
@@ -1670,7 +2575,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\+[1-9]\d{1,14}$
+          pattern: ^\\+[1-9]\\d{1,14}$
         addressLine1:
           type: string
           minLength: 1

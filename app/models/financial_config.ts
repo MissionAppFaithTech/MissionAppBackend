@@ -19,6 +19,6 @@ export default class FinancialConfig extends compose(
   @belongsTo(() => Missionary)
   declare missionary: BelongsTo<typeof Missionary>
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'qr_code_asset_id' })
+  @belongsTo(() => MediaAsset, { foreignKey: 'qrCodeAssetId' })
   declare qrCodeAsset: BelongsTo<typeof MediaAsset>
 }

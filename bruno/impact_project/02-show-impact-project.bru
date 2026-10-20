@@ -1,0 +1,19 @@
+meta {
+  name: Show Impact Project
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/v1/impact-projects/{{impact_project_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Exibe um projeto de impacto com capa e video.
+}

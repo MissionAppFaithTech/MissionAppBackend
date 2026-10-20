@@ -1,0 +1,20 @@
+meta {
+  name: Complete Media Upload
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/v1/media-assets/{{media_asset_id}}/completion
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Confirma o upload: o asset vai para PROCESSING e o worker valida, redimensiona
+  e converte a imagem para WebP. Responde 202.
+}

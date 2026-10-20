@@ -11,6 +11,6 @@ export default class PostImage extends compose(PostImageSchema, WithPrimaryUuid,
   @belongsTo(() => Post)
   declare post: BelongsTo<typeof Post>
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'image_asset_id' })
+  @belongsTo(() => MediaAsset, { foreignKey: 'imageAssetId' })
   declare image: BelongsTo<typeof MediaAsset>
 }

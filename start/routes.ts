@@ -69,8 +69,26 @@ router
       .get('accounts/username-availability', [controllers.user.UsernameAvailability, 'show'])
       .use(middleware.usernameAvailabilityRateLimit())
     router
-      .post('media-assets', [controllers.mediaAsset.MediaAssets, 'store'])
+      .group(() => {
+        router.post('media-assets', [controllers.mediaAsset.MediaAssets, 'store'])
+        router.get('media-assets/:id', [controllers.mediaAsset.MediaAssets, 'show'])
+
+        // Upload direto ao storage: reserva + URL pré-assinada, depois confirmação
+        // (ação com regra própria — dispara validação e compressão no worker)
+        router.post('media-assets/uploads', [controllers.mediaAsset.MediaUploads, 'store'])
+        router.post('media-assets/:id/completion', [
+          controllers.mediaAsset.MediaUploadCompletions,
+          'store',
+        ])
+      })
       .use(middleware.auth())
+
+    router
+      .resource('impact-projects', controllers.impactProject.ImpactProjects)
+      .apiOnly()
+      .use('*', middleware.auth())
+
+    router.resource('posts', controllers.post.Posts).apiOnly().use('*', middleware.auth())
 
     router
       .resource('missionary-agencies', controllers.missionary.MissionaryAgencies)

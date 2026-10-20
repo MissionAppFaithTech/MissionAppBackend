@@ -1,0 +1,35 @@
+meta {
+  name: Create Impact Project
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/v1/impact-projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "title": "Escola na Comunidade",
+    "description": "Construcao de uma escola comunitaria no interior.",
+    "coverImageAssetId": "{{media_asset_id}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("impact_project_id", res.getBody().data.impactProject.id);
+  }
+}
+
+docs {
+  Cria o projeto de impacto do missionario autenticado (um por missionario).
+  A capa precisa ser um asset IMPACT_PROJECT_COVER enviado pelo proprio usuario
+  e com upload confirmado. ADMIN deve informar missionaryId.
+}

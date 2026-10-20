@@ -53,7 +53,7 @@ export default class User extends compose(
   declare lockedAt: DateTime | null
   declare lockCount: number
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'profile_picture_id' })
+  @belongsTo(() => MediaAsset, { foreignKey: 'profilePictureId' })
   declare profilePicture: BelongsTo<typeof MediaAsset>
 
   @hasMany(() => AuthenticationAudit)

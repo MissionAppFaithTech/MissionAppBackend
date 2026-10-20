@@ -6,6 +6,13 @@ import { WELCOME_EMAIL_JOB_NAME } from '#constants/welcome_email'
 import { sendPasswordResetEmail } from '#jobs/auth/send_password_reset_email_job'
 import { indexMissionary } from '#jobs/user/index_missionary_job'
 import { sendWelcomeEmail } from '#jobs/user/send_welcome_email_job'
+import {
+  DELETE_MEDIA_ASSETS_JOB_NAME,
+  MEDIA_PROCESSING_QUEUE_NAME,
+  PROCESS_MEDIA_ASSET_JOB_NAME,
+} from '#constants/media_asset'
+import { deleteMediaAssets } from '#jobs/media_asset/delete_media_assets_job'
+import { processMediaAsset } from '#jobs/media_asset/process_media_asset_job'
 
 /**
  * Trinca {fila, job, handler} — `any` no payload é proposital: cada `handle`
@@ -47,5 +54,15 @@ export const workerRegistry: WorkerRegistryEntry[] = [
     queueName: SEARCH_INDEXING_QUEUE_NAME,
     jobName: MISSIONARY_INDEXING_JOB_NAME,
     handle: indexMissionary,
+  },
+  {
+    queueName: MEDIA_PROCESSING_QUEUE_NAME,
+    jobName: PROCESS_MEDIA_ASSET_JOB_NAME,
+    handle: processMediaAsset,
+  },
+  {
+    queueName: MEDIA_PROCESSING_QUEUE_NAME,
+    jobName: DELETE_MEDIA_ASSETS_JOB_NAME,
+    handle: deleteMediaAssets,
   },
 ]

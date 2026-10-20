@@ -5,16 +5,33 @@
 
 /// <reference path="./manifest.d.ts" />
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
+import type FaithCommunityTransformer from '#transformers/faith_community_transformer'
+import type ImpactProjectTransformer from '#transformers/impact_project_transformer'
 import type MediaAssetTransformer from '#transformers/media_asset_transformer'
+import type MissionaryAgencyTransformer from '#transformers/missionary_agency_transformer'
 import type MissionaryTransformer from '#transformers/missionary_transformer'
 import type MissionaryWorkAddressTransformer from '#transformers/missionary_work_address_transformer'
+import type PostImageTransformer from '#transformers/post_image_transformer'
+import type PostTransformer from '#transformers/post_transformer'
 import type SessionTransformer from '#transformers/session_transformer'
 import type UserTransformer from '#transformers/user_transformer'
 
 export namespace Data {
+  export type FaithCommunity = InferData<FaithCommunityTransformer>
+  export namespace FaithCommunity {
+    export type Variants = InferVariants<FaithCommunityTransformer>
+  }
+  export type ImpactProject = InferData<ImpactProjectTransformer>
+  export namespace ImpactProject {
+    export type Variants = InferVariants<ImpactProjectTransformer>
+  }
   export type MediaAsset = InferData<MediaAssetTransformer>
   export namespace MediaAsset {
     export type Variants = InferVariants<MediaAssetTransformer>
+  }
+  export type MissionaryAgency = InferData<MissionaryAgencyTransformer>
+  export namespace MissionaryAgency {
+    export type Variants = InferVariants<MissionaryAgencyTransformer>
   }
   export type Missionary = InferData<MissionaryTransformer>
   export namespace Missionary {
@@ -23,6 +40,14 @@ export namespace Data {
   export type MissionaryWorkAddress = InferData<MissionaryWorkAddressTransformer>
   export namespace MissionaryWorkAddress {
     export type Variants = InferVariants<MissionaryWorkAddressTransformer>
+  }
+  export type PostImage = InferData<PostImageTransformer>
+  export namespace PostImage {
+    export type Variants = InferVariants<PostImageTransformer>
+  }
+  export type Post = InferData<PostTransformer>
+  export namespace Post {
+    export type Variants = InferVariants<PostTransformer>
   }
   export type Session = InferData<SessionTransformer>
   export namespace Session {

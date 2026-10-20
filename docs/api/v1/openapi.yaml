@@ -29,6 +29,18 @@ tags:
     description: >-
       Perfil estendido de missionários — informações públicas, identidade e
       endereço de atuação.
+  - name: media_asset
+    description: >-
+      Upload direto ao storage via URL pré-assinada e acompanhamento do
+      processamento (validação e compressão em background) dos arquivos.
+  - name: impact_project
+    description: >-
+      Projeto de impacto do missionário — vitrine principal da causa, com capa
+      e vídeo opcional. Um por missionário.
+  - name: post
+    description: >-
+      Postagens de missionários para o feed, com galeria de imagens sujeita ao
+      limite rotativo de 50 imagens por missionário.
 
 paths:
   /auth/login:
@@ -55,6 +67,20 @@ paths:
     $ref: './user/openapi.yaml#/paths/~1account~1password'
   /media-assets:
     $ref: './user/openapi.yaml#/paths/~1media-assets'
+  /media-assets/uploads:
+    $ref: './media_asset/openapi.yaml#/paths/~1media-assets~1uploads'
+  /media-assets/{id}:
+    $ref: './media_asset/openapi.yaml#/paths/~1media-assets~1{id}'
+  /media-assets/{id}/completion:
+    $ref: './media_asset/openapi.yaml#/paths/~1media-assets~1{id}~1completion'
+  /impact-projects:
+    $ref: './impact_project/openapi.yaml#/paths/~1impact-projects'
+  /impact-projects/{id}:
+    $ref: './impact_project/openapi.yaml#/paths/~1impact-projects~1{id}'
+  /posts:
+    $ref: './post/openapi.yaml#/paths/~1posts'
+  /posts/{id}:
+    $ref: './post/openapi.yaml#/paths/~1posts~1{id}'
   /missionaries/about:
     $ref: './missionary/openapi.yaml#/paths/~1missionaries~1about'
   /missionaries/profile:

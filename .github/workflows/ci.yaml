@@ -23,3 +23,96 @@ jobs:
       - run: pnpm install --frozen-lockfile --prefer-offline --verify-store-integrity=false
       - run: pnpm lint
       - run: pnpm build
+
+  test:
+    runs-on: ubuntu-latest
+    # NOTE: valores fictícios, válidos só para os containers efêmeros deste job —
+    # nenhum serviço externo real é acessado (S3 só assina URLs offline; e-mail
+    # e storage usam fakes/filas nos testes)
+    env:
+      NODE_ENV: test
+      TZ: UTC
+      HOST: 127.0.0.1
+      PORT: '3333'
+      LOG_LEVEL: warn
+      APP_KEY: ci-app-key-not-secret-0123456789abcdef
+      APP_URL: http://127.0.0.1:3333
+      SESSION_DRIVER: memory
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_USER: missionapp
+      DB_PASSWORD: missionapp
+      DB_DATABASE: missionapp_test
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: '6379'
+      REDIS_PASSWORD: ci-redis-password
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: missionapp-test-public-assets
+      S3_ACCESS_KEY: ci-access-key
+      S3_SECRET_KEY: ci-secret-key
+      S3_FORCE_PATH_STYLE: 'true'
+      DRIVE_DISK: s3
+      ELASTIC_NODE: http://127.0.0.1:9200
+      JWT_SECRET: ci-jwt-secret-not-secret
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN_WEB: 7d
+      JWT_REFRESH_EXPIRES_IN_MOBILE: 30d
+      MAIL_MAILER: resend
+      MAIL_FROM_NAME: MissionApp
+      MAIL_FROM_ADDRESS: noreply@missionapp.dev
+      RESEND_API_KEY: re_ci_not_secret
+      FRONTEND_URL: http://127.0.0.1:3000
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.23
+        env:
+          POSTGRES_USER: missionapp
+          POSTGRES_PASSWORD: missionapp
+          POSTGRES_DB: missionapp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U missionapp -d missionapp_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.4.2
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -s -f http://127.0.0.1:9200/_cluster/health"
+          --health-interval 10s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.node-version'
+      - run: corepack enable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile --prefer-offline --verify-store-integrity=false
+      # NOTE: Dragonfly via `docker run` (não `services`) porque precisa de flags de
+      # linha de comando — `allow-undeclared-keys` é exigido pelos scripts Lua do BullMQ
+      - name: Start Dragonfly
+        run: |
+          docker run -d --name dragonfly -p 6379:6379 \
+            docker.dragonflydb.io/dragonflydb/dragonfly:v1.39.0 \
+            --requirepass="$REDIS_PASSWORD" --proactor_threads=2 \
+            --default_lua_flags=allow-undeclared-keys
+          for i in $(seq 1 30); do
+            docker exec dragonfly redis-cli -a "$REDIS_PASSWORD" ping 2>/dev/null | grep -q PONG && exit 0
+            sleep 2
+          done
+          echo "Dragonfly não respondeu a tempo" >&2; exit 1
+      - run: node ace migration:run --force
+      # NOTE: garante que database/schema.ts commitado corresponde às migrations
+      - name: Check database/schema.ts is up to date
+        run: git diff --exit-code database/schema.ts
+      - run: pnpm test

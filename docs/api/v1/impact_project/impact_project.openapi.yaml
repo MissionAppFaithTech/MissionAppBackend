@@ -1,0 +1,316 @@
+paths:
+  /impact-projects:
+    get:
+      operationId: impactProjectIndex
+      tags: [impact_project]
+      summary: Lista projetos de impacto (paginado)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Busca parcial (sem diferenciar maiúsculas) pelo título do projeto.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelo missionário dono do projeto.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/Page'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Página de projetos de impacto, do mais recente para o mais antigo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectsResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      operationId: impactProjectStore
+      tags: [impact_project]
+      summary: Cria o projeto de impacto do missionário
+      description: >-
+        Cada missionário tem no máximo um projeto. Missionários criam o
+        próprio projeto; ADMIN informa `missionaryId`. A capa (e o vídeo, se
+        houver) deve ter sido enviada pelo próprio usuário autenticado via
+        `POST /media-assets/uploads` e ter o upload confirmado.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Perfil missionário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Missionário já possui um projeto de impacto.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação, ou arquivo inválido para vínculo
+            (`E_MEDIA_ASSET_NOT_ATTACHABLE`: de outro usuário, com outra
+            finalidade, upload não confirmado ou já vinculado).
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /impact-projects/{id}:
+    get:
+      operationId: impactProjectShow
+      tags: [impact_project]
+      summary: Exibe um projeto de impacto
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Projeto de impacto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    patch:
+      operationId: impactProjectUpdate
+      tags: [impact_project]
+      summary: Atualiza um projeto de impacto
+      description: >-
+        Ao trocar a capa ou o vídeo (ou remover o vídeo com `null`), o arquivo
+        anterior é removido do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para alterar o projeto.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Projeto de impacto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação ou arquivo inválido para vínculo.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    delete:
+      operationId: impactProjectDestroy
+      tags: [impact_project]
+      summary: Remove um projeto de impacto
+      description: Capa e vídeo do projeto são removidos do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto removido com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Access token ausente, inválido ou revogado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Usuário sem permissão para remover o projeto.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Projeto de impacto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    ImpactProjectId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ImpactProject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        coverImageAssetId:
+          type: string
+          format: uuid
+        videoAssetId:
+          type: [string, 'null']
+          format: uuid
+        coverImage:
+          $ref: '../media_asset/media_asset.openapi.yaml#/components/schemas/MediaAsset'
+        video:
+          oneOf:
+            - $ref: '../media_asset/media_asset.openapi.yaml#/components/schemas/MediaAsset'
+            - type: 'null'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ImpactProjectResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            impactProject:
+              $ref: '#/components/schemas/ImpactProject'
+
+    ImpactProjectsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImpactProject'
+        metadata:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/PaginationMetadata'
+
+    CreateImpactProjectRequest:
+      type: object
+      required: [title, description, coverImageAssetId]
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários criam o próprio projeto.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+          description: Asset com finalidade `IMPACT_PROJECT_COVER`.
+        videoAssetId:
+          type: string
+          format: uuid
+          description: Asset com finalidade `IMPACT_PROJECT_VIDEO`.
+
+    UpdateImpactProjectRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+        videoAssetId:
+          type: [string, 'null']
+          format: uuid
+          description: '`null` remove o vídeo do projeto.'

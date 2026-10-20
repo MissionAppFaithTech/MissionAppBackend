@@ -1,0 +1,26 @@
+meta {
+  name: List Impact Projects
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/impact-projects
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~search: 
+  ~missionaryId: 
+  ~page: 1
+  ~perPage: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista paginada de projetos de impacto, do mais recente para o mais antigo.
+}
