@@ -16,9 +16,9 @@ export default class UserActionAudit extends compose(
 ) {
   declare actionType: SystemAction
 
-  @belongsTo(() => User, { foreignKey: 'actor_id' })
+  @belongsTo(() => User, { foreignKey: 'actorId' })
   declare actor: BelongsTo<typeof User>
 
-  @belongsTo(() => User, { foreignKey: 'target_id' })
+  @belongsTo(() => User, { foreignKey: 'targetId' })
   declare target: BelongsTo<typeof User>
 }
