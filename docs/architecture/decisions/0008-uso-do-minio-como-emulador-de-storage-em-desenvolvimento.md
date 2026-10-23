@@ -10,9 +10,9 @@
 
 ## Contexto e Problema
 
-O MissionApp requer armazenamento de arquivos binários em múltiplos fluxos: foto de perfil de missionários e apoiadores (Req. 2.3), imagens anexadas a posts (Req. 6.1), imagem de capa de projetos de impacto (Req. 7.2) e QR codes estáticos de Pix (Req. 9.1.2). A estratégia de armazenamento em produção adota AWS S3, com estrutura de buckets padronizada conforme o [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md).
+O MissionApp requer armazenamento de arquivos binários em múltiplos fluxos: foto de perfil de missionários e apoiadores (Req. 2.3), imagens anexadas a posts (Req. 6.1), imagem de capa de projetos de impacto (Req. 7.2) e QR codes estáticos de Pix (Req. 9.1.2). A aplicação conversa com o storage exclusivamente pela API S3, com estrutura de buckets padronizada conforme o [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md); o provedor de produção ainda não está definido (ver [Storage em produção](#storage-em-producao-em-aberto)).
 
-O problema surge no ambiente de desenvolvimento: utilizar o AWS S3 real como alvo de upload durante o desenvolvimento local impõe restrições significativas:
+O problema surge no ambiente de desenvolvimento: utilizar um storage S3 real (AWS S3 ou equivalente gerenciado) como alvo de upload durante o desenvolvimento local impõe restrições significativas:
 
 - **Custo por operação:** Cada upload, download e listagem de objetos em S3 gera cobrança. Em um projeto open-source com múltiplos contribuidores executando a aplicação localmente e em pipelines de CI/CD, esse custo se acumula de forma não controlável.
 
@@ -32,9 +32,76 @@ Adotaremos o **MinIO** como serviço de storage em ambiente de desenvolvimento, 
 
 O MinIO é um servidor de armazenamento de objetos de código aberto e alto desempenho, compatível com a API S3 da Amazon Web Services. Projetado para ser executado on-premises ou em containers, permite replicar localmente o comportamento de um bucket S3 de produção com fidelidade total — mesmas operações (`PutObject`, `GetObject`, `DeleteObject`, presigned URLs) e mesma interface de políticas de acesso — sem depender de conectividade com a AWS durante o desenvolvimento.
 
-O MinIO implementa a API S3 da AWS integralmente, o que significa que o `@adonisjs/drive` com driver S3 aponta para `http://localhost:9000` em desenvolvimento e para `https://s3.amazonaws.com` em produção — sem nenhuma alteração de código entre os ambientes. A estrutura de buckets definida no [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md) será replicada localmente no MinIO durante o setup inicial via script de seed de buckets.
+O MinIO implementa a API S3 da AWS, o que significa que o `@adonisjs/drive` com driver S3 aponta para `http://localhost:9000` em desenvolvimento e para o endpoint do provedor S3-compatível escolhido em produção — sem nenhuma alteração de código entre os ambientes, só de variáveis de ambiente. A estrutura de buckets definida no [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md) é replicada localmente no MinIO pelo comando `node ace storage:setup`.
 
 O MinIO Console (interface web) estará disponível em `http://localhost:9001` para inspeção visual de buckets e objetos durante o desenvolvimento.
+
+### Integração com a aplicação: `@adonisjs/drive`
+
+> **Nota (2026-10-23):** seção adicionada após a implementação. Ela documenta como a decisão foi aplicada; a decisão (MinIO em desenvolvimento) não mudou.
+
+O acesso ao storage segue a [documentação oficial do Drive](https://docs.adonisjs.com/guides/digging-deeper/drive) do AdonisJS. O `@adonisjs/drive` é um wrapper do [FlyDrive](https://flydrive.dev): o código da aplicação usa uma API única (`drive.use(disco).put/get/getUrl/getSignedUrl/delete`) e o provedor real fica isolado na configuração. Ele é instalado com `node ace add @adonisjs/drive`, que registra o provider em `adonisrc.ts` e gera o `config/drive.ts`. O driver S3 depende de `@aws-sdk/client-s3` e `@aws-sdk/s3-request-presigner`.
+
+O `config/drive.ts` declara um **disco** (service) por combinação de conexão e visibilidade:
+
+<table width="100%">
+   <thead>
+      <tr>
+         <th>Disco</th>
+         <th>Conexão</th>
+         <th>Bucket</th>
+         <th>Visibilidade</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td align="left"><code>s3_public</code></td>
+         <td align="left"><code>S3_*</code> (MinIO em dev; qualquer S3-compatível)</td>
+         <td align="left"><code>S3_PUBLIC_BUCKET</code></td>
+         <td align="left">pública</td>
+      </tr>
+      <tr>
+         <td align="left"><code>s3_private</code></td>
+         <td align="left"><code>S3_*</code></td>
+         <td align="left"><code>S3_PRIVATE_BUCKET</code></td>
+         <td align="left">privada (URL assinada)</td>
+      </tr>
+      <tr>
+         <td align="left"><code>r2_public</code></td>
+         <td align="left"><code>R2_*</code> (Cloudflare R2)</td>
+         <td align="left"><code>R2_PUBLIC_BUCKET</code></td>
+         <td align="left">pública, servida por <code>R2_PUBLIC_URL</code></td>
+      </tr>
+      <tr>
+         <td align="left"><code>r2_private</code></td>
+         <td align="left"><code>R2_*</code></td>
+         <td align="left"><code>R2_PRIVATE_BUCKET</code></td>
+         <td align="left">privada (URL assinada)</td>
+      </tr>
+   </tbody>
+</table>
+
+Pontos da configuração:
+
+- **`DRIVE_DISK`** escolhe o disco padrão (`drive.use()` sem argumento). Os demais continuam acessíveis por nome, o que permite, por exemplo, copiar arquivos de um provedor para outro durante uma migração.
+- **Variáveis `R2_*` são opcionais**, mas tornam-se obrigatórias no boot quando `DRIVE_DISK` aponta para um disco `r2_*` — a aplicação recusa subir e informa qual variável falta.
+- **`forcePathStyle: true`** na conexão `S3_*`: o MinIO (e a maioria dos storages self-hosted) resolve buckets pelo caminho (`endpoint/bucket/chave`), não por subdomínio.
+- **`supportsACL: false`** em todos os discos, como a [documentação do FlyDrive](https://flydrive.dev/docs/services/s3) recomenda para R2 e outros S3-compatíveis sem ACL. A visibilidade é garantida pela policy do bucket: `storage:setup` libera leitura anônima apenas no bucket público.
+- **`R2_PUBLIC_URL`** vira o `cdnUrl` do disco `r2_public`, porque o endpoint S3 do R2 não serve leitura pública — é preciso o domínio `r2.dev` ou um domínio customizado.
+- A tabela `media_assets` registra `provider`/`bucket`/`file_key` de cada arquivo; o enum `Provider` já aceita `S3`, `R2`, `GCS` e `AZURE`.
+
+<a name="storage-em-producao-em-aberto"></a>
+
+### Storage em produção (em aberto)
+
+Este ADR **não** define o provedor de produção. O que está estabelecido é que o storage é **S3-compatível**: como a aplicação só usa a API S3 via `@adonisjs/drive`, trocar de provedor é uma mudança de configuração (endpoint, credenciais e buckets), não de código.
+
+Para o MVP, as alternativas mais prováveis são:
+
+- **Storage S3-compatível self-hosted no próprio VPS** — por exemplo [Garage](https://garagehq.deuxfleurs.fr/) ou [SeaweedFS](https://github.com/seaweedfs/seaweedfs). Usa a conexão `S3_*` (discos `s3_*`).
+- **Plano gratuito do [Cloudflare R2](https://developers.cloudflare.com/r2/)** — usa a conexão `R2_*` (discos `r2_*`).
+
+À medida que o volume de dados e de usuários crescer, a expectativa é migrar para provedores maiores. A escolha definitiva deve ser registrada em um ADR próprio quando for tomada.
 
 ## Justificativa
 
@@ -66,7 +133,7 @@ O MinIO foi escolhido por ser a solução que melhor atende ao conjunto de restr
 
 - **Onboarding sem fricção:** Nenhum pré-requisito externo para storage — `docker compose up -d` provisiona MinIO junto com PostgreSQL e DragonflyDB. Novos contribuidores têm o ambiente de storage funcional em segundos.
 
-- **Paridade de código entre dev e produção:** O mesmo driver S3 do `@adonisjs/drive` opera contra MinIO em dev e AWS S3 em produção. Bugs de integração com storage são detectados localmente, não em produção.
+- **Paridade de código entre dev e produção:** O mesmo driver S3 do `@adonisjs/drive` opera contra o MinIO em dev e contra o provedor S3-compatível de produção. Bugs de integração com storage são detectados localmente, não em produção.
 
 - **Validação antecipada da estrutura de buckets:** A convenção do [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md) pode ser testada e verificada localmente antes de qualquer deploy, reduzindo o risco de erros de nomenclatura ou permissão em produção.
 
@@ -74,7 +141,7 @@ O MinIO foi escolhido por ser a solução que melhor atende ao conjunto de restr
 
 ### Negativas / Riscos
 
-- **Fidelidade parcial com S3:** O MinIO implementa o núcleo da API S3, mas algumas funcionalidades avançadas e comportamentos específicos da AWS (S3 Select, Object Lambda, certos comportamentos de IAM Policies) podem diferir. Funcionalidades que dependem dessas APIs avançadas precisam ser validadas diretamente em S3.
+- **Fidelidade parcial com S3:** O MinIO implementa o núcleo da API S3, mas algumas funcionalidades avançadas e comportamentos específicos da AWS (S3 Select, Object Lambda, certos comportamentos de IAM Policies) podem diferir. Funcionalidades que dependem dessas APIs avançadas precisam ser validadas diretamente no provedor de produção — que, sendo outro S3-compatível, pode ter suas próprias lacunas em relação à AWS.
 
 - **Persistência requer configuração explícita de volume:** Sem volume Docker configurado, objetos armazenados no MinIO são perdidos ao reiniciar o container. A configuração de volume precisa estar documentada no `docker-compose.yaml` e no guia de setup para evitar confusão entre desenvolvedores.
 
@@ -83,6 +150,8 @@ O MinIO foi escolhido por ser a solução que melhor atende ao conjunto de restr
 ## Referências
 
 - [Documentação oficial do MinIO](https://min.io/docs/minio/container/index.html): referência principal do emulador de storage adotado
-- [Compatibilidade MinIO com API S3 da AWS](https://min.io/product/s3-compatibility): garante que o código de produção (AWS S3) funciona localmente sem alteração
+- [Compatibilidade MinIO com API S3 da AWS](https://min.io/product/s3-compatibility): garante que o código de produção (S3-compatível) funciona localmente sem alteração
 - [ADR-0001](./0001-adocao-do-adonisjs-como-framework-backend.md): adoção do AdonisJS, que inclui o pacote Drive para abstração de storage
-- [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md): convenção de nomenclatura de buckets aplicada tanto em MinIO quanto em S3
+- [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md): convenção de nomenclatura de buckets aplicada tanto no MinIO quanto no provedor S3-compatível de produção
+- [AdonisJS — Drive](https://docs.adonisjs.com/guides/digging-deeper/drive): documentação oficial do pacote usado para acessar o storage
+- [FlyDrive — S3 service](https://flydrive.dev/docs/services/s3): opções do driver S3 (`supportsACL`, `cdnUrl`, R2)

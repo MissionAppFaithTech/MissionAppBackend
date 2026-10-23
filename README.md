@@ -9,6 +9,7 @@
 5. [Ferramentas Necessárias](#ferramentas-necessarias)
 6. [Versões de Tecnologias Utilizadas](#versoes-de-tecnologias-utilizadas)
 7. [Como Executar o Servidor](#como-executar-o-servidor)
+8. [Armazenamento de Arquivos](#armazenamento-de-arquivos)
 
 ---
 
@@ -183,7 +184,7 @@ A pasta `docs/` é organizada por **audiência** — cada subpasta serve a um pe
     <tr>
       <td><code>docs/deployment/</code></td>
       <td>DevOps e infraestrutura</td>
-      <td>Pipelines do GitHub Actions, arquitetura AWS (ver <a href="./docs/architecture/decisions/0013-padronizacao-de-nomenclatura-de-buckets.md">ADR-0013</a>), requisitos de produção e runbooks.</td>
+      <td>Pipelines do GitHub Actions, infraestrutura de produção (convenção de buckets no <a href="./docs/architecture/decisions/0013-padronizacao-de-nomenclatura-de-buckets.md">ADR-0013</a>), requisitos de produção e runbooks.</td>
     </tr>
   </tbody>
 </table>
@@ -258,6 +259,8 @@ Certifique-se de ter os seguintes softwares instalados antes de continuar:
 - **VineJS (Validação)**: 4.3.1
 - **Argon2 (Hashing)**: 0.44.0
 - **PostgreSQL**: 18.3 (alpine)
+- **AdonisJS Drive (storage)**: 4.0.0
+- **MinIO (storage S3-compatível em desenvolvimento)**: RELEASE.2026-04-17
 
 ---
 
@@ -296,10 +299,11 @@ cp .env.example .env
 docker compose up -d
 ```
 
-6. Execute as migrations para criar as tabelas do banco:
+6. Execute as migrations e crie os buckets de storage no MinIO:
 
 ```bash
 node ace migration:run
+node ace storage:setup
 ```
 
 7. Rode o servidor em modo de desenvolvimento com HMR:
@@ -307,3 +311,16 @@ node ace migration:run
 ```bash
 node ace serve --hmr
 ```
+
+---
+
+<a name="armazenamento-de-arquivos"></a>
+
+## 🗄️ Armazenamento de Arquivos
+
+Fotos de perfil, imagens de posts, capas de projetos e demais arquivos ficam em um **storage de objetos compatível com a API S3**. A aplicação nunca fala com um provedor específico: todo acesso passa pelo [`@adonisjs/drive`](https://docs.adonisjs.com/guides/digging-deeper/drive), o pacote oficial de storage do AdonisJS, configurado em `config/drive.ts`.
+
+- **Discos:** `s3_public`/`s3_private` usam a conexão `S3_*`; `r2_public`/`r2_private` usam a conexão `R2_*` (Cloudflare R2). `DRIVE_DISK` define o disco padrão.
+- **Buckets:** um público (leitura anônima) e um privado (acesso só por URL assinada), nomeados conforme o [ADR-0013](./docs/architecture/decisions/0013-padronizacao-de-nomenclatura-de-buckets.md).
+- **Desenvolvimento:** o MinIO roda no `docker-compose.yaml` e emula o S3 localmente ([ADR-0008](./docs/architecture/decisions/0008-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md)). O `node ace storage:setup` cria os buckets; o console web fica em `http://localhost:9001`.
+- **Produção (em aberto):** o provedor ainda não foi definido. Inicialmente, o mais provável é um storage S3-compatível self-hosted no VPS (por exemplo, [Garage](https://garagehq.deuxfleurs.fr/) ou [SeaweedFS](https://github.com/seaweedfs/seaweedfs)) ou o plano gratuito do [Cloudflare R2](https://developers.cloudflare.com/r2/). Como tudo passa pela API S3, trocar de provedor — inclusive para um maior, conforme o app crescer — é uma mudança de variáveis de ambiente, não de código.

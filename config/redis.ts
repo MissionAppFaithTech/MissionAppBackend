@@ -6,6 +6,7 @@ export const redisConnection: RedisOptions = {
   host: env.get('REDIS_HOST'),
   port: env.get('REDIS_PORT'),
   password: env.get('REDIS_PASSWORD') || undefined,
+  db: env.get('REDIS_DB', 0),
 }
 
 /**
@@ -23,6 +24,7 @@ export const bullMQConnection: BullMQRedisOptions = {
   host: env.get('REDIS_HOST'),
   port: env.get('REDIS_PORT'),
   password: env.get('REDIS_PASSWORD') || undefined,
+  db: env.get('REDIS_DB', 0),
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
 }

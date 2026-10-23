@@ -53,15 +53,17 @@ Todos os Workers serão escritos como comandos personalizados do AdonisJS Ace CL
 node ace make:command QueueListen
 ```
 
-O arquivo gerado em `commands/queue_listen.ts` expõe a flag `loadApp: true` nas opções do comando:
+> **Nota (2026-10-23):** versões anteriores deste ADR citavam a flag `loadApp`, herdada de versões antigas do AdonisJS. No AdonisJS 7 a opção lida pelo Ace é `startApp` — `loadApp` é ignorada silenciosamente. O texto abaixo foi atualizado; a decisão em si não mudou.
+
+O arquivo gerado em `commands/queue_listen.ts` expõe a flag `startApp: true` nas opções do comando:
 
 ```typescript
 export default class QueueListen extends BaseCommand {
   static commandName = 'queue:listen'
   static description = 'Inicia o Worker do BullMQ para processar jobs em background'
 
-  static options = {
-    loadApp: true,
+  static options: CommandOptions = {
+    startApp: true,
   }
 
   async run() {
@@ -71,7 +73,7 @@ export default class QueueListen extends BaseCommand {
 }
 ```
 
-A flag `loadApp: true` instrui o AdonisJS a executar o ciclo de vida completo de inicialização antes de chamar `run()`: leitura do `.env`, conexão com o PostgreSQL via Lucid, registro de todos os providers — sem inicializar o servidor HTTP. O resultado é um processo isolado com acesso total à camada de dados e à injeção de dependências, sem a sobrecarga e a superfície de ataque de um servidor HTTP.
+A flag `startApp: true` instrui o AdonisJS a executar o ciclo de vida completo de inicialização (`boot` e `start` dos providers, mais os arquivos de preload) antes de chamar `run()`: leitura do `.env`, conexão com o PostgreSQL via Lucid, registro de todos os providers — sem inicializar o servidor HTTP. O resultado é um processo isolado com acesso total à camada de dados e à injeção de dependências, sem a sobrecarga e a superfície de ataque de um servidor HTTP.
 
 **Transporte de IDs, não de dados:**
 Workers nunca recebem objetos completos pela fila. O payload de um Job transporta exclusivamente identificadores (IDs). O Worker busca os dados atuais diretamente no PostgreSQL no momento da execução — garantindo que o Worker opere sempre sobre o estado mais recente do dado, não sobre um snapshot potencialmente obsoleto serializado no momento do enfileiramento.
@@ -96,7 +98,7 @@ O padrão foi escolhido por resolver os três problemas identificados no context
 
 - **Reutilização de cache Docker (UnionFS):** A mesma imagem compartilha todas as camadas: a instalação do `pnpm`, os `node_modules`, o código compilado do TypeScript. O registry armazena um único objeto. O servidor de produção baixa a imagem uma única vez. Dois containers (`api` e `worker`) compartilham o mesmo "esqueleto" físico em disco — o overhead de memória do segundo container é apenas o delta de estado de runtime, não os gigabytes das dependências.
 
-- **Ciclo de vida completo do AdonisJS via `loadApp: true`:** O Worker tem acesso a Lucid ORM, `Env`, injeção de dependências e todos os providers sem nenhum código de bootstrap manual. Qualquer mudança no ciclo de vida da aplicação (novo provider, nova variável obrigatória, novo migration) é automaticamente herdada por todos os Workers — a única fonte de verdade de inicialização é o próprio AdonisJS.
+- **Ciclo de vida completo do AdonisJS via `startApp: true`:** O Worker tem acesso a Lucid ORM, `Env`, injeção de dependências e todos os providers sem nenhum código de bootstrap manual. Qualquer mudança no ciclo de vida da aplicação (novo provider, nova variável obrigatória, novo migration) é automaticamente herdada por todos os Workers — a única fonte de verdade de inicialização é o próprio AdonisJS.
 
 - **TypeScript e tipagem end-to-end:** Comandos Ace são TypeScript nativo. O Worker herda todos os contratos de tipo do domínio: os models do Lucid, os tipos dos payloads de Job definidos em `contracts/events.ts` ([ADR-0012](./0012-adocao-de-arquitetura-orientada-a-eventos-com-bullmq.md)), os tipos de retorno dos services. Incompatibilidades são detectadas em tempo de compilação — antes do deploy.
 
@@ -126,7 +128,7 @@ O padrão foi escolhido por resolver os três problemas identificados no context
 
 - **Reutilização de cache máxima:** Workers e API compartilham todas as camadas Docker. O overhead de disco de subir um segundo container a partir da mesma imagem é próximo de zero bytes.
 
-- **Acesso completo ao AdonisJS sem bootstrap manual:** `loadApp: true` entrega Lucid ORM, `Env`, injeção de dependências e providers ao Worker de forma automática e sempre sincronizada com a versão da API.
+- **Acesso completo ao AdonisJS sem bootstrap manual:** `startApp: true` entrega Lucid ORM, `Env`, injeção de dependências e providers ao Worker de forma automática e sempre sincronizada com a versão da API.
 
 - **Isolamento de carga entre API e Workers:** Picos de volume nas filas não competem com a CPU ou o pool de conexões do servidor HTTP. Cada processo escala de forma independente conforme o perfil de carga.
 
@@ -147,7 +149,7 @@ O padrão foi escolhido por resolver os três problemas identificados no context
 ## Referências
 
 - [AdonisJS — Ace CLI: criando comandos customizados](https://docs.adonisjs.com/guides/ace/creating-commands): base para implementação dos workers como comandos Ace
-- [AdonisJS — Ace CLI: a flag `loadApp`](https://docs.adonisjs.com/guides/ace/creating-commands#loadapp): flag que permite ao worker acessar Lucid, Env e DI sem iniciar o servidor HTTP
+- [AdonisJS — Ace CLI: a flag `startApp`](https://docs.adonisjs.com/guides/ace/creating-commands): flag que permite ao worker acessar Lucid, Env e DI sem iniciar o servidor HTTP
 - [Docker — Understanding image layers and the UnionFS](https://docs.docker.com/storage/storagedriver/): fundamenta o reuso de layers entre API e workers na imagem única
 - [BullMQ — Workers](https://docs.bullmq.io/guide/workers): documentação dos workers BullMQ iniciados pelos comandos Ace
 - [ADR-0010](./0010-uso-do-docker-para-ambiente-de-desenvolvimento-e-deploy.md): Docker como base do padrão de empacotamento de imagem única
