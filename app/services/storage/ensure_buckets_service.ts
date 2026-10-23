@@ -37,6 +37,10 @@ export class EnsureBucketsService {
    * }) // ['missionapp-dev-public-assets', 'missionapp-dev-private-docs']
    */
   async execute(payload: EnsureBucketsPayload): Promise<string[]> {
+    if (payload.publicBucket === payload.privateBucket) {
+      throw new Error('Os buckets público e privado devem ser diferentes')
+    }
+
     const created: string[] = []
 
     for (const bucket of [payload.publicBucket, payload.privateBucket]) {
