@@ -28,7 +28,7 @@ HTTP Request
   → Service     — business logic, DB transaction, emit domain event
   → Listener    — receive event, enqueue BullMQ Job only (< 1ms, no logic)
   → BullMQ Queue (persisted in DragonflyDB)
-  → Worker      — Ace command with loadApp:true, executes heavy async work
+  → Worker      — Ace command with startApp: true, executes heavy async work
 ```
 
 ### Directory map
@@ -231,10 +231,10 @@ export default class OnPostCreated {
 ```typescript
 export default class IndexPostWorker extends BaseCommand {
   static commandName = 'worker:index-post'
-  static options = { loadApp: true }
+  static options: CommandOptions = { startApp: true }
 
   async run() {
-    new Worker(
+    const worker = new Worker(
       'index-post',
       async (job) => {
         const post = await Post.findOrFail(job.data.postId)
@@ -242,12 +242,15 @@ export default class IndexPostWorker extends BaseCommand {
       },
       { connection }
     )
+    // close BullMQ connections on SIGTERM (e.g. docker stop), or the process never exits
+    this.app.terminating(() => worker.close())
     await new Promise(() => {}) // keep process alive
   }
 }
 ```
 
-- `loadApp: true` is mandatory — provides Lucid, Env, DI without an HTTP server
+- `startApp: true` is mandatory — starts the app (providers + preloads) so Lucid, Env and DI are available, without an HTTP server ([docs](https://docs.adonisjs.com/guides/ace/creating-commands))
+- Register `this.app.terminating(...)` to close every BullMQ `Worker`/`Queue` the command opens — `app.terminate()` runs on SIGTERM but does not know about them
 - Job payload carries **IDs only** — worker always fetches fresh data from the DB at runtime
 - Lives in `commands/`
 
@@ -403,6 +406,26 @@ Whenever you create a new endpoint **or** modify anything visible to external co
 | Route renamed or removed                          | Update or remove the path entry |
 
 A PR that changes the API surface without updating the spec must not be merged.
+
+---
+
+## Storage (`@adonisjs/drive`)
+
+Files (profile pictures, post images, project covers) live in **S3-compatible object storage**, accessed only through [`@adonisjs/drive`](https://docs.adonisjs.com/guides/digging-deeper/drive) — never through the AWS SDK directly. Disks are declared in `config/drive.ts`:
+
+| Disk         | Connection             | Bucket env          | Visibility               |
+| ------------ | ---------------------- | ------------------- | ------------------------ |
+| `s3_public`  | `S3_*` (MinIO in dev)  | `S3_PUBLIC_BUCKET`  | public                   |
+| `s3_private` | `S3_*`                 | `S3_PRIVATE_BUCKET` | private (signed URL)     |
+| `r2_public`  | `R2_*` (Cloudflare R2) | `R2_PUBLIC_BUCKET`  | public (`R2_PUBLIC_URL`) |
+| `r2_private` | `R2_*`                 | `R2_PRIVATE_BUCKET` | private (signed URL)     |
+
+- `DRIVE_DISK` picks the default disk; `R2_*` vars are optional unless `DRIVE_DISK` is an `r2_*` disk (boot fails otherwise)
+- Visibility comes from the bucket policy (`node ace storage:setup`), not object ACLs — every disk sets `supportsACL: false`
+- Every stored file gets a row in `media_assets` (`provider`, `bucket`, `file_key`)
+- Storage calls triggered by a request go through the event → listener → job pipeline, like any side effect
+- In tests, use the real MinIO for config/integration checks; for code that merely _uses_ storage, prefer `drive.fake()` ([docs](https://docs.adonisjs.com/guides/digging-deeper/drive))
+- **Production provider is not decided.** Write code and docs as "S3-compatible": likely candidates for the MVP are a self-hosted store on the VPS (e.g. Garage, SeaweedFS) or Cloudflare R2's free plan — see [ADR-0008](../docs/architecture/decisions/0008-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md#storage-em-producao-em-aberto)
 
 ---
 

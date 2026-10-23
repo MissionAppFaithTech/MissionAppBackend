@@ -4,3 +4,5 @@ allowBuilds:
   better-sqlite3: true
   msgpackr-extract: false
   unrs-resolver: false
+patchedDependencies:
+  jsonschema@1.5.0: patches/jsonschema@1.5.0.patch

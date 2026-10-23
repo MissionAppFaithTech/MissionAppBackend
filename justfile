@@ -150,6 +150,24 @@ _wait-elasticsearch:
 [group('infra')]
 _wait-infra: _wait-db _wait-dragonfly _wait-minio _wait-elasticsearch
 
+# Falha se o .env não tiver alguma variável declarada no .env.example
+[group('dev')]
+check-env:
+    @if [ ! -f .env ]; then echo "ERRO: .env não encontrado — rode: cp .env.example .env"; exit 1; fi
+    @missing=$(comm -23 <(grep -oE '^[A-Z0-9_]+=' .env.example | sort -u) <(grep -oE '^[A-Z0-9_]+=' .env | sort -u) | tr -d '='); \
+    if [ -n "$missing" ]; then \
+        echo "ERRO: variáveis do .env.example ausentes no .env:"; \
+        echo "$missing" | sed 's/^/  - /'; \
+        echo "Copie-as do .env.example (veja a seção de storage em CONTRIBUTING.md)."; \
+        exit 1; \
+    fi
+    @echo "OK: .env contém todas as variáveis do .env.example."
+
+# Cria os buckets do MinIO (S3_PUBLIC_BUCKET/S3_PRIVATE_BUCKET) — idempotente
+[group('dev')]
+storage-setup:
+    node ace storage:setup
+
 # Instala dependências
 [group('dev')]
 install:
@@ -157,7 +175,7 @@ install:
 
 # Sobe a infraestrutura, aguarda, migra e inicia o servidor de desenvolvimento
 [group('dev')]
-start: up _wait-infra migrate
+start: check-env up _wait-infra storage-setup migrate
     pnpm dev
 
 # Inicia servidor de desenvolvimento com HMR

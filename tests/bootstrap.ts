@@ -7,8 +7,8 @@ import { dbAssertions } from '@adonisjs/lucid/plugins/db'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { authApiClient } from '@adonisjs/auth/plugins/api_client'
 import { sessionApiClient } from '@adonisjs/session/plugins/api_client'
-import cache from '#services/shared/cache/cache'
 import searchClient from '#services/shared/search/search_client'
+import { MissionarySearchService } from '#services/search/missionary_search_service'
 import { emailQueue } from '#queues/email_queue'
 import { searchIndexingQueue } from '#queues/search_indexing_queue'
 import type { Registry } from '../.adonisjs/client/registry/schema.d.ts'
@@ -45,11 +45,20 @@ export const plugins: Config['plugins'] = [
  * As funções de teardown são executadas depois de todos os testes
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [],
-  // NOTE: fecha as conexões ioredis compartilhadas — sem isso o processo nunca
-  // encerra sozinho (forceExit: false + socket aberto mantêm o event loop vivo).
+  // NOTE: aquece o Elasticsearch antes da suíte — com o container recém-subido
+  // e o índice ainda inexistente, a primeira chamada (criação do índice + JVM
+  // fria) passa dos 2s de timeout da suíte unit. Pago aqui, fora de qualquer
+  // teste, o custo não vira falha intermitente.
+  setup: [
+    async () => {
+      await new MissionarySearchService().searchByName('aquecimento')
+    },
+  ],
+  // NOTE: fecha as conexões compartilhadas — sem isso o processo nunca encerra
+  // sozinho (forceExit: false + socket aberto mantêm o event loop vivo). O
+  // cache não entra aqui: é fechado pelo `shutdown()` do CacheProvider no
+  // `app.terminate()` encadeado em bin/test.ts.
   teardown: [
-    () => cache.quit(),
     () => searchClient.close(),
     () => emailQueue.close(),
     () => searchIndexingQueue.close(),
