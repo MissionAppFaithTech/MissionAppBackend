@@ -61,7 +61,10 @@ const driveConfig = defineConfig({
       visibility: 'public',
       // NOTE: o endpoint S3 do R2 não serve leitura pública; URLs públicas
       // precisam do domínio r2.dev ou de um domínio customizado.
-      cdnUrl: env.get('R2_PUBLIC_URL'),
+      cdnUrl:
+        env.get('DRIVE_DISK') === 'r2_public'
+          ? requireEnvWhen('R2_PUBLIC_URL', env.get('R2_PUBLIC_URL'), true)
+          : env.get('R2_PUBLIC_URL'),
     }),
     r2_private: services.s3({
       ...r2ClientConfig,
