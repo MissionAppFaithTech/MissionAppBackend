@@ -78,7 +78,7 @@
     "@japa/assert": "4.2.0",
     "@japa/plugin-adonisjs": "5.2.0",
     "@japa/runner": "5.3.0",
-    "@poppinss/ts-exec": "1.4.4",
+    "@poppinss/ts-exec": "1.5.1",
     "@types/luxon": "3.7.5",
     "@types/node": "25.9.5",
     "commitlint": "21.2.2",
