@@ -939,37 +939,43 @@ components:
 
     UpdateMissionaryAboutRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         aboutMe:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
         missionStorySummary:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
         originLocation:
-          type: string
+          type: [string, 'null']
           maxLength: 255
         faithCommunityId:
-          type: string
+          type: [string, 'null']
           format: uuid
         prayerRequest:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
         lifeVerse:
-          type: string
+          type: [string, 'null']
           maxLength: 255
 
     UpdateMissionaryProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         publicEmail:
-          type: string
+          type: [string, 'null']
           format: email
         publicPhone:
-          type: string
+          type: [string, 'null']
           example: '+5511912345678'
         donationMessage:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
 
     UpdateMissionaryIdentityRequest:

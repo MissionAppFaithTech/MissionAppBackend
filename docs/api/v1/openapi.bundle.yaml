@@ -1282,6 +1282,10 @@ components:
               description: Até 3 variações livres, presente só quando available é false.
     UpdateProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados. Apenas
+        `biography` aceita `null` (ou string vazia) para ser limpo; `null` em
+        `fullName`, `username` ou `profilePictureId` é ignorado.
       properties:
         fullName:
           type: string
@@ -1293,7 +1297,9 @@ components:
           maxLength: 32
           pattern: ^[a-z0-9_]+$
         biography:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 200
         profilePictureId:
           type: string
@@ -1354,24 +1360,39 @@ components:
           type: object
     UpdateMissionaryAboutRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         aboutMe:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
         missionStorySummary:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
         originLocation:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 255
         faithCommunityId:
-          type: string
+          type:
+            - string
+            - 'null'
           format: uuid
         prayerRequest:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
         lifeVerse:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 255
     MissionaryResponse:
       type: object
@@ -1388,15 +1409,24 @@ components:
           format: uuid
     UpdateMissionaryProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         publicEmail:
-          type: string
+          type:
+            - string
+            - 'null'
           format: email
         publicPhone:
-          type: string
+          type:
+            - string
+            - 'null'
           example: '+5511912345678'
         donationMessage:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
     UpdateMissionaryIdentityRequest:
       type: object

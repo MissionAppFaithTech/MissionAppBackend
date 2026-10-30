@@ -1,5 +1,6 @@
 import MediaAsset from '#models/media_asset'
 import User from '#models/user'
+import { omitUndefined } from '#utils/omit_undefined'
 import db from '@adonisjs/lucid/services/db'
 import { Exception } from '@adonisjs/core/exceptions'
 
@@ -41,12 +42,14 @@ export class UpdateProfileService {
 
     return db.transaction(async (trx) => {
       actor.useTransaction(trx)
-      actor.merge({
-        fullName: payload.fullName,
-        username: payload.username,
-        biography: payload.biography,
-        profilePictureId: payload.profilePictureId,
-      })
+      actor.merge(
+        omitUndefined({
+          fullName: payload.fullName,
+          username: payload.username,
+          biography: payload.biography,
+          profilePictureId: payload.profilePictureId,
+        })
+      )
       await actor.save()
       return actor
     })
