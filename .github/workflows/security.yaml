@@ -24,15 +24,27 @@ jobs:
 
       - run: corepack enable && pnpm install --frozen-lockfile
 
+      # NOTE: --all-projects é obrigatório: com pnpm-workspace.yaml na raiz, `snyk test`
+      # sem ele responde 422 (SNYK-CLI-0000) e não analisa nada.
       - name: Snyk SCA
+        id: snyk-sca
         uses: snyk/actions/node@master
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: >
+            --all-projects
             --sarif-file-output=snyk-sca.sarif
             --severity-threshold=high
+
+      # Vulnerabilidades encontradas viram alertas (SARIF) sem bloquear; um erro da
+      # ferramenta (sem SARIF gerado) falha o job em vez de passar em silêncio.
+      - name: Falhar se o Snyk SCA não gerou resultado
+        if: steps.snyk-sca.outcome == 'failure' && hashFiles('snyk-sca.sarif') == ''
+        run: |
+          echo "::error::Snyk SCA falhou sem gerar snyk-sca.sarif (erro da ferramenta, não vulnerabilidade)."
+          exit 1
 
       - name: Upload SCA results ao GitHub Security
         uses: github/codeql-action/upload-sarif@v4
@@ -52,10 +64,17 @@ jobs:
       - uses: snyk/actions/setup@master
 
       - name: Snyk Code SAST
+        id: snyk-code
         continue-on-error: true
         run: snyk code test --sarif-file-output=snyk-code.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Falhar se o Snyk Code não gerou resultado
+        if: steps.snyk-code.outcome == 'failure' && hashFiles('snyk-code.sarif') == ''
+        run: |
+          echo "::error::Snyk Code falhou sem gerar snyk-code.sarif (erro da ferramenta, não vulnerabilidade)."
+          exit 1
 
       - name: Upload SAST results ao GitHub Security
         uses: github/codeql-action/upload-sarif@v4
