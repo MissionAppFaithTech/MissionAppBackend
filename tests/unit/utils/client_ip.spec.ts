@@ -15,7 +15,7 @@ function fakeRequest(headers: Record<string, string>): RequestContext {
 test.group('resolveClientIp', () => {
   test('usa o IP da conexão quando o segredo não está configurado', ({ assert }) => {
     const request = fakeRequest({ [BFF_SECRET_HEADER]: SECRET, [CLIENT_IP_HEADER]: '203.0.113.9' })
-    assert.equal(resolveClientIp(request, undefined), CONNECTION_IP)
+    assert.equal(resolveClientIp(request, ''), CONNECTION_IP)
   })
 
   test('usa o IP repassado pelo BFF quando o segredo confere', ({ assert }) => {
