@@ -7,6 +7,7 @@ import MissionaryAgency from '#models/missionary_agency'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { randomBytes } from 'node:crypto'
 import { v7 as uuidv7 } from 'uuid'
 
 type ApiBody = { data: Record<string, any> }
@@ -132,7 +133,9 @@ test.group('Catálogo público - agências missionárias e comunidades de fé', 
   test('separa o limite por usuário atrás do BFF autenticado (ADR-0032)', async ({ client }) => {
     const url = router.builder().make('v1.faith_communities.index')!
     const bffIp = uniqueClientIp()
-    const secret = 'segredo-de-teste-com-tamanho-suficiente'
+    // NOTE: segredos de teste gerados por execução (CSPRNG) — nada fixo no código
+    const secret = randomBytes(32).toString('hex')
+    const forgedSecret = randomBytes(32).toString('hex')
     const previous = env.get('BFF_SHARED_SECRET')
     env.set('BFF_SHARED_SECRET', secret)
 
@@ -160,9 +163,9 @@ test.group('Catálogo público - agências missionárias e comunidades de fé', 
 
       // NOTE: sem o segredo certo o IP repassado é ignorado — conta pelo IP da conexão
       for (let attempt = 1; attempt <= RATE_LIMIT_MAX_REQUESTS; attempt++) {
-        await expectStatus(uniqueClientIp(), 200, 'forjado')
+        await expectStatus(uniqueClientIp(), 200, forgedSecret)
       }
-      await expectStatus(uniqueClientIp(), 429, 'forjado')
+      await expectStatus(uniqueClientIp(), 429, forgedSecret)
     } finally {
       env.set('BFF_SHARED_SECRET', previous ?? '')
     }

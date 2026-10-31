@@ -1,8 +1,11 @@
 import { BFF_SECRET_HEADER, CLIENT_IP_HEADER, resolveClientIp } from '#utils/client_ip'
 import type { RequestContext } from '#types/http/context'
 import { test } from '@japa/runner'
+import { randomBytes } from 'node:crypto'
 
-const SECRET = 'segredo-de-teste-com-tamanho-suficiente'
+// NOTE: segredos de teste gerados por execução (CSPRNG) — nada fixo no código
+const SECRET = randomBytes(32).toString('hex')
+const WRONG_SECRET = randomBytes(32).toString('hex')
 const CONNECTION_IP = '10.0.0.5'
 
 function fakeRequest(headers: Record<string, string>): RequestContext {
@@ -33,7 +36,7 @@ test.group('resolveClientIp', () => {
 
   test('ignora o IP repassado quando o segredo diverge', ({ assert }) => {
     const request = fakeRequest({
-      [BFF_SECRET_HEADER]: 'errado',
+      [BFF_SECRET_HEADER]: WRONG_SECRET,
       [CLIENT_IP_HEADER]: '203.0.113.9',
     })
     assert.equal(resolveClientIp(request, SECRET), CONNECTION_IP)
