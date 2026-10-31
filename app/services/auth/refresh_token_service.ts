@@ -2,6 +2,7 @@ import { REFRESH_TOKEN_BYTES } from '#constants/refresh_token'
 import InvalidRefreshTokenException from '#exceptions/auth/invalid_refresh_token_exception'
 import SessionNotFoundException from '#exceptions/auth/session_not_found_exception'
 import RefreshToken from '#models/refresh_token'
+import type { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import type { DeviceMetadata } from '#types/services/auth/refresh_token'
 import { refreshTokenTtlInDays } from '#utils/refresh_token_ttl'
 import { DateTime } from 'luxon'
@@ -84,12 +85,19 @@ export class RefreshTokenService {
    *
    * @param rawToken Valor bruto apresentado pelo cliente.
    * @param meta Metadados de dispositivo do request atual — substituem os do token anterior.
+   * @param revocation Usado para bloquear na hora os access tokens da família quando
+   *                   o reuso é detectado — injetado em vez de importado para evitar
+   *                   import circular entre os dois services.
    * @returns `userId` do dono, `newRaw` (novo valor bruto) e `familyId` da sessão.
    * @throws {InvalidRefreshTokenException} Token não encontrado, expirado ou revogado.
    * @example
-   * const { newRaw } = await service.rotate(rawTokenFromClient, meta)
+   * const { newRaw } = await service.rotate(rawTokenFromClient, meta, new AuthRevocationService())
    */
-  async rotate(rawToken: string, meta: DeviceMetadata) {
+  async rotate(
+    rawToken: string,
+    meta: DeviceMetadata,
+    revocation: Pick<AuthRevocationService, 'blockFamily'>
+  ) {
     const hash = this.#hashToken(rawToken)
     const token = await RefreshToken.findBy('tokenHash', hash)
 
@@ -103,9 +111,15 @@ export class RefreshTokenService {
       // reautenticação em todos os dispositivos daquela sessão de login.
       // Token só expirado (nunca revogado) não dispara essa invalidação.
       if (token.revokedAt) {
-        await RefreshToken.query()
-          .where('familyId', token.familyId)
-          .update({ revokedAt: DateTime.now() })
+        // NOTE: além dos refresh tokens, bloqueia os access tokens já emitidos para a
+        // família — sem isso, quem roubou o token seguiria autenticado até o access
+        // token expirar (JWT_ACCESS_EXPIRES_IN), como acontece no revokeSession.
+        await Promise.all([
+          RefreshToken.query()
+            .where('familyId', token.familyId)
+            .update({ revokedAt: DateTime.now() }),
+          revocation.blockFamily(token.familyId),
+        ])
       }
       throw new InvalidRefreshTokenException('Refresh token inválido')
     }

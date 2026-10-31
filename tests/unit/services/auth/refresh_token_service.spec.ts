@@ -14,6 +14,17 @@ function hashOf(raw: string): string {
 const WEB: DeviceMetadata = { deviceType: DeviceType.WEB, deviceName: 'Chrome no macOS' }
 const MOBILE: DeviceMetadata = { deviceType: DeviceType.MOBILE, deviceName: 'iPhone 15' }
 
+/** Records blocked families instead of touching Dragonfly. */
+function fakeRevocation() {
+  const blocked: string[] = []
+  return {
+    blocked,
+    blockFamily: async (familyId: string) => {
+      blocked.push(familyId)
+    },
+  }
+}
+
 test.group('RefreshTokenService', (group) => {
   group.each.setup(async () => {
     const rollback = await testUtils.db().wrapInGlobalTransaction()
@@ -45,7 +56,7 @@ test.group('RefreshTokenService', (group) => {
   test('rotate() em token inexistente lança erro', async ({ assert }) => {
     const service = new RefreshTokenService()
 
-    await assert.rejects(() => service.rotate('token-que-nao-existe', WEB))
+    await assert.rejects(() => service.rotate('token-que-nao-existe', WEB, fakeRevocation()))
   })
 
   test('rotate() revoga o token atual e emite um novo na mesma família', async ({ assert }) => {
@@ -55,7 +66,7 @@ test.group('RefreshTokenService', (group) => {
     const { raw } = await service.create(user.id, WEB)
     const original = await RefreshToken.findByOrFail('tokenHash', hashOf(raw))
 
-    const { newRaw, familyId } = await service.rotate(raw, WEB)
+    const { newRaw, familyId } = await service.rotate(raw, WEB, fakeRevocation())
 
     await original.refresh()
     assert.isNotNull(original.revokedAt)
@@ -70,13 +81,17 @@ test.group('RefreshTokenService', (group) => {
     const service = new RefreshTokenService()
 
     const { raw } = await service.create(user.id, WEB)
-    const { newRaw } = await service.rotate(raw, WEB)
+    const revocation = fakeRevocation()
+    const { newRaw, familyId } = await service.rotate(raw, WEB, revocation)
+    assert.deepEqual(revocation.blocked, [])
 
     // NOTE: raw já foi revogado pela rotação acima — reutilizá-lo é sinal de roubo
-    await assert.rejects(() => service.rotate(raw, WEB))
+    await assert.rejects(() => service.rotate(raw, WEB, revocation))
 
     const rotated = await RefreshToken.findByOrFail('tokenHash', hashOf(newRaw))
     assert.isNotNull(rotated.revokedAt)
+    // NOTE: os access tokens da família também são bloqueados na hora
+    assert.deepEqual(revocation.blocked, [familyId])
   })
 
   test('revokeAllForUser() revoga todos os tokens ativos do usuário, de todas as famílias', async ({
@@ -131,7 +146,7 @@ test.group('RefreshTokenService', (group) => {
 
     const web = await service.create(user.id, WEB)
     await service.create(user.id, MOBILE)
-    await service.rotate(web.raw, WEB) // NOTE: rotaciona — família web continua ativa, com token novo
+    await service.rotate(web.raw, WEB, fakeRevocation()) // NOTE: rotaciona — família web continua ativa, com token novo
 
     const sessions = await service.listActiveSessions(user.id)
 
