@@ -1164,9 +1164,23 @@ components:
           format: uuid
         fullName:
           type: string
+        username:
+          type: string
         email:
           type: string
           format: email
+        phoneNumber:
+          type: string
+          description: E.164
+        biography:
+          type: [string, 'null']
+        profilePictureId:
+          type: [string, 'null']
+          format: uuid
+        role:
+          type: string
+          enum: [ADMIN, MISSIONARY, SUPPORTER]
+          description: Cadastro público sempre cria SUPPORTER.
         createdAt:
           type: string
           format: date-time

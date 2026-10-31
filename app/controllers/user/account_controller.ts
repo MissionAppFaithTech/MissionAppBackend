@@ -21,6 +21,10 @@ export default class AccountController {
       email: validated.email,
       passwordHash: validated.password,
     })
+    // NOTE: `create` não relê os defaults do banco (`role`, `biography`...). Sem o
+    // refresh, o JWT sai sem o claim `role`, o evento leva `role` indefinido e a
+    // resposta omite esses campos.
+    await user.refresh()
     const meta = await toDeviceMetadata(request)
     const tokens = await new TokenIssuanceService().issue(
       auth,
