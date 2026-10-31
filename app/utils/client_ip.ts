@@ -16,6 +16,16 @@ function sameSecret(received: string, expected: string): boolean {
   return timingSafeEqual(a, b)
 }
 
+function hasValidBffSecret(request: RequestContext, sharedSecret: string): boolean {
+  const secret = request.header(BFF_SECRET_HEADER)
+  return secret !== undefined && sameSecret(secret, sharedSecret)
+}
+
+function forwardedClientIp(request: RequestContext): string | undefined {
+  const value = request.header(CLIENT_IP_HEADER)?.trim()
+  return value && isIP(value) ? value : undefined
+}
+
 /**
  * Resolve o IP do usuário final para rate limits (ADR-0032). O frontend chama a
  * API a partir do servidor do BFF, então `request.ip()` seria o IP do BFF para
@@ -33,12 +43,6 @@ export function resolveClientIp(
   request: RequestContext,
   sharedSecret: string | undefined = env.get('BFF_SHARED_SECRET')
 ): string {
-  const fallback = request.ip()
-  if (!sharedSecret) return fallback
-
-  const secret = request.header(BFF_SECRET_HEADER)
-  const clientIp = request.header(CLIENT_IP_HEADER)?.trim()
-  if (!secret || !clientIp || !sameSecret(secret, sharedSecret)) return fallback
-
-  return isIP(clientIp) ? clientIp : fallback
+  if (!sharedSecret || !hasValidBffSecret(request, sharedSecret)) return request.ip()
+  return forwardedClientIp(request) ?? request.ip()
 }
