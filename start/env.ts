@@ -70,6 +70,10 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   JWT_SECRET: Env.schema.string(),
 
+  // NOTE: segredo compartilhado com o BFF (Next.js) para confiar no IP do usuário
+  // que ele repassa nos rate limits (ADR-0032). Opcional: ausente, vale request.ip().
+  BFF_SHARED_SECRET: Env.schema.string.optional(),
+
   JWT_ACCESS_EXPIRES_IN: Env.schema.string(),
 
   // NOTE: TTL do refresh token por tipo de cliente — sliding window

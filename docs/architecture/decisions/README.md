@@ -519,5 +519,10 @@ flowchart LR
          <td align="left">Adoção do @adonisjs/i18n para Internacionalização de Mensagens da API</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0032-ip-do-usuario-repassado-pelo-bff-com-segredo-compartilhado.md">ADR-0032</a></td>
+         <td align="left">IP do Usuário Repassado pelo BFF com Segredo Compartilhado</td>
+         <td>🟢 Aceito</td>
+      </tr>
    </tbody>
 </table>
