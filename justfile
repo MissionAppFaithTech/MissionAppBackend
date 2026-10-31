@@ -248,20 +248,25 @@ migrate-rollback:
 seed:
     node ace db:seed
 
+# NOTE: o dotenv-load exporta o .env para o processo, e o AdonisJS dá
+# precedência ao process.env sobre o .env.test — sem reexportar o .env.test,
+# os testes rodariam com os valores de desenvolvimento (ex.: REDIS_DB=0).
+LOAD_TEST_ENV := "set -a && . ./.env.test && set +a"
+
 # Todos os suites de teste
 [group('testes')]
 test:
-    pnpm test
+    {{LOAD_TEST_ENV}} && pnpm test
 
 # Apenas testes unitários
 [group('testes')]
 test-unit:
-    node ace test --suite=unit
+    {{LOAD_TEST_ENV}} && node ace test unit
 
 # Apenas testes funcionais
 [group('testes')]
 test-functional:
-    node ace test --suite=functional
+    {{LOAD_TEST_ENV}} && node ace test functional
 
 # Análise completa do projeto: código morto + duplicatas + saúde
 [group('fallow')]
