@@ -1,4 +1,6 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
+import env from '#start/env'
+import { BFF_SECRET_HEADER, CLIENT_IP_HEADER } from '#utils/client_ip'
 import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 import FaithCommunity from '#models/faith_community'
 import MissionaryAgency from '#models/missionary_agency'
@@ -126,6 +128,45 @@ test.group('Catálogo público - agências missionárias e comunidades de fé', 
       const otherIp = await client.get(url).header('X-Forwarded-For', uniqueClientIp())
       otherIp.assertStatus(200)
     })
+
+  test('separa o limite por usuário atrás do BFF autenticado (ADR-0032)', async ({ client }) => {
+    const url = router.builder().make('v1.faith_communities.index')!
+    const bffIp = uniqueClientIp()
+    const secret = 'segredo-de-teste-com-tamanho-suficiente'
+    const previous = env.get('BFF_SHARED_SECRET')
+    env.set('BFF_SHARED_SECRET', secret)
+
+    try {
+      const asUser = (userIp: string, headerSecret = secret) =>
+        client
+          .get(url)
+          .header('X-Forwarded-For', bffIp)
+          .header(BFF_SECRET_HEADER, headerSecret)
+          .header(CLIENT_IP_HEADER, userIp)
+
+      const expectStatus = async (userIp: string, status: number, headerSecret = secret) => {
+        const response = await asUser(userIp, headerSecret)
+        response.assertStatus(status)
+      }
+
+      const firstUser = uniqueClientIp()
+      for (let attempt = 1; attempt <= RATE_LIMIT_MAX_REQUESTS; attempt++) {
+        await expectStatus(firstUser, 200)
+      }
+      await expectStatus(firstUser, 429)
+
+      // NOTE: outro usuário atrás do mesmo BFF continua com orçamento próprio
+      await expectStatus(uniqueClientIp(), 200)
+
+      // NOTE: sem o segredo certo o IP repassado é ignorado — conta pelo IP da conexão
+      for (let attempt = 1; attempt <= RATE_LIMIT_MAX_REQUESTS; attempt++) {
+        await expectStatus(uniqueClientIp(), 200, 'forjado')
+      }
+      await expectStatus(uniqueClientIp(), 429, 'forjado')
+    } finally {
+      env.set('BFF_SHARED_SECRET', previous ?? '')
+    }
+  })
 
   test('conta o limite de cada catálogo separadamente', async ({ client }) => {
     const clientIp = uniqueClientIp()
