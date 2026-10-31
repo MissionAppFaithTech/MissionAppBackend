@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+# Privilégio mínimo para GITHUB_TOKEN: lint e build precisam apenas de leitura do repositório.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
