@@ -340,10 +340,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/UserSummary'
+                $ref: '#/components/schemas/AccountProfileResponse'
         '401':
           description: Access token ausente, inválido ou revogado.
           content:
@@ -1354,6 +1351,46 @@ components:
         profilePictureId:
           type: string
           format: uuid
+    AccountProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserSummary'
+            missionary:
+              type: [object, 'null']
+              description: Perfil missionário do usuário; null quando ele não é missionário.
+            workAddress:
+              type: [object, 'null']
+              description: Endereço de atuação do missionário; null quando não cadastrado.
+            missionaryAgency:
+              description: >-
+                Agência missionária vinculada (id e nome), para exibir o nome sem
+                consultar o catálogo público, que tem rate limit por IP. Null
+                quando o usuário não é missionário.
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+            faithCommunity:
+              description: >-
+                Comunidade de fé vinculada (id e nome). Null quando o usuário não
+                é missionário ou não informou comunidade.
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+
+    CatalogReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
     UserProfileResponse:
       type: object
       properties:
