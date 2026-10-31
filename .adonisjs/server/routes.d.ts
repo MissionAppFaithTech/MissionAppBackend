@@ -5,6 +5,7 @@ type ParamValue = string | number | bigint | boolean
 export type ScannedRoutes = {
   ALL: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
+    'v1.username_availability.show': { paramsTuple?: []; params?: {} }
     'v1.media_assets.store': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.store': { paramsTuple?: []; params?: {} }
@@ -38,20 +39,22 @@ export type ScannedRoutes = {
     'v1.missionary.admin.work_address.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   GET: {
-    'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
-    'v1.profile.show': { paramsTuple?: []; params?: {} }
+    'v1.username_availability.show': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
     'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
+    'v1.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
-    'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
-    'v1.profile.show': { paramsTuple?: []; params?: {} }
+    'v1.username_availability.show': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
     'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
+    'v1.profile.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
@@ -63,14 +66,13 @@ export type ScannedRoutes = {
     'v1.auth.forgot_password.store': { paramsTuple?: []; params?: {} }
     'v1.missionary.profile.store': { paramsTuple?: []; params?: {} }
   }
-  DELETE: {
-    'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }
-    'v1.auth.all_sessions.destroy': { paramsTuple?: []; params?: {} }
-    'v1.auth.sessions.destroy': { paramsTuple: [ParamValue]; params: {'familyId': ParamValue} }
-    'v1.missionary_agencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
-    'v1.faith_communities.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+  PUT: {
+    'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   PATCH: {
+    'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.auth.reset_password.update': { paramsTuple?: []; params?: {} }
     'v1.profile.update': { paramsTuple?: []; params?: {} }
     'v1.account_password.update': { paramsTuple?: []; params?: {} }
@@ -78,12 +80,17 @@ export type ScannedRoutes = {
     'v1.missionary.profile.update': { paramsTuple?: []; params?: {} }
     'v1.missionary.identity.update': { paramsTuple?: []; params?: {} }
     'v1.missionary.work_address.update': { paramsTuple?: []; params?: {} }
-    'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
-    'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.about.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.profile.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.identity.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary.admin.work_address.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+  }
+  DELETE: {
+    'v1.missionary_agencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.faith_communities.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }
+    'v1.auth.all_sessions.destroy': { paramsTuple?: []; params?: {} }
+    'v1.auth.sessions.destroy': { paramsTuple: [ParamValue]; params: {'familyId': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {
