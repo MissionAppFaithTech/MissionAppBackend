@@ -5,6 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Least privilege for GITHUB_TOKEN: push the update branch and open its pull request.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   tree:
     runs-on: ubuntu-latest
