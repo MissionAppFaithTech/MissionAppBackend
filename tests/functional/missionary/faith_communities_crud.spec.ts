@@ -4,6 +4,7 @@ import FaithCommunity from '#models/faith_community'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 
 type TokensBody = { data: { accessToken: string } }
 type ApiBody = { data: Record<string, any> }
@@ -29,6 +30,7 @@ test.group('Faith communities - CRUD', (group) => {
   test('cria, lista, detalha, atualiza e remove comunidade de fé', async ({ client, assert }) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const clientIp = uniqueClientIp()
 
     const store = await client
       .post(router.builder().make('v1.faith_communities.store')!)
@@ -40,6 +42,7 @@ test.group('Faith communities - CRUD', (group) => {
 
     const index = await client
       .get(router.builder().make('v1.faith_communities.index')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     index.assertStatus(200)
@@ -47,6 +50,7 @@ test.group('Faith communities - CRUD', (group) => {
 
     const show = await client
       .get(router.builder().params({ id: storedCommunityId }).make('v1.faith_communities.show')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     show.assertStatus(200)
@@ -125,6 +129,7 @@ test.group('Faith communities - CRUD', (group) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
     const url = router.builder().make('v1.faith_communities.index')!
+    const clientIp = uniqueClientIp()
 
     for (const body of [
       { name: 'Alfa Central', city: 'São Paulo', state: 'SP', country: 'Brasil' },
@@ -139,7 +144,11 @@ test.group('Faith communities - CRUD', (group) => {
     }
 
     const names = async (qs: Record<string, string>) => {
-      const res = await client.get(url).qs(qs).header('Authorization', `Bearer ${accessToken}`)
+      const res = await client
+        .get(url)
+        .qs(qs)
+        .header('X-Forwarded-For', clientIp)
+        .header('Authorization', `Bearer ${accessToken}`)
       res.assertStatus(200)
       return ((res.body() as ApiBody).data.faithCommunities as { name: string }[]).map(
         (item) => item.name

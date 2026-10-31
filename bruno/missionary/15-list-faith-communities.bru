@@ -6,7 +6,7 @@ meta {
 
 get {
   url: {{base_url}}/api/v1/faith-communities
-  auth: bearer
+  auth: none
 }
 
 params:query {
@@ -16,10 +16,10 @@ params:query {
   ~country: 
 }
 
-auth:bearer {
-  token: {{auth_token}}
-}
-
 docs {
   Lista as comunidades de fe disponiveis para vinculacao de perfil missionario.
+
+  Consulta pública (sem autenticação), usada no cadastro de missionário
+  antes de a conta existir. Limitada a 20 requisições por 60 segundos
+  por IP (429 + Retry-After ao exceder).
 }

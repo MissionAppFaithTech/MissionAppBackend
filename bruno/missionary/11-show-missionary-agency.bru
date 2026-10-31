@@ -6,13 +6,13 @@ meta {
 
 get {
   url: {{base_url}}/api/v1/missionary-agencies/{{missionary_agency_id}}
-  auth: bearer
-}
-
-auth:bearer {
-  token: {{auth_token}}
+  auth: none
 }
 
 docs {
   Exibe os dados de uma agencia missionaria especifica por id.
+
+  Consulta pública (sem autenticação), usada no cadastro de missionário
+  antes de a conta existir. Limitada a 20 requisições por 60 segundos
+  por IP (429 + Retry-After ao exceder).
 }
