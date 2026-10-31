@@ -1347,7 +1347,7 @@ components:
           type:
             - string
             - 'null'
-          maxLength: 200
+          maxLength: 70
         profilePictureId:
           type: string
           format: uuid
@@ -1510,6 +1510,9 @@ components:
             - string
             - 'null'
           example: '+5511912345678'
+        publicPhoneIsWhatsapp:
+          type: boolean
+          description: Indica se o telefone público aceita WhatsApp; o perfil só oferece WhatsApp quando true.
         donationMessage:
           type:
             - string

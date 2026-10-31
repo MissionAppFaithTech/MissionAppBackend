@@ -223,7 +223,7 @@ components:
           pattern: '^[a-z0-9_]+$'
         biography:
           type: [string, 'null']
-          maxLength: 200
+          maxLength: 70
         profilePictureId:
           type: string
           format: uuid

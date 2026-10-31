@@ -67,6 +67,13 @@ test.group('Validators - campos opcionais anuláveis do perfil', () => {
     )
     await assert.rejects(() => updateMissionaryProfileValidator.validate({ publicPhone: '123' }))
     await assert.rejects(() => updateAboutValidator.validate({ faithCommunityId: 'nao-uuid' }))
-    await assert.rejects(() => updateUserProfileValidator.validate({ biography: 'a'.repeat(201) }))
+    await assert.rejects(() => updateUserProfileValidator.validate({ biography: 'a'.repeat(71) }))
+  })
+
+  test('updateUserProfileValidator aceita minibiografia de até 70 caracteres', async ({
+    assert,
+  }) => {
+    const biography = 'a'.repeat(70)
+    assert.deepEqual(await updateUserProfileValidator.validate({ biography }), { biography })
   })
 })
