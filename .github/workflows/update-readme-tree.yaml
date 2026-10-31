@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Generate tree
-        uses: RavelloH/readme-tree@latest
+        uses: RavelloH/readme-tree@v1.1.0
         with:
           showall: 'no'
           showdirectoryname: 'yes'
