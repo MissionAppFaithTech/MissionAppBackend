@@ -52,6 +52,7 @@ test.group('Auth - refresh rotation', (group) => {
       .json({ refreshToken: rt1 })
 
     const rt2 = (firstRefresh.body() as TokensBody).data.refreshToken
+    const at2 = (firstRefresh.body() as TokensBody).data.accessToken
 
     // NOTE: reutiliza RT1 (já revogado pela primeira rotação) — dispara invalidação da família
     const reuseRt1 = await client
@@ -68,6 +69,14 @@ test.group('Auth - refresh rotation', (group) => {
       .json({ refreshToken: rt2 })
 
     reuseRt2.assertStatus(401)
+
+    // NOTE: o access token emitido para a família também deixa de valer na hora,
+    // sem esperar o JWT expirar
+    const profile = await client
+      .get(router.builder().make('v1.profile.show')!)
+      .header('authorization', `Bearer ${at2}`)
+
+    profile.assertStatus(401)
   })
 
   test('refresh token inexistente é rejeitado', async ({ client }) => {
