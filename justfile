@@ -317,3 +317,13 @@ fallow-audit-ci:
 [group('fallow')]
 fallow-verify: fallow-audit fallow-security
     pnpm audit
+
+# Snyk Open Source (requer `snyk auth`) — mesmo escopo do CI; build/ guarda um lockfile copiado pelo build
+[group('segurança')]
+snyk:
+    pnpm dlx snyk@1.1308.3 test --all-projects --exclude=build
+
+# Snyk Code (SAST) — exige org com Snyk Code habilitado (ex.: SNYK_CFG_ORG=missionapp.faithtech)
+[group('segurança')]
+snyk-code:
+    pnpm dlx snyk@1.1308.3 code test
