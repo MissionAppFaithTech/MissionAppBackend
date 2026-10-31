@@ -72,15 +72,20 @@ router
       .post('media-assets', [controllers.mediaAsset.MediaAssets, 'store'])
       .use(middleware.auth())
 
+    // NOTE: listagem e detalhe são públicos porque o cadastro de missionário
+    // escolhe agência/comunidade antes de a conta existir; o rate limit por IP
+    // compensa a ausência de auth. Escrita continua exigindo auth.
     router
       .resource('missionary-agencies', controllers.missionary.MissionaryAgencies)
       .apiOnly()
-      .use('*', middleware.auth())
+      .use(['index', 'show'], middleware.publicCatalogRateLimit({ catalog: 'missionary_agencies' }))
+      .use(['store', 'update', 'destroy'], middleware.auth())
 
     router
       .resource('faith-communities', controllers.missionary.FaithCommunities)
       .apiOnly()
-      .use('*', middleware.auth())
+      .use(['index', 'show'], middleware.publicCatalogRateLimit({ catalog: 'faith_communities' }))
+      .use(['store', 'update', 'destroy'], middleware.auth())
 
     router
       .group(() => {

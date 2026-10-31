@@ -245,8 +245,11 @@ paths:
       operationId: missionaryAgencyIndex
       tags: [missionary]
       summary: Lista agências missionárias
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher agências missionárias antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - name: search
           in: query
@@ -287,8 +290,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgenciesResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '429':
+          description: Limite de consultas por IP excedido.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -331,8 +340,11 @@ paths:
       operationId: missionaryAgencyShow
       tags: [missionary]
       summary: Exibe uma agência missionária
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher agências missionárias antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - $ref: '#/components/parameters/MissionaryAgencyId'
       responses:
@@ -342,14 +354,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '404':
+          description: Agência missionária não encontrada.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
-        '404':
-          description: Agência missionária não encontrada.
+        '429':
+          description: Limite de consultas por IP excedido.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -440,8 +458,11 @@ paths:
       operationId: faithCommunityIndex
       tags: [missionary]
       summary: Lista comunidades de fé
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher comunidades de fé antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - name: search
           in: query
@@ -482,8 +503,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunitiesResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '429':
+          description: Limite de consultas por IP excedido.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -526,8 +553,11 @@ paths:
       operationId: faithCommunityShow
       tags: [missionary]
       summary: Exibe uma comunidade de fé
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher comunidades de fé antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - $ref: '#/components/parameters/FaithCommunityId'
       responses:
@@ -537,14 +567,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '404':
+          description: Comunidade de fé não encontrada.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
-        '404':
-          description: Comunidade de fé não encontrada.
+        '429':
+          description: Limite de consultas por IP excedido.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -701,9 +737,6 @@ components:
           type: [string, 'null']
         website:
           type: [string, 'null']
-        userId:
-          type: [string, 'null']
-          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -831,9 +864,6 @@ components:
           type: [string, 'null']
         website:
           type: [string, 'null']
-        userId:
-          type: [string, 'null']
-          format: uuid
         createdAt:
           type: string
           format: date-time

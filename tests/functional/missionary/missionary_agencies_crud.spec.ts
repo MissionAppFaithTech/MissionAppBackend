@@ -4,6 +4,7 @@ import { UserRole } from '#enums/user/user_role'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 
 type TokensBody = { data: { accessToken: string } }
 type ApiBody = { data: Record<string, any> }
@@ -32,6 +33,7 @@ test.group('Missionary agencies - CRUD', (group) => {
   }) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const clientIp = uniqueClientIp()
 
     const store = await client
       .post(router.builder().make('v1.missionary_agencies.store')!)
@@ -43,6 +45,7 @@ test.group('Missionary agencies - CRUD', (group) => {
 
     const index = await client
       .get(router.builder().make('v1.missionary_agencies.index')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     index.assertStatus(200)
@@ -50,6 +53,7 @@ test.group('Missionary agencies - CRUD', (group) => {
 
     const show = await client
       .get(router.builder().params({ id: storedAgencyId }).make('v1.missionary_agencies.show')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     show.assertStatus(200)
@@ -128,6 +132,7 @@ test.group('Missionary agencies - CRUD', (group) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
     const url = router.builder().make('v1.missionary_agencies.index')!
+    const clientIp = uniqueClientIp()
 
     for (const body of [
       { name: 'Alfa Central', city: 'São Paulo', state: 'SP', country: 'Brasil' },
@@ -142,7 +147,11 @@ test.group('Missionary agencies - CRUD', (group) => {
     }
 
     const names = async (qs: Record<string, string>) => {
-      const res = await client.get(url).qs(qs).header('Authorization', `Bearer ${accessToken}`)
+      const res = await client
+        .get(url)
+        .qs(qs)
+        .header('X-Forwarded-For', clientIp)
+        .header('Authorization', `Bearer ${accessToken}`)
       res.assertStatus(200)
       return ((res.body() as ApiBody).data.missionaryAgencies as { name: string }[]).map(
         (item) => item.name
