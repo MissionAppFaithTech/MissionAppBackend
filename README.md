@@ -76,6 +76,7 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   │   ├── shared
 │   │   │   ├── cache
 │   │   │   └── search
+│   │   ├── storage
 │   │   └── user
 │   ├── transformers
 │   ├── types
@@ -120,6 +121,7 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   │   ├── decisions
 │   │   └── templates
 │   └── deployment
+├── patches
 ├── providers
 ├── resources
 │   ├── assets
@@ -140,17 +142,25 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   │   ├── missionary
 │   │   └── user
 │   └── unit
+│       ├── commands
+│       ├── config
 │       ├── jobs
 │       │   ├── auth
 │       │   └── user
 │       ├── listeners
 │       │   └── user
-│       └── services
-│           ├── auth
-│           └── search
+│       ├── providers
+│       ├── services
+│       │   ├── auth
+│       │   ├── search
+│       │   ├── shared
+│       │   │   └── cache
+│       │   └── storage
+│       ├── utils
+│       └── validators
 └── tmp
 
-119 directories
+129 directories
 ```
 <!-- readme-tree end -->
 
