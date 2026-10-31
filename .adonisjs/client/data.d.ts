@@ -5,16 +5,31 @@
 
 /// <reference path="./manifest.d.ts" />
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
+import type CatalogReferenceTransformer from '#transformers/catalog_reference_transformer'
+import type FaithCommunityTransformer from '#transformers/faith_community_transformer'
 import type MediaAssetTransformer from '#transformers/media_asset_transformer'
+import type MissionaryAgencyTransformer from '#transformers/missionary_agency_transformer'
 import type MissionaryTransformer from '#transformers/missionary_transformer'
 import type MissionaryWorkAddressTransformer from '#transformers/missionary_work_address_transformer'
 import type SessionTransformer from '#transformers/session_transformer'
 import type UserTransformer from '#transformers/user_transformer'
 
 export namespace Data {
+  export type CatalogReference = InferData<CatalogReferenceTransformer>
+  export namespace CatalogReference {
+    export type Variants = InferVariants<CatalogReferenceTransformer>
+  }
+  export type FaithCommunity = InferData<FaithCommunityTransformer>
+  export namespace FaithCommunity {
+    export type Variants = InferVariants<FaithCommunityTransformer>
+  }
   export type MediaAsset = InferData<MediaAssetTransformer>
   export namespace MediaAsset {
     export type Variants = InferVariants<MediaAssetTransformer>
+  }
+  export type MissionaryAgency = InferData<MissionaryAgencyTransformer>
+  export namespace MissionaryAgency {
+    export type Variants = InferVariants<MissionaryAgencyTransformer>
   }
   export type Missionary = InferData<MissionaryTransformer>
   export namespace Missionary {
