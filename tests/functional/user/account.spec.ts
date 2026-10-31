@@ -72,6 +72,40 @@ test.group('Conta - criação', (group) => {
     assert.isNull(indexingJob)
   })
 
+  test('devolve o usuário com os defaults do banco e o role no JWT', async ({ client, assert }) => {
+    const email = `test_${uuidv7()}@example.com`
+
+    const response = await client.post(router.builder().make('v1.account.store')!).json({
+      fullName: 'Default User',
+      username: `test_${uuidv7().replaceAll('-', '').slice(0, 20)}`,
+      phoneNumber: '+5511912345678',
+      gender: 'FEMALE',
+      email,
+      password: 'password123',
+      passwordConfirmation: 'password123',
+    })
+
+    response.assertStatus(200)
+    const { user, accessToken } = (
+      response.body() as {
+        data: {
+          user: { role: string; biography: string | null; profilePictureId: string | null }
+          accessToken: string
+        }
+      }
+    ).data
+    assert.equal(user.role, 'SUPPORTER')
+    assert.isNull(user.biography)
+    assert.isNull(user.profilePictureId)
+
+    const claims = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64url').toString('utf8'))
+    assert.equal(claims.role, 'SUPPORTER')
+
+    const job = await findEnqueuedJob(email)
+    assert.equal((job?.data as { role?: string } | undefined)?.role, 'SUPPORTER')
+    await job?.remove()
+  })
+
   test('rejeita criação sem fullName', async ({ client }) => {
     const response = await client.post(router.builder().make('v1.account.store')!).json({
       username: `test_${uuidv7().replaceAll('-', '').slice(0, 20)}`,
