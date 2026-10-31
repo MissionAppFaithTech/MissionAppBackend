@@ -18,7 +18,13 @@
 
   "usedClassMembers": ["toObject"],
 
-  "ignoreDependencies": ["pg", "hot-hook", "@aws-sdk/s3-request-presigner"],
+  "ignoreDependencies": [
+    "pg",
+    "hot-hook",
+    "@aws-sdk/s3-request-presigner",
+    "@japa/runner",
+    "@poppinss/ts-exec"
+  ],
 
   "duplicates": {
     "ignore": ["bin/**", "database/migrations/**"]
