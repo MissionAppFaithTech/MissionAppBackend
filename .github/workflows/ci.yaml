@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
 
-# Least privilege for GITHUB_TOKEN: lint and build only read the repository.
+# Privilégio mínimo para GITHUB_TOKEN: lint e build precisam apenas de leitura do repositório.
 permissions:
   contents: read
 
