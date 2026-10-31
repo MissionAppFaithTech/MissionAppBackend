@@ -7,5 +7,6 @@ import vine from '@vinejs/vine'
 export const updateProfileValidator = vine.create({
   publicEmail: email().nullable().optional(),
   publicPhone: phoneNumber().nullable().optional(),
+  publicPhoneIsWhatsapp: vine.boolean().optional(),
   donationMessage: vine.string().trim().maxLength(5000).nullable().optional(),
 })

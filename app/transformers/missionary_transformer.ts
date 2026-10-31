@@ -10,6 +10,7 @@ export default class MissionaryTransformer extends BaseTransformer<Missionary> {
       'identityDocument',
       'publicEmail',
       'publicPhone',
+      'publicPhoneIsWhatsapp',
       'donationMessage',
       'aboutMe',
       'missionStorySummary',

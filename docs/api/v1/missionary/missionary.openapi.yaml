@@ -1004,6 +1004,9 @@ components:
         publicPhone:
           type: [string, 'null']
           example: '+5511912345678'
+        publicPhoneIsWhatsapp:
+          type: boolean
+          description: Indica se o telefone público aceita WhatsApp; o perfil só oferece WhatsApp quando true.
         donationMessage:
           type: [string, 'null']
           maxLength: 5000

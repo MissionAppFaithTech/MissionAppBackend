@@ -7,6 +7,7 @@ import { ResolveMissionaryService } from './resolve_missionary_service.ts'
 type UpdateMissionaryProfilePayload = {
   publicEmail?: string | null
   publicPhone?: string | null
+  publicPhoneIsWhatsapp?: boolean
   donationMessage?: string | null
 }
 
@@ -27,6 +28,7 @@ export class UpdateMissionaryProfileService {
         omitUndefined({
           publicEmail: payload.publicEmail,
           publicPhone: payload.publicPhone,
+          publicPhoneIsWhatsapp: payload.publicPhoneIsWhatsapp,
           donationMessage: payload.donationMessage,
         })
       )
