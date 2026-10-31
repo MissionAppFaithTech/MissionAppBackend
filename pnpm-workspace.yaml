@@ -12,4 +12,4 @@ overrides:
   # Validado com o transporte Resend — remover quando o Adonis suportar o 10.
   nodemailer: 10.3.1
   # NOTE: o @opentelemetry/core 2.x (via @elastic/transport) exige api <1.10.
-  '@opentelemetry/api': 1.9.1
+  '@opentelemetry/api': 1.10.0
