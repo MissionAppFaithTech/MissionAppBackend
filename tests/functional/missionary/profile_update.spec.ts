@@ -172,4 +172,42 @@ test.group('Missionary - profile update', (group) => {
     assert.equal(persisted.publicPhone, '+5511912345678')
     assert.equal(body.publicPhone, '+5511912345678')
   })
+
+  test('marca e desmarca o telefone público como WhatsApp', async ({ client, assert }) => {
+    const { user, password, missionary } = await createFilledMissionary()
+    const accessToken = await loginAndGetAccessToken(client, user.email, password)
+    const update = (publicPhoneIsWhatsapp: boolean) =>
+      client
+        .patch(router.builder().make('v1.missionary.profile.update')!)
+        .header('Authorization', `Bearer ${accessToken}`)
+        .json({ publicPhoneIsWhatsapp })
+
+    const initial = await Missionary.findOrFail(missionary.id)
+    assert.isFalse(initial.publicPhoneIsWhatsapp)
+
+    const enabled = await update(true)
+    enabled.assertStatus(200)
+    assert.isTrue((enabled.body() as MissionaryBody).data.missionary.publicPhoneIsWhatsapp)
+    const afterEnable = await Missionary.findOrFail(missionary.id)
+    assert.isTrue(afterEnable.publicPhoneIsWhatsapp)
+
+    const disabled = await update(false)
+    disabled.assertStatus(200)
+    assert.isFalse((disabled.body() as MissionaryBody).data.missionary.publicPhoneIsWhatsapp)
+    const persisted = await Missionary.findOrFail(missionary.id)
+    assert.isFalse(persisted.publicPhoneIsWhatsapp)
+    assert.equal(persisted.publicPhone, '+5511912345678')
+  })
+
+  test('rejeita publicPhoneIsWhatsapp que não é booleano', async ({ client }) => {
+    const { user, password } = await createFilledMissionary()
+    const accessToken = await loginAndGetAccessToken(client, user.email, password)
+
+    const response = await client
+      .patch(router.builder().make('v1.missionary.profile.update')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ publicPhoneIsWhatsapp: 'talvez' })
+
+    response.assertStatus(422)
+  })
 })

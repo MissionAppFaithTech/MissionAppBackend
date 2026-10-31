@@ -4,6 +4,7 @@ import MissionaryAgencyNotFoundException from '#exceptions/missionary/missionary
 import MissionaryAgency from '#models/missionary_agency'
 import type User from '#models/user'
 import { applySearchFilters } from '#services/shared/apply_search_filters'
+import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
 import type { SearchFilters } from '#services/shared/apply_search_filters'
 import db from '@adonisjs/lucid/services/db'
 
@@ -47,6 +48,10 @@ export class MissionaryAgenciesService {
 
   async create(actor: User, payload: CreateMissionaryAgencyPayload): Promise<MissionaryAgency> {
     return db.transaction(async (trx) => {
+      // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
+      const existing = await findCatalogDuplicate(MissionaryAgency, trx, payload)
+      if (existing) return existing
+
       return MissionaryAgency.create(
         {
           name: payload.name,

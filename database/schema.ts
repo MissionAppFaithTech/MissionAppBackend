@@ -280,6 +280,7 @@ export class MissionarySchema extends BaseModel {
     'prayerRequest',
     'publicEmail',
     'publicPhone',
+    'publicPhoneIsWhatsapp',
     'status',
     'userId',
   ] as const
@@ -312,6 +313,8 @@ export class MissionarySchema extends BaseModel {
   declare publicEmail: string | null
   @column()
   declare publicPhone: string | null
+  @column()
+  declare publicPhoneIsWhatsapp: boolean
   @column()
   declare status: string
   @column()

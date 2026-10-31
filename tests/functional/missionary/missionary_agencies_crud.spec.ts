@@ -146,6 +146,7 @@ test.group('Missionary agencies - CRUD', (group) => {
       created.assertStatus(200)
     }
 
+    const createdNames = new Set(['Alfa Central', 'Beta Norte', 'Gamma 100%'])
     const names = async (qs: Record<string, string>) => {
       const res = await client
         .get(url)
@@ -153,9 +154,10 @@ test.group('Missionary agencies - CRUD', (group) => {
         .header('X-Forwarded-For', clientIp)
         .header('Authorization', `Bearer ${accessToken}`)
       res.assertStatus(200)
-      return ((res.body() as ApiBody).data.missionaryAgencies as { name: string }[]).map(
-        (item) => item.name
-      )
+      // NOTE: o banco local pode ter outros registros (seed); só os criados aqui importam
+      return ((res.body() as ApiBody).data.missionaryAgencies as { name: string }[])
+        .map((item) => item.name)
+        .filter((name) => createdNames.has(name))
     }
 
     assert.deepEqual(await names({ search: 'alfa' }), ['Alfa Central'])
@@ -165,5 +167,30 @@ test.group('Missionary agencies - CRUD', (group) => {
     assert.deepEqual(await names({ country: 'brasil', search: 'norte' }), ['Beta Norte'])
     assert.deepEqual(await names({ search: '100%' }), ['Gamma 100%'])
     assert.deepEqual(await names({ search: '%' }), ['Gamma 100%'])
+  })
+
+  test('reaproveita a agência com mesmo nome e cidade em vez de duplicar', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createTestUser()
+    const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const store = (payload: Record<string, string>) =>
+      client
+        .post(router.builder().make('v1.missionary_agencies.store')!)
+        .header('Authorization', `Bearer ${accessToken}`)
+        .json(payload)
+
+    const first = await store({ name: 'Missão Esperança' })
+    const again = await store({ name: 'MISSAO ESPERANCA' })
+
+    first.assertStatus(200)
+    again.assertStatus(200)
+    assert.equal(
+      (again.body() as ApiBody).data.missionaryAgency.id,
+      (first.body() as ApiBody).data.missionaryAgency.id
+    )
+    const rows = await MissionaryAgency.query().where('user_id', user.id)
+    assert.lengthOf(rows, 1)
   })
 })

@@ -4,6 +4,7 @@ import FaithCommunityNotFoundException from '#exceptions/missionary/faith_commun
 import FaithCommunity from '#models/faith_community'
 import type User from '#models/user'
 import { applySearchFilters } from '#services/shared/apply_search_filters'
+import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
 import type { SearchFilters } from '#services/shared/apply_search_filters'
 import db from '@adonisjs/lucid/services/db'
 
@@ -47,6 +48,10 @@ export class FaithCommunitiesService {
 
   async create(actor: User, payload: CreateFaithCommunityPayload): Promise<FaithCommunity> {
     return db.transaction(async (trx) => {
+      // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
+      const existing = await findCatalogDuplicate(FaithCommunity, trx, payload)
+      if (existing) return existing
+
       return FaithCommunity.create(
         {
           name: payload.name,
