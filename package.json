@@ -80,7 +80,7 @@
     "@japa/runner": "5.4.0",
     "@poppinss/ts-exec": "1.5.1",
     "@types/luxon": "3.7.6",
-    "@types/node": "25.9.9",
+    "@types/node": "26.6.5",
     "commitlint": "21.2.4",
     "eslint": "10.13.0",
     "eslint-plugin-import-x": "4.17.1",
