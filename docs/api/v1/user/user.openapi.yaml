@@ -210,6 +210,10 @@ components:
 
     UpdateProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados. Apenas
+        `biography` aceita `null` (ou string vazia) para ser limpo; `null` em
+        `fullName`, `username` ou `profilePictureId` é ignorado.
       properties:
         fullName:
           type: string
@@ -221,7 +225,7 @@ components:
           maxLength: 32
           pattern: '^[a-z0-9_]+$'
         biography:
-          type: string
+          type: [string, 'null']
           maxLength: 200
         profilePictureId:
           type: string

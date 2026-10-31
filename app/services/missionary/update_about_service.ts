@@ -1,6 +1,7 @@
 import FaithCommunity from '#models/faith_community'
 import type Missionary from '#models/missionary'
 import type User from '#models/user'
+import { omitUndefined } from '#utils/omit_undefined'
 import db from '@adonisjs/lucid/services/db'
 import { Exception } from '@adonisjs/core/exceptions'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'
@@ -37,14 +38,16 @@ export class UpdateMissionaryAboutService {
 
     return db.transaction(async (trx) => {
       missionary.useTransaction(trx)
-      missionary.merge({
-        aboutMe: payload.aboutMe,
-        missionStorySummary: payload.missionStorySummary,
-        originLocation: payload.originLocation,
-        faithCommunityId: payload.faithCommunityId,
-        prayerRequest: payload.prayerRequest,
-        lifeVerse: payload.lifeVerse,
-      })
+      missionary.merge(
+        omitUndefined({
+          aboutMe: payload.aboutMe,
+          missionStorySummary: payload.missionStorySummary,
+          originLocation: payload.originLocation,
+          faithCommunityId: payload.faithCommunityId,
+          prayerRequest: payload.prayerRequest,
+          lifeVerse: payload.lifeVerse,
+        })
+      )
       await missionary.save()
       return missionary
     })
