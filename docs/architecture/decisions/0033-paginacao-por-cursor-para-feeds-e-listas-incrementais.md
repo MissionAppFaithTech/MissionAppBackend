@@ -24,7 +24,10 @@ As próximas features são majoritariamente listas que crescem no topo e são li
 - listas de seguidores e seguidos com "Carregar mais" (RF 10.6, 11.6);
 - "Explorar" (RF 14).
 
-O requisito não funcional **NF 2.3** do [site de requisitos](https://missionappfaithtech.github.io/MissionAppRequirementsList/) pede explicitamente **paginação por cursor, 20 itens por requisição, com carregamento sob demanda**.
+O [site de requisitos](https://missionappfaithtech.github.io/MissionAppRequirementsList/) é explícito:
+
+- **NF 2.2** pede "Paginação por Key Cursor (baseada em _timestamp_ ou ID)" e o feed carregado em menos de 2 s para os primeiros 10 itens.
+- **NF 2.3** pede "Retorno **máximo** de 20 itens por requisição da API" em listagens extensas (seguidores, feed, resultados de busca), com scroll infinito no frontend.
 
 Offset nesses casos tem dois problemas conhecidos:
 
@@ -48,7 +51,7 @@ A API adota **duas estratégias de paginação, escolhidas pelo tipo de lista**:
 
 **Requisição:** `GET /api/v1/<recurso>?limit=20&cursor=<opaco>`
 
-- `limit`: padrão **20** (NF 2.3), mínimo 1, máximo **100**. Validado por um novo `cursorPaginationSchema` em `app/validators/shared/schemas/`, ao lado do `paginationSchema`.
+- `limit`: padrão **20**, mínimo 1, máximo **20**. O NF 2.3 fixa 20 como teto por requisição. Telas que precisam de menos (ex.: os 10 primeiros itens do NF 2.2) pedem um `limit` menor. Validado por um novo `cursorPaginationSchema` em `app/validators/shared/schemas/`, ao lado do `paginationSchema`.
 - `cursor`: opcional. Ausente significa primeira página.
 
 **Ordenação e chave:**
@@ -93,7 +96,7 @@ A lógica fica num helper compartilhado (ex.: `app/utils/cursor_pagination.ts`) 
 
 ## Justificativa
 
-- **Atende o NF 2.3 literalmente:** cursor, 20 por página, carregamento sob demanda.
+- **Atende os NF 2.2 e 2.3 literalmente:** cursor por timestamp/ID e no máximo 20 itens por requisição.
 - **Sem duplicação nem buraco** quando chegam itens novos no topo do feed, o que é o caso normal numa rede social.
 - **Custo constante por página:** a comparação de tupla usa o índice e não depende de quantas páginas o usuário já rolou. Isso importa para o NF 2.5 (1.000 usuários simultâneos).
 - **UUID v7 favorece o keyset:** a chave primária já é ordenada no tempo e serve de desempate sem coluna extra.
@@ -104,7 +107,7 @@ A lógica fica num helper compartilhado (ex.: `app/utils/cursor_pagination.ts`) 
 
 **1. Offset em todas as listas (manter os exemplos atuais)**
 
-Mais simples e já previsto nos ADRs. Contraria o NF 2.3, duplica e pula itens em feeds com inserção contínua e degrada com a profundidade. Descartada para listas de usuário final.
+Mais simples e já previsto nos ADRs. Contraria o NF 2.2, que pede cursor, duplica e pula itens em feeds com inserção contínua e degrada com a profundidade. Descartada para listas de usuário final.
 
 **2. Cursor em todas as listas, inclusive no admin**
 
@@ -135,7 +138,7 @@ Funciona enquanto a ordem for por criação, mas não serve para listas ordenada
 
 ## Referências
 
-- [Site de requisitos](https://missionappfaithtech.github.io/MissionAppRequirementsList/): NF 2.3 (cursor, 20 itens), NF 2.5, RF 4.4.2, 5.3.1, 10.4, 10.6, 11.6, 14
+- [Site de requisitos](https://missionappfaithtech.github.io/MissionAppRequirementsList/): NF 2.2 (key cursor), NF 2.3 (máximo de 20 itens por requisição), NF 2.5, RF 4.4.2, 5.3.1, 10.4, 10.6, 11.6, 14
 - [ADR-0021](./0021-adocao-de-uuid-v7-como-estrategia-de-chave-primaria.md): UUID v7 ordenado no tempo, usado como desempate
 - [ADR-0026](./0026-adocao-do-adonis-lucid-filter-para-filtragem-de-queries.md) e [ADR-0028](./0028-arquitetura-de-validators-reutilizaveis-com-vinejs.md): paginação por offset, mantida para o admin
 - [ADR-0034](./0034-envelope-de-erro-unico-com-codigo.md): formato do erro de cursor inválido
