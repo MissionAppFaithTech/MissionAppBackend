@@ -524,5 +524,20 @@ flowchart LR
          <td align="left">IP do Usuário Repassado pelo BFF com Segredo Compartilhado</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0033-paginacao-por-cursor-para-feeds-e-listas-incrementais.md">ADR-0033</a></td>
+         <td align="left">Paginação por Cursor para Feeds e Listas Incrementais</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0034-envelope-de-erro-unico-com-codigo.md">ADR-0034</a></td>
+         <td align="left">Envelope de Erro Único com Código Estável</td>
+         <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0035-rotacao-idempotente-de-refresh-token-com-janela-de-tolerancia.md">ADR-0035</a></td>
+         <td align="left">Rotação Idempotente de Refresh Token com Janela de Tolerância</td>
+         <td>🟡 Proposto</td>
+      </tr>
    </tbody>
 </table>
