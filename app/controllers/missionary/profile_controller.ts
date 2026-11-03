@@ -3,6 +3,7 @@ import { UpdateMissionaryProfileService } from '#services/missionary/update_prof
 import MissionaryTransformer from '#transformers/missionary_transformer'
 import { createMissionaryProfileValidator } from '#validators/missionary/create_profile'
 import { updateProfileValidator } from '#validators/missionary/update_profile'
+import { missionaryIdValidator } from '#validators/missionary/missionary_id'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class ProfileController {
@@ -23,7 +24,9 @@ export default class ProfileController {
 
   async update({ auth, request, serialize }: HttpContext) {
     const payload = await request.validateUsing(updateProfileValidator)
-    const targetMissionaryId = request.param('id') as string | undefined
+    const {
+      params: { id: targetMissionaryId },
+    } = await request.validateUsing(missionaryIdValidator)
 
     const missionary = await new UpdateMissionaryProfileService().execute(
       auth.getUserOrFail(),
