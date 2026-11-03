@@ -5,6 +5,7 @@ import User from '#models/user'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { randomBytes } from 'node:crypto'
 
 type TokensBody = { data: { accessToken: string; refreshToken: string } }
 
@@ -92,7 +93,7 @@ test.group('Auth - login', (group) => {
     const response = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
       .header('x-client-type', 'geladeira')
-      .json({ login: user.email, password: 'wrong-password' })
+      .json({ login: user.email, password: randomBytes(12).toString('base64url') })
 
     response.assertStatus(422)
     const reloaded = await User.findOrFail(user.id)
