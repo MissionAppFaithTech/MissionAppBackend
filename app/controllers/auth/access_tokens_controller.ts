@@ -11,9 +11,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 export default class AccessTokensController {
   async store({ request, serialize, auth }: HttpContext) {
     const validated = await request.validateUsing(loginValidator)
+    // NOTE: headers inválidos respondem 422 antes de conferir a senha, que conta a
+    // tentativa (bloqueio da conta) e grava auditoria.
+    const meta = await toDeviceMetadata(request)
 
     const user = await User.verifyCredentials(validated.login, validated.password)
-    const meta = await toDeviceMetadata(request)
 
     const tokens = await new TokenIssuanceService().issue(
       auth,
