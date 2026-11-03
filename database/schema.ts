@@ -465,6 +465,7 @@ export class RefreshTokenSchema extends BaseModel {
     'id',
     'ipAddress',
     'lastUsedAt',
+    'replacedById',
     'revokedAt',
     'tokenHash',
     'updatedAt',
@@ -487,6 +488,8 @@ export class RefreshTokenSchema extends BaseModel {
   declare ipAddress: string | null
   @column.dateTime()
   declare lastUsedAt: DateTime | null
+  @column()
+  declare replacedById: string | null
   @column.dateTime()
   declare revokedAt: DateTime | null
   @column()

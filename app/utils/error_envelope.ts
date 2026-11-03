@@ -14,7 +14,7 @@ export type ErrorEnvelopeFieldError = {
  * - `code`: identificador estável (`E_*`), parte do contrato público.
  * - `errors`: só em erros de validação.
  * - `meta`: dados estruturados para o cliente reagir (ex.: `retryAfterSeconds`).
- * - `debug`: só fora de produção, em erros 5xx; o stack fica só nos logs (`report`).
+ * - `debug`: só fora de produção, em erros internos; o stack fica só nos logs (`report`).
  */
 export type ErrorEnvelope = {
   message: string
@@ -122,6 +122,17 @@ function internalErrorEnvelope(error: unknown, err: ErrorLike, debug: boolean): 
 }
 
 /**
+ * 500, ou 5xx sem `code` de domínio: resposta genérica, sem detalhes do erro.
+ * Um 5xx diferente de 500 com `code` `E_*` é um sinal deliberado (ex.:
+ * `E_REFRESH_UNAVAILABLE`, 503) e mantém código e mensagem.
+ */
+function isInternalError(err: ErrorLike, status: number): boolean {
+  if (status < 500) return false
+  if (status === 500) return true
+  return !(typeof err.code === 'string' && err.code.startsWith('E_'))
+}
+
+/**
  * `code` declarado pelo erro (padrão `E_*`) ou derivado do status.
  */
 function codeOf(err: ErrorLike, status: number): string {
@@ -169,7 +180,7 @@ function retryAfterOf(err: ErrorLike): number | undefined {
 export function normalizeError(error: unknown, options: { debug?: boolean } = {}): NormalizedError {
   const err = asErrorLike(error)
   const status = statusOf(err)
-  if (status >= 500) {
+  if (isInternalError(err, status)) {
     return { status, envelope: internalErrorEnvelope(error, err, Boolean(options.debug)) }
   }
 

@@ -124,10 +124,15 @@ paths:
       summary: Renovação de access token
       description: >-
         Rotaciona o refresh token e emite um novo access token. O refresh
-        token vai sempre no corpo — não há mais fallback via cookie.
-        Reutilizar um refresh token já rotacionado invalida toda a família de
-        tokens da sessão (detecção de roubo — ver ADR-0023). O TTL do novo
-        refresh token é recalculado a partir de agora (sliding window).
+        token vai sempre no corpo — não há mais fallback via cookie. A rotação
+        é serializada por token e idempotente dentro da janela de tolerância
+        (ADR-0035, padrão 30 s): reapresentar um refresh token já rotacionado,
+        do mesmo dispositivo (x-client-type e x-device-name), devolve o refresh
+        token atual da sessão e um novo access token. Fora da janela, de outro
+        dispositivo ou sem o registro da rotação, o reuso é tratado como roubo e
+        invalida toda a família (ADR-0023). Reapresentar um token de sessão já
+        encerrada (logout, troca de senha, revogação) responde 401 sem efeito.
+        O TTL do novo refresh token é recalculado a partir de agora (sliding window).
       security: []
       requestBody:
         required: true
@@ -144,8 +149,18 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: >-
-            Refresh token ausente, inválido, expirado ou já revogado
-            (reuso detectado — toda a família foi invalidada).
+            Refresh token inválido, expirado, de sessão encerrada ou reusado fora
+            da janela de tolerância (`E_INVALID_REFRESH_TOKEN`; no último caso,
+            toda a família foi invalidada).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: >-
+            Não foi possível registrar a rotação na janela de tolerância
+            (`E_REFRESH_UNAVAILABLE`). Nada foi alterado; tente de novo após
+            `Retry-After`.
           content:
             application/json:
               schema:

@@ -25,7 +25,8 @@ type ExceptionClass = (new (message: string, ...args: unknown[]) => Error) & {
 
 /**
  * Contrato do ADR-0034: toda exceção de domínio tem um `code` estável `E_*`, um
- * status 4xx e chega ao cliente no envelope com esse mesmo `code`.
+ * status 4xx (ou um 5xx deliberado, como 503) e chega ao cliente no envelope com
+ * esse mesmo `code`. O 500 é reservado para erros internos.
  */
 test.group('Exceções de domínio (contrato do envelope de erro)', () => {
   test('existe pelo menos uma exceção a verificar', async ({ assert }) => {
@@ -33,7 +34,7 @@ test.group('Exceções de domínio (contrato do envelope de erro)', () => {
     assert.isAbove(files.length, 0)
   })
 
-  test('cada exceção declara code E_*, status 4xx e sai no envelope', async ({ assert }) => {
+  test('cada exceção declara code E_*, status de erro e sai no envelope', async ({ assert }) => {
     for (const file of await exceptionFiles(EXCEPTIONS_DIR)) {
       const name = relative(EXCEPTIONS_DIR, file)
       const module = (await import(pathToFileURL(file).href)) as { default: ExceptionClass }
@@ -41,7 +42,12 @@ test.group('Exceções de domínio (contrato do envelope de erro)', () => {
 
       assert.match(String(ExceptionCtor.code), /^E_[A-Z0-9_]+$/, `${name}: code inválido`)
       assert.isAtLeast(Number(ExceptionCtor.status), 400, `${name}: status abaixo de 400`)
-      assert.isBelow(Number(ExceptionCtor.status), 500, `${name}: status 5xx`)
+      assert.notEqual(
+        Number(ExceptionCtor.status),
+        500,
+        `${name}: 500 é reservado a erros internos`
+      )
+      assert.isBelow(Number(ExceptionCtor.status), 600, `${name}: status inválido`)
 
       const { status, envelope } = normalizeError(new ExceptionCtor('Mensagem de teste', 30))
       assert.equal(status, ExceptionCtor.status, `${name}: status no envelope`)

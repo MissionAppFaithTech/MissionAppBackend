@@ -537,7 +537,7 @@ flowchart LR
       <tr>
          <td><a href="./0035-rotacao-idempotente-de-refresh-token-com-janela-de-tolerancia.md">ADR-0035</a></td>
          <td align="left">Rotação Idempotente de Refresh Token com Janela de Tolerância</td>
-         <td>🟡 Proposto</td>
+         <td>🟢 Aceito</td>
       </tr>
    </tbody>
 </table>
