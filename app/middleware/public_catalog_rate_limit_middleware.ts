@@ -1,5 +1,6 @@
 import cache from '#services/shared/cache/cache'
 import { resolveClientIp } from '#utils/client_ip'
+import { tooManyRequestsEnvelope } from '#utils/error_envelope'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 
@@ -21,9 +22,12 @@ export default class PublicCatalogRateLimitMiddleware {
 
     if (attempts > PUBLIC_CATALOG_RATE_LIMIT_MAX_REQUESTS) {
       ctx.response.header('Retry-After', String(PUBLIC_CATALOG_RATE_LIMIT_WINDOW_SECONDS))
-      return ctx.response.tooManyRequests({
-        message: 'Muitas consultas ao catálogo. Tente novamente em instantes.',
-      })
+      return ctx.response.tooManyRequests(
+        tooManyRequestsEnvelope(
+          'Muitas consultas ao catálogo. Tente novamente em instantes.',
+          PUBLIC_CATALOG_RATE_LIMIT_WINDOW_SECONDS
+        )
+      )
     }
 
     return next()

@@ -14,5 +14,6 @@ docs {
 
   Consulta pública (sem autenticação), usada no cadastro de missionário
   antes de a conta existir. Limitada a 20 requisições por 60 segundos
-  por IP (429 + Retry-After ao exceder).
+  por IP (429 + Retry-After ao exceder; corpo no envelope de erro do
+  ADR-0034 com `code: E_TOO_MANY_REQUESTS` e `meta.retryAfterSeconds`).
 }

@@ -532,7 +532,7 @@ flowchart LR
       <tr>
          <td><a href="./0034-envelope-de-erro-unico-com-codigo.md">ADR-0034</a></td>
          <td align="left">Envelope de Erro Único com Código Estável</td>
-         <td>🟡 Proposto</td>
+         <td>🟢 Aceito</td>
       </tr>
       <tr>
          <td><a href="./0035-rotacao-idempotente-de-refresh-token-com-janela-de-tolerancia.md">ADR-0035</a></td>
