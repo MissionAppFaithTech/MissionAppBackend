@@ -5,6 +5,7 @@ import { searchIndexingQueue } from '#queues/search_indexing_queue'
 import User from '#models/user'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
+import { randomPassword } from '#tests/functional/auth/helpers'
 import { test } from '@japa/runner'
 import { randomBytes } from 'node:crypto'
 import { v7 as uuidv7 } from 'uuid'
@@ -38,6 +39,8 @@ async function findEnqueuedIndexingJob(email: string) {
   )
 }
 
+const SIGNUP_PASSWORD = randomPassword()
+
 test.group('Conta - criação', (group) => {
   group.each.setup(async () => {
     const rollback = await testUtils.db().wrapInGlobalTransaction()
@@ -55,8 +58,8 @@ test.group('Conta - criação', (group) => {
       phoneNumber: '+5511912345678',
       gender: 'MALE',
       email,
-      password: 'password123',
-      passwordConfirmation: 'password123',
+      password: SIGNUP_PASSWORD,
+      passwordConfirmation: SIGNUP_PASSWORD,
     })
 
     response.assertStatus(200)
@@ -138,8 +141,8 @@ test.group('Conta - criação', (group) => {
       phoneNumber: '+5511912345678',
       gender: 'MALE',
       email: `test_${uuidv7()}@example.com`,
-      password: 'password123',
-      passwordConfirmation: 'password123',
+      password: SIGNUP_PASSWORD,
+      passwordConfirmation: SIGNUP_PASSWORD,
     })
 
     response.assertStatus(422)

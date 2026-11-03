@@ -92,6 +92,9 @@ export default await Env.create(new URL('../', import.meta.url), {
   // ausente ou `false`, nenhum detalhe sai; em produção é sempre ignorado.
   ERROR_DEBUG: Env.schema.boolean.optional(),
 
+  // Senha dos usuários de seed (só development/testing). Ausente, vale `password123`.
+  SEED_USER_PASSWORD: Env.schema.string.optional(),
+
   /*
   |----------------------------------------------------------
   | Variables for configuring the mail package

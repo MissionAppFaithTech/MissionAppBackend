@@ -2,15 +2,16 @@ import { Gender } from '#enums/user/gender'
 import { MembershipStatus } from '#enums/user/membership_status'
 import { UserRole } from '#enums/user/user_role'
 import User from '#models/user'
+import env from '#start/env'
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import { DateTime } from 'luxon'
 
 /**
  * Senha compartilhada por todos os usuários deste seed — só pra login manual
  * em ambiente local, nunca usada fora de development/testing (ver
- * `static environment` abaixo).
+ * `static environment` abaixo). `SEED_USER_PASSWORD` troca o padrão local.
  */
-const SEED_PASSWORD = 'password123'
+const SEED_PASSWORD = env.get('SEED_USER_PASSWORD') ?? 'password123'
 
 /**
  * Usuários de desenvolvimento — cobre os 3 roles (admin, missionário,

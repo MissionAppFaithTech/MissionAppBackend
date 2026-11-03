@@ -2,6 +2,7 @@ import User from '#models/user'
 import { Gender } from '#enums/user/gender'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
+import { randomPassword } from '#tests/functional/auth/helpers'
 import { test } from '@japa/runner'
 import { v7 as uuidv7 } from 'uuid'
 
@@ -36,7 +37,7 @@ test.group('Conta - disponibilidade de username', (group) => {
       phoneNumber: '+5511912345678',
       gender: Gender.MALE,
       email: `test_${uuidv7()}@example.com`,
-      passwordHash: 'password123',
+      passwordHash: randomPassword(),
     })
 
     const response = await client.get(router.builder().make('v1.username_availability.show')!).qs({
