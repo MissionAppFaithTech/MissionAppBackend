@@ -502,8 +502,9 @@ components:
               description: Segundos até poder tentar de novo (423 e 429; igual ao header Retry-After).
 
     ValidationErrorResponse:
-      description: Envelope de erro de validação (422), com `errors` por campo.
+      description: >-
+        Envelope de erro de validação (422). `errors` vem por campo quando a
+        validação é de esquema (VineJS); regras de negócio verificadas no service
+        (ex.: username já em uso) respondem só com `message` e `code`.
       allOf:
         - $ref: '#/components/schemas/ErrorResponse'
-        - type: object
-          required: [errors]
