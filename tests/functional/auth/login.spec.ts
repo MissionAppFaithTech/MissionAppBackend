@@ -1,4 +1,4 @@
-import { createTestUser } from '#tests/functional/auth/helpers'
+import { createTestUser, randomPassword } from '#tests/functional/auth/helpers'
 import { AuthenticationStatus } from '#enums/authentication_audit/authentication_status'
 import AuthenticationAudit from '#models/authentication_audit'
 import User from '#models/user'
@@ -58,7 +58,7 @@ test.group('Auth - login', (group) => {
 
     const response = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ login: user.email, password: 'wrong-password' })
+      .json({ login: user.email, password: randomPassword() })
 
     response.assertStatus(400)
 
@@ -72,7 +72,7 @@ test.group('Auth - login', (group) => {
   }) => {
     const response = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ login: 'ninguem-cadastrado@example.com', password: 'wrong-password' })
+      .json({ login: 'ninguem-cadastrado@example.com', password: randomPassword() })
 
     response.assertStatus(400)
 

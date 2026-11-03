@@ -88,6 +88,9 @@ export default await Env.create(new URL('../', import.meta.url), {
   // sessão (ADR-0035). Opcional: ausente, vale 30.
   REFRESH_TOKEN_REUSE_WINDOW_SECONDS: Env.schema.number.optional(),
 
+  // Senha dos usuários de seed (só development/testing). Ausente, vale `password123`.
+  SEED_USER_PASSWORD: Env.schema.string.optional(),
+
   /*
   |----------------------------------------------------------
   | Variables for configuring the mail package

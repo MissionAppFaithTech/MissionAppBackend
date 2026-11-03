@@ -1,9 +1,11 @@
-import { createTestUser } from '#tests/functional/auth/helpers'
+import { createTestUser, randomPassword } from '#tests/functional/auth/helpers'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
 
 type TokensBody = { data: { accessToken: string } }
+
+const NEW_PASSWORD = randomPassword()
 
 test.group('Auth - troca de senha', (group) => {
   group.each.setup(async () => {
@@ -25,8 +27,8 @@ test.group('Auth - troca de senha', (group) => {
       .header('Authorization', `Bearer ${accessToken}`)
       .json({
         currentPassword: password,
-        newPassword: 'newpassword456',
-        newPasswordConfirmation: 'newpassword456',
+        newPassword: NEW_PASSWORD,
+        newPasswordConfirmation: NEW_PASSWORD,
       })
 
     changePassword.assertStatus(200)
@@ -52,9 +54,9 @@ test.group('Auth - troca de senha', (group) => {
       .patch(router.builder().make('v1.account_password.update')!)
       .header('Authorization', `Bearer ${accessToken}`)
       .json({
-        currentPassword: 'senha-errada',
-        newPassword: 'newpassword456',
-        newPasswordConfirmation: 'newpassword456',
+        currentPassword: randomPassword(),
+        newPassword: NEW_PASSWORD,
+        newPasswordConfirmation: NEW_PASSWORD,
       })
 
     response.assertStatus(422)
@@ -74,13 +76,13 @@ test.group('Auth - troca de senha', (group) => {
       .header('Authorization', `Bearer ${accessToken}`)
       .json({
         currentPassword: password,
-        newPassword: 'newpassword456',
-        newPasswordConfirmation: 'newpassword456',
+        newPassword: NEW_PASSWORD,
+        newPasswordConfirmation: NEW_PASSWORD,
       })
 
     const newLogin = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ login: user.email, password: 'newpassword456' })
+      .json({ login: user.email, password: NEW_PASSWORD })
 
     newLogin.assertStatus(200)
   })

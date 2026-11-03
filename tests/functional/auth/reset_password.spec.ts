@@ -1,4 +1,4 @@
-import { createTestUser } from '#tests/functional/auth/helpers'
+import { createTestUser, randomPassword } from '#tests/functional/auth/helpers'
 import { PASSWORD_RESET_EMAIL_JOB_NAME } from '#constants/password_reset'
 import type { PasswordResetRequestedPayload } from '#types/events/auth/password_reset_requested'
 import { emailQueue } from '#queues/email_queue'
@@ -33,6 +33,8 @@ async function tokenFromEnqueuedJob(email: string): Promise<string> {
   return extractResetToken((job.data as PasswordResetRequestedPayload).resetUrl)
 }
 
+const NEW_PASSWORD = randomPassword()
+
 test.group('Auth - redefinir senha', (group) => {
   group.each.setup(async () => {
     const rollback = await testUtils.db().wrapInGlobalTransaction()
@@ -59,7 +61,7 @@ test.group('Auth - redefinir senha', (group) => {
 
     const reset = await client
       .patch(router.builder().make('v1.auth.reset_password.update')!)
-      .json({ token, newPassword: 'novaSenha456', newPasswordConfirmation: 'novaSenha456' })
+      .json({ token, newPassword: NEW_PASSWORD, newPasswordConfirmation: NEW_PASSWORD })
 
     reset.assertStatus(200)
 
@@ -71,7 +73,7 @@ test.group('Auth - redefinir senha', (group) => {
 
     const newLogin = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ login: user.email, password: 'novaSenha456' })
+      .json({ login: user.email, password: NEW_PASSWORD })
     newLogin.assertStatus(200)
   })
 
@@ -80,8 +82,8 @@ test.group('Auth - redefinir senha', (group) => {
       .patch(router.builder().make('v1.auth.reset_password.update')!)
       .json({
         token: 'token-que-nunca-existiu',
-        newPassword: 'novaSenha456',
-        newPasswordConfirmation: 'novaSenha456',
+        newPassword: NEW_PASSWORD,
+        newPasswordConfirmation: NEW_PASSWORD,
       })
 
     response.assertStatus(401)
@@ -102,7 +104,7 @@ test.group('Auth - redefinir senha', (group) => {
 
     const response = await client
       .patch(router.builder().make('v1.auth.reset_password.update')!)
-      .json({ token, newPassword: 'novaSenha456', newPasswordConfirmation: 'novaSenha456' })
+      .json({ token, newPassword: NEW_PASSWORD, newPasswordConfirmation: NEW_PASSWORD })
 
     response.assertStatus(401)
   })
