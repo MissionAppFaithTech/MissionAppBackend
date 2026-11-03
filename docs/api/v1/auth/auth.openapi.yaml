@@ -571,8 +571,10 @@ components:
 
     ValidationErrorResponse:
       description: >-
-        Envelope de erro de validação (422). `errors` vem por campo quando a
-        validação é de esquema (VineJS); regras de negócio verificadas no service
-        (ex.: username já em uso) respondem só com `message` e `code`.
+        Envelope de erro de validação (422). `errors` traz um item por campo,
+        tanto na validação de esquema (VineJS) quanto nas regras verificadas no
+        service (ex.: username já em uso, `database.unique`; comunidade de fé ou
+        foto inexistente, `database.exists`). Só um corpo que não é objeto JSON
+        responde sem `errors`.
       allOf:
         - $ref: '#/components/schemas/ErrorResponse'
