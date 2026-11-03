@@ -740,6 +740,14 @@ paths:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            Agência com missionários vinculados; nada foi excluído. Códigos:
+            `E_MISSIONARY_AGENCY_IN_USE`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
           description: >-
             Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
