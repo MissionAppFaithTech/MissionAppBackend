@@ -312,6 +312,9 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
       youch:
         specifier: 4.1.1
         version: 4.1.1
@@ -3690,6 +3693,11 @@ packages:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
 
+  yaml@2.9.1:
+    resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   yargs-parser@22.0.0:
     resolution: {integrity: sha512-rwu/ClNdSMpkSrUb+d6BRsSkLUq1fmfsY6TOpYzTwvwkg1/NRG85KBy3kq++A8LKQwX6lsu+aWad+2khvuXrqw==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
@@ -6934,6 +6942,8 @@ snapshots:
   xtend@4.0.2: {}
 
   y18n@5.0.8: {}
+
+  yaml@2.9.1: {}
 
   yargs-parser@22.0.0: {}
 

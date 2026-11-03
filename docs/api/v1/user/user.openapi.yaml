@@ -24,7 +24,9 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/LoginResponse'
         '422':
-          description: 'Erro de validação (ex: email já em uso, senhas não conferem).'
+          description: >-
+            Erro de validação (ex: email já em uso, senhas não conferem).
+            Códigos: `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -57,11 +59,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsernameAvailabilityResponse'
         '422':
-          description: Nome de usuário fora do formato esperado.
+          description: >-
+            Nome de usuário fora do formato esperado. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de requisições atingido; veja `Retry-After`. Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
 
   /account/profile:
     get:
@@ -78,7 +90,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/AccountProfileResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -102,8 +116,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação dos campos de perfil.
+          description: >-
+            Erro de validação dos campos de perfil. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -129,6 +153,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MediaAssetResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /account/password:
     patch:
@@ -156,13 +195,17 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Senha atual incorreta, ou nova senha/confirmação inválidas.
+          description: >-
+            Senha atual incorreta, ou nova senha/confirmação inválidas. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:

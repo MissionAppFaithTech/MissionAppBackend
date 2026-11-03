@@ -64,6 +64,12 @@ Toda resposta de erro da API (4xx e 5xx), em qualquer ambiente, usa o mesmo enve
 
 O BFF (`src/lib/api/errors.ts`) passa a mapear `code` para mensagens em pt-BR. O mapa por texto em inglês é removido depois que todos os endpoints usados estiverem no envelope novo. A decisão de retry do TanStack Query (ADR-0002 do frontend) usa status + `code`.
 
+**Notas de implementação (2026-11-04):**
+
+- O envelope entrou no #158. O item 6 foi concluído depois: cada resposta de erro das specs de domínio e do bundle termina com "Códigos: …" e usa `ValidationErrorResponse` no 422 e `ErrorResponse` nos demais. O teste `tests/unit/docs/openapi_error_codes.spec.ts` falha se uma resposta de erro ficar sem código, se citar um código que a API não tem ou se o bundle divergir dos arquivos de domínio.
+- Os códigos que valem para qualquer operação (500 `E_INTERNAL_SERVER_ERROR`, erros do body parser como 413 `E_REQUEST_ENTITY_TOO_LARGE` e o 404 `E_ROUTE_NOT_FOUND`) ficam descritos uma vez, no `code` do `ErrorResponse`.
+- No frontend, o mapa de mensagens por texto em inglês saiu (MissionAppFrontend #133): os erros passam a ser traduzidos só pelo `code` e pelas regras do VineJS.
+
 ## Justificativa
 
 - **Contrato estável:** o código não muda quando a redação ou o idioma mudam. Isso é indispensável agora que o ADR-0031 torna as mensagens traduzíveis.
