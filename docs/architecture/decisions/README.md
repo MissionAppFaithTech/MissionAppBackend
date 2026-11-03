@@ -544,5 +544,10 @@ flowchart LR
          <td align="left">Perfil Público Anônimo e Orçamento de Rate Limit para o Servidor do BFF</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0037-api-avisa-o-site-para-descartar-o-cache-do-perfil-publico.md">ADR-0037</a></td>
+         <td align="left">API Avisa o Site para Descartar o Cache do Perfil Público</td>
+         <td>🟡 Proposto</td>
+      </tr>
    </tbody>
 </table>
