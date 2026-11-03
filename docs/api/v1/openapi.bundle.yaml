@@ -1200,23 +1200,53 @@ components:
               description: Token opaco — sempre presente, para qualquer cliente.
     ErrorResponse:
       type: object
+      description: >-
+        Envelope único de erro (ADR-0034), igual em todos os ambientes. Clientes
+        decidem pelo `code` (estável) e pelo status; `message` é só para humanos.
+      required: [message, code]
       properties:
         message:
           type: string
-    ValidationErrorResponse:
-      type: object
-      properties:
+          description: Texto em pt-BR para exibir ao usuário.
+          example: Agência missionária não encontrada
+        code:
+          type: string
+          pattern: '^E_[A-Z0-9_]+$'
+          description: >-
+            Identificador estável do erro. Exemplos: E_VALIDATION_ERROR,
+            E_UNAUTHORIZED_ACCESS, E_INVALID_CREDENTIALS, E_ACCOUNT_LOCKED,
+            E_INVALID_REFRESH_TOKEN, E_SESSION_NOT_FOUND, E_TOO_MANY_REQUESTS,
+            E_ROUTE_NOT_FOUND, E_ROW_NOT_FOUND, E_MISSIONARY_*, E_FAITH_COMMUNITY_*,
+            E_INTERNAL_SERVER_ERROR. Renomear um code é breaking change.
+          example: E_MISSIONARY_AGENCY_NOT_FOUND
         errors:
           type: array
+          description: Só em erros de validação (422), um item por campo.
           items:
             type: object
+            required: [field, rule, message]
             properties:
-              message:
+              field:
                 type: string
               rule:
                 type: string
-              field:
+              message:
                 type: string
+        meta:
+          type: object
+          description: Dados estruturados para o cliente reagir.
+          properties:
+            retryAfterSeconds:
+              type: integer
+              minimum: 1
+              description: Segundos até poder tentar de novo (423 e 429; igual ao header Retry-After).
+    ValidationErrorResponse:
+      description: >-
+        Envelope de erro de validação (422). `errors` vem por campo quando a
+        validação é de esquema (VineJS); regras de negócio verificadas no service
+        (ex.: username já em uso) respondem só com `message` e `code`.
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
     ForgotPasswordRequest:
       type: object
       required:

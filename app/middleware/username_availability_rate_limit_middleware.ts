@@ -1,5 +1,6 @@
 import cache from '#services/shared/cache/cache'
 import { resolveClientIp } from '#utils/client_ip'
+import { tooManyRequestsEnvelope } from '#utils/error_envelope'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 
@@ -16,10 +17,12 @@ export default class UsernameAvailabilityRateLimitMiddleware {
 
     if (attempts > USERNAME_AVAILABILITY_RATE_LIMIT_MAX_REQUESTS) {
       ctx.response.header('Retry-After', String(USERNAME_AVAILABILITY_RATE_LIMIT_WINDOW_SECONDS))
-      return ctx.response.tooManyRequests({
-        message:
+      return ctx.response.tooManyRequests(
+        tooManyRequestsEnvelope(
           'Muitas tentativas para consultar disponibilidade de username. Tente novamente em instantes.',
-      })
+          USERNAME_AVAILABILITY_RATE_LIMIT_WINDOW_SECONDS
+        )
+      )
     }
 
     return next()

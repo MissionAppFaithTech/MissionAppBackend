@@ -1,6 +1,7 @@
 import app from '@adonisjs/core/services/app'
 import { ExceptionHandler } from '@adonisjs/core/http'
 import type { HttpContext } from '@adonisjs/core/http'
+import { normalizeError } from '#utils/error_envelope'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -10,11 +11,19 @@ export default class HttpExceptionHandler extends ExceptionHandler {
   protected debug = !app.inProduction
 
   /**
-   * O método é usado para tratar erros e retornar
-   * a resposta ao cliente
+   * Toda resposta de erro sai no envelope único `{ message, code, errors?, meta? }`
+   * (ADR-0034), em qualquer ambiente. Não delega ao `super.handle()` porque erros
+   * do `@adonisjs/auth` e do VineJS se auto-renderizam em formatos próprios, e a
+   * API só responde JSON (`ForceJsonResponseMiddleware`).
    */
   async handle(error: unknown, ctx: HttpContext) {
-    return super.handle(error, ctx)
+    const { status, envelope, retryAfterSeconds } = normalizeError(error, { debug: this.debug })
+
+    if (retryAfterSeconds) {
+      ctx.response.header('Retry-After', String(retryAfterSeconds))
+    }
+
+    return ctx.response.status(status).send(envelope)
   }
 
   /**
