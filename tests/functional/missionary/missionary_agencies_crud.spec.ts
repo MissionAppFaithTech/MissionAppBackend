@@ -1,5 +1,7 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
+import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
+import { MissionaryStatus } from '#enums/missionary/missionary_status'
 import { UserRole } from '#enums/user/user_role'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
@@ -8,6 +10,7 @@ import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 
 type TokensBody = { data: { accessToken: string } }
 type ApiBody = { data: Record<string, any> }
+type ErrorBody = { code: string; message: string }
 
 async function loginAndGetAccessToken(
   login: string,
@@ -77,6 +80,40 @@ test.group('Missionary agencies - CRUD', (group) => {
 
     const deletedAgency = await MissionaryAgency.find(storedAgencyId)
     assert.isNull(deletedAgency)
+  })
+
+  test('responde 409 ao excluir agência com missionários vinculados e mantém a agência', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createTestUser()
+    const accessToken = await loginAndGetAccessToken(user.email, password, client)
+
+    const store = await client
+      .post(router.builder().make('v1.missionary_agencies.store')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ name: 'Agência Vinculada' })
+    const agencyId = (store.body() as ApiBody).data.missionaryAgency.id as string
+
+    const { user: missionaryUser } = await createTestUser()
+    await Missionary.create({
+      userId: missionaryUser.id,
+      status: MissionaryStatus.PENDING_APPROVAL,
+      missionaryAgencyId: agencyId,
+    })
+
+    const destroy = await client
+      .delete(router.builder().params({ id: agencyId }).make('v1.missionary_agencies.destroy')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+
+    destroy.assertStatus(409)
+    const error = destroy.body() as ErrorBody
+    assert.equal(error.code, 'E_MISSIONARY_AGENCY_IN_USE')
+    assert.equal(
+      error.message,
+      'Esta agência missionária tem missionários vinculados e não pode ser excluída'
+    )
+    assert.isNotNull(await MissionaryAgency.find(agencyId))
   })
 
   test('retorna 403 quando usuário não-admin tenta atualizar agência de outro usuário', async ({
