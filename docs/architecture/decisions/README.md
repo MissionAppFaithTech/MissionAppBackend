@@ -539,5 +539,10 @@ flowchart LR
          <td align="left">Rotação Idempotente de Refresh Token com Janela de Tolerância</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0036-perfil-publico-anonimo-e-orcamento-de-rate-limit-do-servidor-do-bff.md">ADR-0036</a></td>
+         <td align="left">Perfil Público Anônimo e Orçamento de Rate Limit para o Servidor do BFF</td>
+         <td>🟢 Aceito</td>
+      </tr>
    </tbody>
 </table>
