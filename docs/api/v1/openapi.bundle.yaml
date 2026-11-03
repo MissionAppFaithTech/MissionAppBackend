@@ -1996,13 +1996,14 @@ components:
           maxLength: 255
         fileKey:
           type: string
-          maxLength: 1024
+          maxLength: 255
         mimeType:
           type: string
           maxLength: 255
         fileSizeBytes:
           type: integer
           minimum: 1
+          maximum: 2147483647
     MediaAssetResponse:
       type: object
       properties:
