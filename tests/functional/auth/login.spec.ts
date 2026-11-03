@@ -1,9 +1,11 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
 import { AuthenticationStatus } from '#enums/authentication_audit/authentication_status'
 import AuthenticationAudit from '#models/authentication_audit'
+import User from '#models/user'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { randomBytes } from 'node:crypto'
 
 type TokensBody = { data: { accessToken: string; refreshToken: string } }
 
@@ -80,5 +82,22 @@ test.group('Auth - login', (group) => {
       .orderBy('createdAt', 'desc')
       .firstOrFail()
     assert.isNull(audit.userId)
+  })
+
+  test('header de cliente inválido responde 422 sem contar tentativa nem auditar', async ({
+    client,
+    assert,
+  }) => {
+    const { user } = await createTestUser()
+
+    const response = await client
+      .post(router.builder().make('v1.auth.access_tokens.store')!)
+      .header('x-client-type', 'geladeira')
+      .json({ login: user.email, password: randomBytes(12).toString('base64url') })
+
+    response.assertStatus(422)
+    const reloaded = await User.findOrFail(user.id)
+    assert.equal(reloaded.loginAttempts, 0)
+    assert.isNull(await AuthenticationAudit.query().where('userId', user.id).first())
   })
 })
