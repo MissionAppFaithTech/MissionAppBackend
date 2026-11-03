@@ -169,6 +169,21 @@ function retryAfterOf(err: ErrorLike): number | undefined {
 }
 
 /**
+ * Decide se os 500 trazem `debug`: só com opt-in explícito (`ERROR_DEBUG=true`)
+ * e nunca em produção, para que nenhum ambiente exposto mostre detalhes internos
+ * por padrão. O stack continua nos logs (`report`).
+ *
+ * @param options.inProduction Se o app roda em produção.
+ * @param options.errorDebug Valor de `ERROR_DEBUG`.
+ */
+export function exposesErrorDetails(options: {
+  inProduction: boolean
+  errorDebug?: boolean
+}): boolean {
+  return !options.inProduction && options.errorDebug === true
+}
+
+/**
  * Normaliza qualquer erro no envelope único da API (ADR-0034).
  *
  * @param error Valor lançado (exceção de domínio, erro do framework ou bug).

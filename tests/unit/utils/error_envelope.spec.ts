@@ -1,4 +1,5 @@
 import {
+  exposesErrorDetails,
   GENERIC_ERROR_MESSAGE,
   INTERNAL_ERROR_CODE,
   INTERNAL_ERROR_MESSAGE,
@@ -191,5 +192,15 @@ test.group('tooManyRequestsEnvelope', () => {
       code: 'E_TOO_MANY_REQUESTS',
       meta: { retryAfterSeconds: 60 },
     })
+  })
+})
+
+test.group('exposesErrorDetails', () => {
+  test('só expõe o detalhe do 500 com ERROR_DEBUG=true e fora de produção', ({ assert }) => {
+    assert.isTrue(exposesErrorDetails({ inProduction: false, errorDebug: true }))
+    assert.isFalse(exposesErrorDetails({ inProduction: false, errorDebug: false }))
+    assert.isFalse(exposesErrorDetails({ inProduction: false }))
+    assert.isFalse(exposesErrorDetails({ inProduction: true, errorDebug: true }))
+    assert.isFalse(exposesErrorDetails({ inProduction: true }))
   })
 })
