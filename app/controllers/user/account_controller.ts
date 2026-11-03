@@ -10,6 +10,9 @@ import UserTransformer from '#transformers/user_transformer'
 export default class AccountController {
   async store({ request, serialize, auth }: HttpContext) {
     const validated = await request.validateUsing(signupValidator)
+    // NOTE: headers inválidos respondem 422 antes de criar a conta; depois disso
+    // a nova tentativa falharia com "e-mail já em uso".
+    const meta = await toDeviceMetadata(request)
 
     // NOTE: passwordHash recebe o valor em texto plano — o hook beforeSave do
     // AuthFinder faz o hash automaticamente antes de persistir.
@@ -25,7 +28,6 @@ export default class AccountController {
     // refresh, o JWT sai sem o claim `role`, o evento leva `role` indefinido e a
     // resposta omite esses campos.
     await user.refresh()
-    const meta = await toDeviceMetadata(request)
     const tokens = await new TokenIssuanceService().issue(
       auth,
       user,
