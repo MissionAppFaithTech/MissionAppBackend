@@ -42,19 +42,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '400':
-          description: Credenciais inválidas.
+          description: >-
+            Credenciais inválidas. Códigos: `E_INVALID_CREDENTIALS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
         '423':
-          description: Conta temporariamente bloqueada por excesso de tentativas de login falhadas. A mensagem informa quantos segundos faltam para o desbloqueio.
+          description: >-
+            Conta temporariamente bloqueada por excesso de tentativas de login
+            falhadas. A mensagem informa quantos segundos faltam para o
+            desbloqueio. Códigos: `E_ACCOUNT_LOCKED`.
           content:
             application/json:
               schema:
@@ -81,7 +87,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -108,13 +116,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Token inexistente ou expirado.
+          description: >-
+            Token inexistente ou expirado. Códigos:
+            `E_INVALID_PASSWORD_RESET_TOKEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -141,13 +153,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
-          description: Refresh token inválido, expirado, de sessão encerrada ou reusado fora da janela de tolerância (`E_INVALID_REFRESH_TOKEN`; no último caso, toda a família foi invalidada).
+          description: >-
+            Refresh token inválido, expirado, de sessão encerrada ou reusado
+            fora da janela de tolerância (`E_INVALID_REFRESH_TOKEN`; no último
+            caso, toda a família foi invalidada). Códigos:
+            `E_INVALID_REFRESH_TOKEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '503':
-          description: Não foi possível registrar a rotação na janela de tolerância (`E_REFRESH_UNAVAILABLE`). Nada foi alterado; tente de novo após `Retry-After`.
+          description: >-
+            Não foi possível registrar a rotação na janela de tolerância
+            (`E_REFRESH_UNAVAILABLE`). Nada foi alterado; tente de novo após
+            `Retry-After`. Códigos: `E_REFRESH_UNAVAILABLE`.
           content:
             application/json:
               schema:
@@ -179,11 +205,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '422':
-          description: Corpo da requisição inválido (refreshToken ausente).
+          description: >-
+            Corpo da requisição inválido (refreshToken ausente). Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /auth/sessions:
     get:
       operationId: authSessionsIndex
@@ -206,7 +234,9 @@ paths:
                     items:
                       $ref: '#/components/schemas/SessionSummary'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -227,7 +257,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -256,23 +288,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Sessão não encontrada, ou pertence a outro usuário.
+          description: >-
+            Sessão não encontrada, ou pertence a outro usuário. Códigos:
+            `E_SESSION_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: familyId ausente ou não é um UUID válido.
+          description: >-
+            familyId ausente ou não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /accounts:
     post:
       operationId: accountSignup
@@ -297,7 +335,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '422':
-          description: 'Erro de validação (ex: email já em uso, senhas não conferem).'
+          description: >-
+            Erro de validação (ex: email já em uso, senhas não conferem).
+            Códigos: `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -327,11 +367,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsernameAvailabilityResponse'
         '422':
-          description: Nome de usuário fora do formato esperado.
+          description: >-
+            Nome de usuário fora do formato esperado. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de requisições atingido; veja `Retry-After`. Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /account/profile:
     get:
       operationId: accountProfileShow
@@ -348,7 +398,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/AccountProfileResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -373,8 +425,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação dos campos de perfil.
+          description: >-
+            Erro de validação dos campos de perfil. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -402,13 +464,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Senha atual incorreta, ou nova senha/confirmação inválidas.
+          description: >-
+            Senha atual incorreta, ou nova senha/confirmação inválidas. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -434,6 +500,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MediaAssetResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/about:
     patch:
       operationId: missionaryAboutUpdate
@@ -455,12 +536,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
-        '403':
-          description: Perfil sem permissão para editar dados missionários.
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Perfil sem permissão para editar dados missionários. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/profile:
     post:
       operationId: missionaryProfileStore
@@ -489,31 +595,41 @@ paths:
                   message:
                     type: string
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Role sem permissão para conversão.
+          description: >-
+            Role sem permissão para conversão. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária informada não encontrada.
+          description: >-
+            Agência missionária informada não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
-          description: Usuário já possui perfil missionário.
+          description: >-
+            Usuário já possui perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_ALREADY_EXISTS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -538,6 +654,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/identity:
     patch:
       operationId: missionaryIdentityUpdate
@@ -559,6 +706,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/work-address:
     patch:
       operationId: missionaryWorkAddressUpdate
@@ -580,6 +758,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/about:
     patch:
       operationId: missionaryAdminAboutUpdate
@@ -603,6 +812,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/profile:
     patch:
       operationId: missionaryAdminProfileUpdate
@@ -626,6 +866,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/identity:
     patch:
       operationId: missionaryAdminIdentityUpdate
@@ -649,6 +920,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/work-address:
     patch:
       operationId: missionaryAdminWorkAddressUpdate
@@ -672,6 +974,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionary-agencies:
     get:
       operationId: missionaryAgencyIndex
@@ -723,8 +1056,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgenciesResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '429':
-          description: Limite de consultas por IP excedido.
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
           headers:
             Retry-After:
               description: Segundos até a janela do rate limit expirar.
@@ -756,13 +1097,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -788,13 +1133,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '429':
-          description: Limite de consultas por IP excedido.
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
           headers:
             Retry-After:
               description: Segundos até a janela do rate limit expirar.
@@ -828,25 +1183,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para atualizar a agência.
+          description: >-
+            Usuário sem permissão para atualizar a agência. Códigos:
+            `E_MISSIONARY_AGENCY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -868,23 +1231,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a agência.
+          description: >-
+            Usuário sem permissão para remover a agência. Códigos:
+            `E_MISSIONARY_AGENCY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /faith-communities:
     get:
       operationId: faithCommunityIndex
@@ -936,8 +1312,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunitiesResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '429':
-          description: Limite de consultas por IP excedido.
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
           headers:
             Retry-After:
               description: Segundos até a janela do rate limit expirar.
@@ -969,13 +1353,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1001,13 +1389,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '429':
-          description: Limite de consultas por IP excedido.
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
           headers:
             Retry-After:
               description: Segundos até a janela do rate limit expirar.
@@ -1041,25 +1439,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para atualizar a comunidade.
+          description: >-
+            Usuário sem permissão para atualizar a comunidade. Códigos:
+            `E_FAITH_COMMUNITY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1081,23 +1487,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a comunidade.
+          description: >-
+            Usuário sem permissão para remover a comunidade. Códigos:
+            `E_FAITH_COMMUNITY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /public/missionaries/{username}:
     get:
       operationId: publicMissionaryProfileShow
@@ -1131,19 +1550,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/PublicMissionaryProfileResponse'
         '404':
-          description: Perfil inexistente ou não público (`E_MISSIONARY_PROFILE_NOT_FOUND`).
+          description: >-
+            Perfil inexistente ou não público
+            (`E_MISSIONARY_PROFILE_NOT_FOUND`). Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Username com formato inválido (`E_VALIDATION_ERROR`).
+          description: >-
+            Username com formato inválido (`E_VALIDATION_ERROR`). Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '429':
-          description: Limite de consultas excedido (`E_TOO_MANY_REQUESTS`).
+          description: >-
+            Limite de consultas excedido (`E_TOO_MANY_REQUESTS`). Códigos:
+            `E_TOO_MANY_REQUESTS`.
           headers:
             Retry-After:
               description: Segundos até a janela do rate limit expirar.
@@ -1309,11 +1735,14 @@ components:
           type: string
           pattern: '^E_[A-Z0-9_]+$'
           description: >-
-            Identificador estável do erro. Exemplos: E_VALIDATION_ERROR,
-            E_UNAUTHORIZED_ACCESS, E_INVALID_CREDENTIALS, E_ACCOUNT_LOCKED,
-            E_INVALID_REFRESH_TOKEN, E_SESSION_NOT_FOUND, E_TOO_MANY_REQUESTS,
-            E_ROUTE_NOT_FOUND, E_ROW_NOT_FOUND, E_MISSIONARY_*, E_FAITH_COMMUNITY_*,
-            E_INTERNAL_SERVER_ERROR. Renomear um code é breaking change.
+            Identificador estável do erro. Cada resposta de erro documenta os
+            códigos possíveis daquela operação ("Códigos: …"). Além deles,
+            qualquer operação pode responder 500 `E_INTERNAL_SERVER_ERROR` e,
+            com corpo, os erros do body parser (400 `E_BAD_REQUEST` para JSON
+            malformado, 413 `E_REQUEST_ENTITY_TOO_LARGE`, 415
+            `E_ENCODING_UNSUPPORTED`, 400 `E_REQUEST_ABORTED`). Rotas
+            inexistentes respondem 404 `E_ROUTE_NOT_FOUND`. Renomear um code é
+            breaking change.
           example: E_MISSIONARY_AGENCY_NOT_FOUND
         errors:
           type: array
