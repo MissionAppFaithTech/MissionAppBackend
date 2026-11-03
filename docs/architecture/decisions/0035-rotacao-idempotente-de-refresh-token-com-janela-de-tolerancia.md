@@ -70,9 +70,8 @@ Tudo roda numa transação, começando por `SELECT ... FOR UPDATE` na linha do t
 
 ### Complemento no frontend
 
-- O BFF mantém o dedupe local, que evita ida à API dentro de um processo.
-- O `proxy.ts` passa a renovar o token **proativamente nas navegações de página** quando o access token estiver para expirar, e grava os cookies novos antes de a página disparar os pedidos paralelos. Isso reduz a chance de corrida, mas não substitui a idempotência no servidor.
-- A mudança no `proxy.ts` é registrada como ADR do frontend quando for implementada.
+- O `proxy.ts` do frontend passa a ser o **único ponto de refresh** em operação normal: renova o token em todo request (páginas, Server Actions e rotas `/api`) quando o access token está para expirar, grava os cookies novos e os repassa ao render do mesmo request. Registrado no [ADR-0006 do frontend](https://github.com/MissionAppFaithTech/MissionAppFrontend/blob/main/docs/architecture/decisions/0006-mutacoes-em-server-actions-e-renovacao-de-sessao-no-proxy.md) e implementado no PR #122 do frontend.
+- Isso elimina a corrida entre o proxy e os route handlers **dentro de um processo**, mas o dedupe continua em memória. Com o BFF em várias instâncias, dois requests do mesmo usuário em instâncias diferentes ainda podem apresentar o mesmo refresh token. Por isso este ADR continua necessário antes de hospedar o BFF com mais de uma instância.
 
 ## Justificativa
 
@@ -144,5 +143,6 @@ Evita guardar o token cifrado, mas multiplica tokens válidos na família a cada
 - [ADR-0020](./0020-convencoes-de-escrita-de-migracoes.md): convenções da migração de `replaced_by_id`
 - [ADR-0032](./0032-ip-do-usuario-repassado-pelo-bff-com-segredo-compartilhado.md): IP do usuário usado no log de segurança
 - [ADR-0002 do frontend](https://github.com/MissionAppFaithTech/MissionAppFrontend/blob/main/docs/architecture/decisions/0002-adocao-do-tanstack-query-para-estado-de-servidor.md): pedidos paralelos que aumentam a chance de corrida
+- [ADR-0006 do frontend](https://github.com/MissionAppFaithTech/MissionAppFrontend/blob/main/docs/architecture/decisions/0006-mutacoes-em-server-actions-e-renovacao-de-sessao-no-proxy.md): refresh centralizado no proxy do frontend
 - [RFC 9700 — seção 4.14](https://datatracker.ietf.org/doc/html/rfc9700#section-4.14): rotação de refresh token e detecção de reuso
 - [Auth0 — Refresh Token Rotation (reuse interval)](https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation): exemplo de janela de tolerância em provedor de identidade
