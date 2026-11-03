@@ -21,8 +21,12 @@ docs {
   sempre vai no corpo da requisição — não existe mais fallback via cookie
   (a API não é consumida diretamente por um browser; ver ADR-0023).
 
-  Reutilizar um refresh token já rotacionado invalida toda a família de
-  tokens daquela sessão/dispositivo (detecção de roubo).
+  A rotação é idempotente dentro da janela de tolerância (ADR-0035, 30 s):
+  reenviar um refresh token já rotacionado, do mesmo dispositivo
+  (x-client-type e x-device-name), devolve o refresh token atual da sessão.
+  Fora da janela ou de outro dispositivo, o reuso invalida toda a família de
+  tokens (detecção de roubo, ADR-0023). Pode responder 503
+  (E_REFRESH_UNAVAILABLE) se o cache da janela estiver indisponível.
 
   Preencha `refresh_token` com o valor retornado por um Login anterior.
 }

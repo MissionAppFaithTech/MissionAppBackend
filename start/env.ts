@@ -83,6 +83,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   JWT_REFRESH_EXPIRES_IN_WEB: Env.schema.string(),
   JWT_REFRESH_EXPIRES_IN_MOBILE: Env.schema.string(),
 
+  // NOTE: janela de tolerância (segundos) em que reapresentar um refresh token já
+  // rotacionado, do mesmo dispositivo, devolve o token atual em vez de revogar a
+  // sessão (ADR-0035). Opcional: ausente, vale 30.
+  REFRESH_TOKEN_REUSE_WINDOW_SECONDS: Env.schema.number.optional(),
+
   /*
   |----------------------------------------------------------
   | Variables for configuring the mail package

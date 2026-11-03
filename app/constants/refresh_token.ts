@@ -11,3 +11,9 @@ export const IP_ADDRESS_MAX_LENGTH = 45
 
 /** Tamanho em bytes do refresh token bruto antes de virar hex — 512 bits de entropia. */
 export const REFRESH_TOKEN_BYTES = 64
+
+/** Janela de tolerância padrão (ADR-0035) quando REFRESH_TOKEN_REUSE_WINDOW_SECONDS está ausente. */
+export const DEFAULT_REFRESH_TOKEN_REUSE_WINDOW_SECONDS = 30
+
+/** Máximo de elos `replaced_by_id` seguidos num replay antes de tratar como roubo. */
+export const MAX_REFRESH_TOKEN_REPLAY_CHAIN = 5

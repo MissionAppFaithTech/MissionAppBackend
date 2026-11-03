@@ -126,6 +126,30 @@ test.group('normalizeError', () => {
     assert.notProperty(envelope.debug, 'stack')
   })
 
+  test('5xx deliberado com code de domínio mantém code e mensagem', ({ assert }) => {
+    const error = Object.assign(new Exception('Tente de novo', { status: 503 }), {
+      code: 'E_REFRESH_UNAVAILABLE',
+      retryAfterSeconds: 1,
+    })
+
+    assert.deepEqual(normalizeError(error), {
+      status: 503,
+      retryAfterSeconds: 1,
+      envelope: {
+        message: 'Tente de novo',
+        code: 'E_REFRESH_UNAVAILABLE',
+        meta: { retryAfterSeconds: 1 },
+      },
+    })
+  })
+
+  test('5xx sem code de domínio continua genérico', ({ assert }) => {
+    const error = new Exception('upstream timeout', { status: 504 })
+    assert.equal(normalizeError(error).envelope.code, INTERNAL_ERROR_CODE)
+    const library = new Exception('db down', { status: 500, code: 'E_DB_DOWN' })
+    assert.equal(normalizeError(library).envelope.message, INTERNAL_ERROR_MESSAGE)
+  })
+
   test('valores lançados que não são objetos viram 500', ({ assert }) => {
     assert.equal(normalizeError('oops').status, 500)
     assert.equal(normalizeError(null).status, 500)
