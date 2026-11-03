@@ -69,6 +69,7 @@ O BFF (`src/lib/api/errors.ts`) passa a mapear `code` para mensagens em pt-BR. O
 - O envelope entrou no #158. O item 6 foi concluído depois: cada resposta de erro das specs de domínio e do bundle termina com "Códigos: …" e usa `ValidationErrorResponse` no 422 e `ErrorResponse` nos demais. O teste `tests/unit/docs/openapi_error_codes.spec.ts` falha se uma resposta de erro ficar sem código, se citar um código que a API não tem ou se o bundle divergir dos arquivos de domínio.
 - Os códigos que valem para qualquer operação (500 `E_INTERNAL_SERVER_ERROR`, erros do body parser como 413 `E_REQUEST_ENTITY_TOO_LARGE` e o 404 `E_ROUTE_NOT_FOUND`) ficam descritos uma vez, no `code` do `ErrorResponse`.
 - No frontend, o mapa de mensagens por texto em inglês saiu (MissionAppFrontend #133): os erros passam a ser traduzidos só pelo `code` e pelas regras do VineJS.
+- O campo `debug` dos 500 passou a ser opt-in (`ERROR_DEBUG=true`), além de nunca existir em produção. Por padrão nenhum ambiente mostra detalhes internos; o stack fica nos logs. Motivo: alerta de exposição de informação do Snyk e ambientes de staging expostos.
 - As regras de validação verificadas no service (username em uso, comunidade de fé ou foto inexistente) também respondem com `errors: [{ field, rule, message }]`, pelo helper `fieldValidationError`. Assim o cliente marca o campo sem depender do texto da mensagem.
 
 ## Justificativa

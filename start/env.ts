@@ -88,6 +88,10 @@ export default await Env.create(new URL('../', import.meta.url), {
   // sessão (ADR-0035). Opcional: ausente, vale 30.
   REFRESH_TOKEN_REUSE_WINDOW_SECONDS: Env.schema.number.optional(),
 
+  // Inclui nome e mensagem do erro interno no corpo dos 500 (`debug`). Opt-in:
+  // ausente ou `false`, nenhum detalhe sai; em produção é sempre ignorado.
+  ERROR_DEBUG: Env.schema.boolean.optional(),
+
   /*
   |----------------------------------------------------------
   | Variables for configuring the mail package
