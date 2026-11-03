@@ -1,7 +1,8 @@
 import app from '@adonisjs/core/services/app'
 import { ExceptionHandler } from '@adonisjs/core/http'
 import type { HttpContext } from '@adonisjs/core/http'
-import { normalizeError } from '#utils/error_envelope'
+import env from '#start/env'
+import { exposesErrorDetails, normalizeError } from '#utils/error_envelope'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -17,7 +18,12 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * API só responde JSON (`ForceJsonResponseMiddleware`).
    */
   async handle(error: unknown, ctx: HttpContext) {
-    const { status, envelope, retryAfterSeconds } = normalizeError(error, { debug: this.debug })
+    const { status, envelope, retryAfterSeconds } = normalizeError(error, {
+      debug: exposesErrorDetails({
+        inProduction: app.inProduction,
+        errorDebug: env.get('ERROR_DEBUG'),
+      }),
+    })
 
     if (retryAfterSeconds) {
       ctx.response.header('Retry-After', String(retryAfterSeconds))
