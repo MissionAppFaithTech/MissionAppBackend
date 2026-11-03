@@ -112,6 +112,7 @@ test.group('Conta - criação', (group) => {
 
   test('header de cliente inválido responde 422 sem criar a conta', async ({ client, assert }) => {
     const email = `test_${uuidv7()}@example.com`
+    const password = randomBytes(12).toString('base64url')
 
     const response = await client
       .post(router.builder().make('v1.account.store')!)
@@ -122,8 +123,8 @@ test.group('Conta - criação', (group) => {
         phoneNumber: '+5511912345678',
         gender: 'MALE',
         email,
-        password: 'password123',
-        passwordConfirmation: 'password123',
+        password,
+        passwordConfirmation: password,
       })
 
     response.assertStatus(422)
