@@ -1,0 +1,26 @@
+meta {
+  name: Show Public Missionary Profile
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{base_url}}/api/v1/public/missionaries/{{missionary_username}}
+  auth: none
+}
+
+docs {
+  Perfil público de um missionário (RF 1.4, RF 10, ADR-0036). Anônimo e só
+  leitura. Devolve apenas os campos públicos aprovados: identificação,
+  agência, comunidade de fé, aba Sobre, local de atuação (cidade/estado/país),
+  contadores e contato público. Nunca devolve documento, e-mail/telefone da
+  conta, status, dados financeiros nem CEP/bairro.
+
+  Só missionários com perfil APPROVED e conta ACTIVE (não excluída) são
+  visíveis; qualquer outro caso responde o mesmo 404
+  (E_MISSIONARY_PROFILE_NOT_FOUND). Username com maiúsculas é aceito.
+
+  Rate limit: 60 consultas por minuto por IP. O servidor do BFF autenticado
+  sem IP de usuário (renderização pública com cache) tem orçamento próprio de
+  600 por minuto. Ao exceder: 429 + Retry-After, com `code: E_TOO_MANY_REQUESTS`.
+}

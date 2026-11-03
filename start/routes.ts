@@ -87,6 +87,14 @@ router
       .use(['index', 'show'], middleware.publicCatalogRateLimit({ catalog: 'faith_communities' }))
       .use(['store', 'update', 'destroy'], middleware.auth())
 
+    // NOTE: perfil público de missionário — anônimo e só leitura (RF 1.4). O rate
+    // limit tem orçamento separado para o servidor do Next que renderiza a página
+    // pública com cache (ADR-0036).
+    router
+      .get('public/missionaries/:username', [controllers.missionary.PublicProfiles, 'show'])
+      .use(middleware.publicProfileRateLimit())
+      .as('public.missionaries.show')
+
     router
       .group(() => {
         router.post('login', [controllers.auth.AccessTokens, 'store'])

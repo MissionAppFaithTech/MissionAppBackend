@@ -1,4 +1,9 @@
-import { BFF_SECRET_HEADER, CLIENT_IP_HEADER, resolveClientIp } from '#utils/client_ip'
+import {
+  BFF_SECRET_HEADER,
+  CLIENT_IP_HEADER,
+  isBffServerRequest,
+  resolveClientIp,
+} from '#utils/client_ip'
 import type { RequestContext } from '#types/http/context'
 import { test } from '@japa/runner'
 import { randomBytes } from 'node:crypto'
@@ -55,5 +60,27 @@ test.group('resolveClientIp', () => {
   test('sem o header de IP, vale o IP da conexão', ({ assert }) => {
     const request = fakeRequest({ [BFF_SECRET_HEADER]: SECRET })
     assert.equal(resolveClientIp(request, SECRET), CONNECTION_IP)
+  })
+})
+
+test.group('isBffServerRequest', () => {
+  test('é verdadeiro com segredo válido e sem IP de usuário', ({ assert }) => {
+    assert.isTrue(isBffServerRequest(fakeRequest({ [BFF_SECRET_HEADER]: SECRET }), SECRET))
+  })
+
+  test('é falso quando o BFF repassa o IP do usuário', ({ assert }) => {
+    const request = fakeRequest({ [BFF_SECRET_HEADER]: SECRET, [CLIENT_IP_HEADER]: '203.0.113.9' })
+    assert.isFalse(isBffServerRequest(request, SECRET))
+  })
+
+  test('é falso com segredo errado, ausente ou sem segredo configurado', ({ assert }) => {
+    assert.isFalse(isBffServerRequest(fakeRequest({ [BFF_SECRET_HEADER]: WRONG_SECRET }), SECRET))
+    assert.isFalse(isBffServerRequest(fakeRequest({}), SECRET))
+    assert.isFalse(isBffServerRequest(fakeRequest({ [BFF_SECRET_HEADER]: SECRET }), ''))
+  })
+
+  test('IP de usuário só com espaços conta como ausente', ({ assert }) => {
+    const request = fakeRequest({ [BFF_SECRET_HEADER]: SECRET, [CLIENT_IP_HEADER]: '   ' })
+    assert.isTrue(isBffServerRequest(request, SECRET))
   })
 })

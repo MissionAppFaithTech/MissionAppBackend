@@ -666,6 +666,62 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
 
+  /public/missionaries/{username}:
+    get:
+      operationId: publicMissionaryProfileShow
+      tags: [missionary]
+      summary: Perfil público de missionário
+      description: >-
+        Consulta anônima, só leitura (RF 1.4, RF 10). Devolve apenas os campos
+        públicos aprovados (ADR-0036): identificação, agência, comunidade de fé,
+        aba Sobre, local de atuação (cidade/estado/país), contadores e contato
+        público. Só missionários com perfil aprovado e conta ativa são visíveis;
+        os demais respondem o mesmo 404. Rate limit de 60 consultas por minuto
+        por IP; o servidor do BFF sem IP de usuário (renderização pública com
+        cache) tem orçamento próprio de 600 por minuto.
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username do missionário (maiúsculas são aceitas e normalizadas).
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[A-Za-z0-9_]+$'
+      responses:
+        '200':
+          description: Perfil público encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicMissionaryProfileResponse'
+        '404':
+          description: Perfil inexistente ou não público (`E_MISSIONARY_PROFILE_NOT_FOUND`).
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: Username com formato inválido (`E_VALIDATION_ERROR`).
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '429':
+          description: Limite de consultas excedido (`E_TOO_MANY_REQUESTS`).
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
 components:
   parameters:
     MissionaryId:
@@ -1041,3 +1097,102 @@ components:
         country:
           type: string
           maxLength: 255
+
+    PublicMissionaryProfile:
+      type: object
+      description: Campos públicos do perfil de missionário (ADR-0036). Nunca inclui PII.
+      required:
+        [
+          username,
+          fullName,
+          biography,
+          role,
+          missionaryAgency,
+          faithCommunity,
+          about,
+          workLocation,
+          followersCount,
+          followingCount,
+          contact,
+        ]
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        biography:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [MISSIONARY]
+        missionaryAgency:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        faithCommunity:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        about:
+          type: object
+          properties:
+            aboutMe:
+              type: string
+              nullable: true
+            missionStorySummary:
+              type: string
+              nullable: true
+            originLocation:
+              type: string
+              nullable: true
+            prayerRequest:
+              type: string
+              nullable: true
+            lifeVerse:
+              type: string
+              nullable: true
+        workLocation:
+          type: object
+          nullable: true
+          properties:
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        contact:
+          type: object
+          properties:
+            publicEmail:
+              type: string
+              nullable: true
+            publicPhone:
+              type: string
+              nullable: true
+            publicPhoneIsWhatsapp:
+              type: boolean
+
+    PublicMissionaryProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            missionary:
+              $ref: '#/components/schemas/PublicMissionaryProfile'

@@ -46,3 +46,22 @@ export function resolveClientIp(
   if (!sharedSecret || !hasValidBffSecret(request, sharedSecret)) return request.ip()
   return forwardedClientIp(request) ?? request.ip()
 }
+
+/**
+ * True quando o pedido vem do servidor do BFF autenticado **sem** IP de usuário:
+ * leituras públicas cacheadas no servidor do Next (`use cache`), compartilhadas
+ * entre visitantes (ADR-0036). Esse tráfego tem orçamento de rate limit próprio.
+ *
+ * @param request Request atual.
+ * @param sharedSecret Segredo esperado; padrão `BFF_SHARED_SECRET` (opcional).
+ * @returns `true` só com segredo válido e sem `x-missionapp-client-ip`.
+ * @example
+ * const bucket = isBffServerRequest(ctx.request) ? 'bff_server' : resolveClientIp(ctx.request)
+ */
+export function isBffServerRequest(
+  request: RequestContext,
+  sharedSecret: string | undefined = env.get('BFF_SHARED_SECRET')
+): boolean {
+  if (!sharedSecret || !hasValidBffSecret(request, sharedSecret)) return false
+  return !request.header(CLIENT_IP_HEADER)?.trim()
+}
