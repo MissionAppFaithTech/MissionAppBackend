@@ -4,6 +4,7 @@ import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
 import { DateTime } from 'luxon'
+import { randomBytes } from 'node:crypto'
 import { v7 as uuidv7 } from 'uuid'
 
 type Envelope = {
@@ -61,7 +62,8 @@ test.group('Envelope de erro único (ADR-0034)', (group) => {
 
     const response = await client
       .post(router.builder().make('v1.auth.access_tokens.store')!)
-      .json({ login: user.email, password: 'senha-errada-123' })
+      // NOTE: senha errada gerada por execução (CSPRNG) — nada fixo no código
+      .json({ login: user.email, password: randomBytes(16).toString('hex') })
 
     response.assertStatus(400)
     const body = response.body() as Envelope

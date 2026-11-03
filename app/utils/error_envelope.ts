@@ -14,14 +14,14 @@ export type ErrorEnvelopeFieldError = {
  * - `code`: identificador estável (`E_*`), parte do contrato público.
  * - `errors`: só em erros de validação.
  * - `meta`: dados estruturados para o cliente reagir (ex.: `retryAfterSeconds`).
- * - `debug`: só fora de produção, em erros 5xx.
+ * - `debug`: só fora de produção, em erros 5xx; o stack fica só nos logs (`report`).
  */
 export type ErrorEnvelope = {
   message: string
   code: string
   errors?: ErrorEnvelopeFieldError[]
   meta?: { retryAfterSeconds?: number }
-  debug?: { name: string; message: string; stack?: string }
+  debug?: { name: string; message: string }
 }
 
 export const INTERNAL_ERROR_CODE = 'E_INTERNAL_SERVER_ERROR'
@@ -66,7 +66,6 @@ export type NormalizedError = {
 type ErrorLike = {
   name?: unknown
   message?: unknown
-  stack?: unknown
   status?: unknown
   code?: unknown
   messages?: unknown
@@ -118,7 +117,6 @@ function internalErrorEnvelope(error: unknown, err: ErrorLike, debug: boolean): 
     debug: {
       name: stringOr(err.name, 'Error'),
       message: stringOr(err.message, String(error)),
-      stack: typeof err.stack === 'string' ? err.stack : undefined,
     },
   }
 }

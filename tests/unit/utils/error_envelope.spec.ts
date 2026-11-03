@@ -123,7 +123,7 @@ test.group('normalizeError', () => {
     assert.equal(envelope.message, INTERNAL_ERROR_MESSAGE)
     assert.equal(envelope.debug?.name, 'TypeError')
     assert.equal(envelope.debug?.message, 'boom')
-    assert.isString(envelope.debug?.stack)
+    assert.notProperty(envelope.debug, 'stack')
   })
 
   test('valores lançados que não são objetos viram 500', ({ assert }) => {
