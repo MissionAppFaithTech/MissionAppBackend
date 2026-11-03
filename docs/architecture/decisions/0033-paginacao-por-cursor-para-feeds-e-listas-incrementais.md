@@ -2,7 +2,7 @@
 
 ## Dados
 
-- **Status:** 🟡 Proposto
+- **Status:** 🟢 Aceito
 - **Data:** 2026-11-01
 - **Proponentes:** [@Amaro-peter](https://github.com/Amaro-peter)
 

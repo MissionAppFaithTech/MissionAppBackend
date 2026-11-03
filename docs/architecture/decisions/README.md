@@ -527,7 +527,7 @@ flowchart LR
       <tr>
          <td><a href="./0033-paginacao-por-cursor-para-feeds-e-listas-incrementais.md">ADR-0033</a></td>
          <td align="left">Paginação por Cursor para Feeds e Listas Incrementais</td>
-         <td>🟡 Proposto</td>
+         <td>🟢 Aceito</td>
       </tr>
       <tr>
          <td><a href="./0034-envelope-de-erro-unico-com-codigo.md">ADR-0034</a></td>
