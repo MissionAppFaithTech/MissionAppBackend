@@ -1,8 +1,8 @@
 import MediaAsset from '#models/media_asset'
 import User from '#models/user'
+import { fieldValidationError } from '#utils/field_validation_error'
 import { omitUndefined } from '#utils/omit_undefined'
 import db from '@adonisjs/lucid/services/db'
-import { Exception } from '@adonisjs/core/exceptions'
 
 type UpdateAccountProfilePayload = {
   fullName?: string
@@ -23,20 +23,18 @@ export class UpdateProfileService {
         .first()
 
       if (userWithSameUsername) {
-        throw new Exception('Nome de usuário já está em uso', {
-          status: 422,
-          code: 'E_VALIDATION_ERROR',
-        })
+        throw fieldValidationError('username', 'database.unique', 'Nome de usuário já está em uso')
       }
     }
 
     if (payload.profilePictureId) {
       const mediaAsset = await MediaAsset.find(payload.profilePictureId)
       if (!mediaAsset) {
-        throw new Exception('Imagem de perfil informada não existe', {
-          status: 422,
-          code: 'E_VALIDATION_ERROR',
-        })
+        throw fieldValidationError(
+          'profilePictureId',
+          'database.exists',
+          'Imagem de perfil informada não existe'
+        )
       }
     }
 

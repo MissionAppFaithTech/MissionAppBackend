@@ -1,5 +1,5 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
-import { uniqueClientIp } from '#tests/functional/missionary/helpers'
+import { createMissionaryTestUser, uniqueClientIp } from '#tests/functional/missionary/helpers'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
@@ -112,7 +112,7 @@ test.group('Envelope de erro único (ADR-0034)', (group) => {
     assert.equal(body.code, 'E_MISSIONARY_AGENCY_NOT_FOUND')
   })
 
-  test('validação lançada à mão (sem campos) sai com code e sem errors', async ({
+  test('username em uso (regra do service) aponta o campo em errors', async ({
     client,
     assert,
   }) => {
@@ -135,7 +135,60 @@ test.group('Envelope de erro único (ADR-0034)', (group) => {
     const body = response.body() as Envelope
     assert.equal(body.code, 'E_VALIDATION_ERROR')
     assert.equal(body.message, 'Nome de usuário já está em uso')
-    assert.notProperty(body, 'errors')
+    assert.deepEqual(body.errors, [
+      { field: 'username', rule: 'database.unique', message: 'Nome de usuário já está em uso' },
+    ])
+  })
+
+  test('foto de perfil inexistente aponta o campo profilePictureId', async ({ client, assert }) => {
+    const { user, password } = await createTestUser()
+    const login = await client
+      .post(router.builder().make('v1.auth.access_tokens.store')!)
+      .json({ login: user.email, password })
+    const accessToken = (login.body() as TokensBody).data.accessToken
+
+    const response = await client
+      .patch(router.builder().make('v1.profile.update')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ profilePictureId: uuidv7() })
+
+    response.assertStatus(422)
+    const body = response.body() as Envelope
+    assert.equal(body.code, 'E_VALIDATION_ERROR')
+    assert.deepEqual(body.errors, [
+      {
+        field: 'profilePictureId',
+        rule: 'database.exists',
+        message: 'Imagem de perfil informada não existe',
+      },
+    ])
+  })
+
+  test('comunidade de fé inexistente aponta o campo faithCommunityId', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createMissionaryTestUser()
+    const login = await client
+      .post(router.builder().make('v1.auth.access_tokens.store')!)
+      .json({ login: user.email, password })
+    const accessToken = (login.body() as TokensBody).data.accessToken
+
+    const response = await client
+      .patch(router.builder().make('v1.missionary.about.update')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ faithCommunityId: uuidv7() })
+
+    response.assertStatus(422)
+    const body = response.body() as Envelope
+    assert.equal(body.code, 'E_VALIDATION_ERROR')
+    assert.deepEqual(body.errors, [
+      {
+        field: 'faithCommunityId',
+        rule: 'database.exists',
+        message: 'Comunidade de fé informada não existe',
+      },
+    ])
   })
 
   test('429 do rate limit traz E_TOO_MANY_REQUESTS e o tempo de espera', async ({
