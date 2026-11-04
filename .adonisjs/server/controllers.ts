@@ -26,6 +26,7 @@ export const controllers = {
     Identity: () => import('#controllers/missionary/identity_controller'),
     MissionaryAgencies: () => import('#controllers/missionary/missionary_agencies_controller'),
     Profile: () => import('#controllers/missionary/profile_controller'),
+    PublicProfiles: () => import('#controllers/missionary/public_profiles_controller'),
     WorkAddress: () => import('#controllers/missionary/work_address_controller'),
   },
   post: {
@@ -34,6 +35,7 @@ export const controllers = {
   user: {
     Account: () => import('#controllers/user/account_controller'),
     AccountPassword: () => import('#controllers/user/account_password_controller'),
+    MissionaryAccounts: () => import('#controllers/user/missionary_accounts_controller'),
     Profile: () => import('#controllers/user/profile_controller'),
     UsernameAvailability: () => import('#controllers/user/username_availability_controller'),
   },

@@ -353,6 +353,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
+  /accounts/missionaries:
+    post:
+      operationId: accountMissionarySignup
+      tags: [user]
+      summary: Cadastro de missionário
+      description: >-
+        Cria, numa única transação, a conta já com role MISSIONARY e o perfil
+        missionário, com os dados das três etapas do cadastro. Agência e
+        comunidade de fé chegam como id de um item do catálogo ou como objeto
+        para cadastrar um novo (registrado em nome do novo usuário; um item com
+        o mesmo nome e cidade é reaproveitado). Qualquer falha desfaz tudo.
+        Emite o par de tokens como o login (ADR-0023); o access token já sai
+        com o role MISSIONARY. Rate limit de 10 cadastros por hora por IP.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ClientType'
+        - $ref: '#/components/parameters/DeviceName'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceKind'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MissionarySignupRequest'
+      responses:
+        '200':
+          description: Conta e perfil missionário criados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionarySignupResponse'
+        '422':
+          description: >-
+            Erro de validação (ex.: e-mail ou username em uso, agência ausente
+            ou inexistente, data de nascimento futura). Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de cadastros por IP atingido; veja `Retry-After`. Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /accounts/username-availability:
     get:
       operationId: accountUsernameAvailability
@@ -2453,6 +2502,10 @@ components:
           description: E.164
         biography:
           type: [string, 'null']
+        birthDate:
+          type: [string, 'null']
+          format: date
+          description: Informada no cadastro de missionário; null nas demais contas.
         profilePictureId:
           type: [string, 'null']
           format: uuid
@@ -2692,7 +2745,92 @@ components:
             `POST /media-assets/{id}/completion`); caso contrário, 422 em
             `profilePictureId`. A foto anterior é removida do storage depois da
             troca ou da remoção.
-
+    MissionarySignupRequest:
+      type: object
+      required:
+        [fullName, username, phoneNumber, gender, email, password, passwordConfirmation, birthDate]
+      description: >-
+        Informe a agência por `missionaryAgencyId` ou por `missionaryAgency`
+        (exatamente um) e, opcionalmente, a comunidade por `faithCommunityId`
+        ou por `faithCommunity` (no máximo um).
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-z0-9_]+$'
+        phoneNumber:
+          type: string
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        gender:
+          type: string
+          enum: [MALE, FEMALE]
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 32
+        passwordConfirmation:
+          type: string
+          minLength: 8
+          maxLength: 32
+        birthDate:
+          type: string
+          format: date
+          description: Data passada no formato AAAA-MM-DD.
+        identityType:
+          type: string
+          enum: [CPF, PASSPORT]
+          description: Obrigatório junto com `identityDocument`.
+        identityDocument:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Obrigatório junto com `identityType`.
+        aboutMe:
+          type: string
+          maxLength: 5000
+          description: Texto da seção Sobre (projeto ou atuação missionária).
+        missionaryAgencyId:
+          type: string
+          format: uuid
+        missionaryAgency:
+          $ref: '#/components/schemas/CreateMissionaryAgencyRequest'
+        faithCommunityId:
+          type: string
+          format: uuid
+        faithCommunity:
+          $ref: '#/components/schemas/CreateFaithCommunityRequest'
+    MissionarySignupResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserSummary'
+            missionary:
+              type: object
+            workAddress:
+              type: 'null'
+              description: Sempre null no cadastro; o local de atuação é informado depois.
+            missionaryAgency:
+              $ref: '#/components/schemas/CatalogReference'
+            faithCommunity:
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+            accessToken:
+              type: string
+            refreshToken:
+              type: string
     AccountProfileResponse:
       type: object
       properties:

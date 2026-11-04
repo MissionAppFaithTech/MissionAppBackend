@@ -10,6 +10,7 @@ import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
 import { isForeignKeyViolation } from '#utils/postgres_errors'
 import type { SearchFilters } from '#services/shared/apply_search_filters'
 import db from '@adonisjs/lucid/services/db'
+import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
 type Address = {
   addressLine1?: string
@@ -49,22 +50,38 @@ export class MissionaryAgenciesService {
     return agency
   }
 
-  async create(actor: User, payload: CreateMissionaryAgencyPayload): Promise<MissionaryAgency> {
-    return db.transaction(async (trx) => {
-      // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
-      const existing = await findCatalogDuplicate(MissionaryAgency, trx, payload)
-      if (existing) return existing
+  /**
+   * Cria o registro, ou reaproveita um igual (mesmo nome e cidade). Com `trx`,
+   * participa de uma transação já aberta em vez de abrir a própria.
+   */
+  async create(
+    actor: User,
+    payload: CreateMissionaryAgencyPayload,
+    trx?: TransactionClientContract
+  ): Promise<MissionaryAgency> {
+    return trx
+      ? this.createWithin(actor, payload, trx)
+      : db.transaction((own) => this.createWithin(actor, payload, own))
+  }
 
-      return MissionaryAgency.create(
-        {
-          name: payload.name,
-          phoneNumber: payload.phoneNumber,
-          ...this.addressOf(payload),
-          userId: actor.id,
-        },
-        { client: trx }
-      )
-    })
+  private async createWithin(
+    actor: User,
+    payload: CreateMissionaryAgencyPayload,
+    trx: TransactionClientContract
+  ): Promise<MissionaryAgency> {
+    // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
+    const existing = await findCatalogDuplicate(MissionaryAgency, trx, payload)
+    if (existing) return existing
+
+    return MissionaryAgency.create(
+      {
+        name: payload.name,
+        phoneNumber: payload.phoneNumber,
+        ...this.addressOf(payload),
+        userId: actor.id,
+      },
+      { client: trx }
+    )
   }
 
   async update(

@@ -543,6 +543,7 @@ export class UserSchema extends BaseModel {
   static $columns = [
     'activedAt',
     'biography',
+    'birthDate',
     'createdAt',
     'deletedAt',
     'email',
@@ -574,6 +575,8 @@ export class UserSchema extends BaseModel {
   declare activedAt: DateTime | null
   @column()
   declare biography: string | null
+  @column.date()
+  declare birthDate: DateTime | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column.dateTime()

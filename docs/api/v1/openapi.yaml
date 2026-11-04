@@ -60,6 +60,8 @@ paths:
     $ref: './auth/openapi.yaml#/paths/~1auth~1sessions~1{familyId}'
   /accounts:
     $ref: './user/openapi.yaml#/paths/~1accounts'
+  /accounts/missionaries:
+    $ref: './user/openapi.yaml#/paths/~1accounts~1missionaries'
   /accounts/username-availability:
     $ref: './user/openapi.yaml#/paths/~1accounts~1username-availability'
   /account/profile:

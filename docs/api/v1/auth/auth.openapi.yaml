@@ -511,6 +511,10 @@ components:
           description: E.164
         biography:
           type: [string, 'null']
+        birthDate:
+          type: [string, 'null']
+          format: date
+          description: Informada no cadastro de missionário; null nas demais contas.
         profilePictureId:
           type: [string, 'null']
           format: uuid

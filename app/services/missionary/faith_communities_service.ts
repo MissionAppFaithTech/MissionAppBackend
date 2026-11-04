@@ -66,27 +66,43 @@ export class FaithCommunitiesService {
     return community
   }
 
-  async create(actor: User, payload: CreateFaithCommunityPayload): Promise<FaithCommunity> {
-    return db.transaction(async (trx) => {
-      // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
-      const existing = await findCatalogDuplicate(FaithCommunity, trx, payload)
-      if (existing) {
-        await existing.load('pastors', pastorsInCreationOrder)
-        return existing
-      }
+  /**
+   * Cria o registro, ou reaproveita um igual (mesmo nome e cidade). Com `trx`,
+   * participa de uma transação já aberta em vez de abrir a própria.
+   */
+  async create(
+    actor: User,
+    payload: CreateFaithCommunityPayload,
+    trx?: TransactionClientContract
+  ): Promise<FaithCommunity> {
+    return trx
+      ? this.createWithin(actor, payload, trx)
+      : db.transaction((own) => this.createWithin(actor, payload, own))
+  }
 
-      const community = await FaithCommunity.create(
-        {
-          name: payload.name,
-          phoneNumber: payload.phoneNumber,
-          ...this.addressOf(payload),
-          userId: actor.id,
-        },
-        { client: trx }
-      )
-      await this.syncPastor(community, payload, trx)
-      return community
-    })
+  private async createWithin(
+    actor: User,
+    payload: CreateFaithCommunityPayload,
+    trx: TransactionClientContract
+  ): Promise<FaithCommunity> {
+    // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
+    const existing = await findCatalogDuplicate(FaithCommunity, trx, payload)
+    if (existing) {
+      await existing.load('pastors', pastorsInCreationOrder)
+      return existing
+    }
+
+    const community = await FaithCommunity.create(
+      {
+        name: payload.name,
+        phoneNumber: payload.phoneNumber,
+        ...this.addressOf(payload),
+        userId: actor.id,
+      },
+      { client: trx }
+    )
+    await this.syncPastor(community, payload, trx)
+    return community
   }
 
   async update(
