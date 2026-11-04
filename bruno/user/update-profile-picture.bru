@@ -1,0 +1,29 @@
+meta {
+  name: Update Profile Picture
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{base_url}}/api/v1/account/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "profilePictureId": "{{media_asset_id}}"
+  }
+}
+
+docs {
+  Define a foto de perfil. Antes, envie a imagem pelo fluxo de upload direto
+  (media_asset/01 com "purpose": "PROFILE_PICTURE", PUT na URL pré-assinada e
+  media_asset/02). A resposta traz `profilePictureUrl`, que fica `null` até o
+  worker terminar de comprimir a imagem. Enviar `null` remove a foto; a foto
+  anterior é apagada do storage depois da troca.
+}

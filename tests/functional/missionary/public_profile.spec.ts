@@ -1,4 +1,6 @@
 import { IdentityType } from '#enums/missionary/identity_type'
+import { MediaAssetPurpose } from '#enums/media_asset/media_asset_purpose'
+import { MediaAssetStatus } from '#enums/media_asset/media_asset_status'
 import { MissionaryStatus } from '#enums/missionary/missionary_status'
 import { MembershipStatus } from '#enums/user/membership_status'
 import { UserRole } from '#enums/user/user_role'
@@ -6,6 +8,7 @@ import FaithCommunity from '#models/faith_community'
 import MissionaryWorkAddress from '#models/missionary_work_address'
 import cache from '#services/shared/cache/cache'
 import env from '#start/env'
+import { createTestMediaAsset } from '#tests/functional/media_asset/helpers'
 import { createMissionaryTestUser, uniqueClientIp } from '#tests/functional/missionary/helpers'
 import { BFF_SECRET_HEADER, CLIENT_IP_HEADER } from '#utils/client_ip'
 import testUtils from '@adonisjs/core/services/test_utils'
@@ -70,6 +73,29 @@ test.group('Perfil público de missionário (ADR-0036)', (group) => {
     return rollback
   })
 
+  test('expõe a URL da foto de perfil só quando o arquivo está pronto', async ({
+    client,
+    assert,
+  }) => {
+    const { user } = await createPublicMissionary()
+    const picture = await createTestMediaAsset(user, MediaAssetPurpose.PROFILE_PICTURE)
+    user.profilePictureId = picture.id
+    await user.save()
+    const fetchPictureUrl = async () => {
+      const response = await client
+        .get(profileUrl(user.username))
+        .header('X-Forwarded-For', uniqueClientIp())
+      response.assertStatus(200)
+      return (response.body() as PublicProfileBody).data.missionary.profilePictureUrl
+    }
+
+    assert.include(await fetchPictureUrl(), picture.fileKey)
+
+    picture.status = MediaAssetStatus.PROCESSING
+    await picture.save()
+    assert.isNull(await fetchPictureUrl())
+  })
+
   test('devolve só os campos públicos aprovados', async ({ client, assert }) => {
     const { user, agency, community } = await createPublicMissionary()
 
@@ -83,6 +109,7 @@ test.group('Perfil público de missionário (ADR-0036)', (group) => {
       username: user.username,
       fullName: user.fullName,
       biography: 'Missionário no sertão',
+      profilePictureUrl: null,
       role: 'MISSIONARY',
       missionaryAgency: { id: agency.id, name: agency.name },
       faithCommunity: { id: community.id, name: 'Igreja Teste' },

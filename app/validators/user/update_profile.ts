@@ -10,5 +10,7 @@ export const updateProfileValidator = vine.create({
   // em null globalmente); sem ele o VineJS descarta o null e o valor antigo permanece
   // NOTE: minibiografia do cabeçalho do perfil, limitada a 70 caracteres (regra de produto)
   biography: vine.string().trim().maxLength(70).nullable().optional(),
-  profilePictureId: id().optional(),
+  // NOTE: o asset precisa ser `PROFILE_PICTURE`, do próprio usuário e com upload
+  // confirmado; `null` remove a foto
+  profilePictureId: id().nullable().optional(),
 })

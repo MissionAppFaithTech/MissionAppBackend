@@ -47,14 +47,16 @@ test.group('Validators - campos opcionais anuláveis do perfil', () => {
     assert.deepEqual(await updateUserProfileValidator.validate({}), {})
   })
 
-  test('updateUserProfileValidator aceita null em biography', async ({ assert }) => {
-    const output = await updateUserProfileValidator.validate({ biography: null })
+  test('updateUserProfileValidator aceita null em {$self}')
+    .with(['biography', 'profilePictureId'])
+    .run(async ({ assert }, field) => {
+      const output = await updateUserProfileValidator.validate({ [field]: null })
 
-    assert.deepEqual(output, { biography: null })
-  })
+      assert.deepEqual(output, { [field]: null })
+    })
 
   test('updateUserProfileValidator descarta null em {$self}')
-    .with(['fullName', 'username', 'profilePictureId'])
+    .with(['fullName', 'username'])
     .run(async ({ assert }, field) => {
       const output = await updateUserProfileValidator.validate({ [field]: null })
 

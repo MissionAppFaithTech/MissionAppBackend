@@ -105,11 +105,13 @@ test.group('Regras de upload de mídia', () => {
     assert.sameMembers(Object.keys(MEDIA_ASSET_RULES), [
       MediaAssetPurpose.IMPACT_PROJECT_COVER,
       MediaAssetPurpose.POST_IMAGE,
+      MediaAssetPurpose.PROFILE_PICTURE,
     ])
     for (const rules of Object.values(MEDIA_ASSET_RULES)) {
       assert.isTrue(rules.mimeTypes.every((mimeType) => mimeType.startsWith('image/')))
       assert.isAbove(rules.maxDimensionPx, 0)
-      assert.equal(rules.maxSizeBytes, 10 * 1024 * 1024)
+      assert.isAtMost(rules.maxSizeBytes, 10 * 1024 * 1024)
     }
+    assert.equal(MEDIA_ASSET_RULES[MediaAssetPurpose.PROFILE_PICTURE].maxSizeBytes, 5 * 1024 * 1024)
   })
 })

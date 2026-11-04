@@ -1,4 +1,5 @@
 import type Missionary from '#models/missionary'
+import { mediaAssetUrl } from '#utils/media_asset_url'
 import { BaseTransformer } from '@adonisjs/core/transformers'
 
 /**
@@ -15,6 +16,7 @@ export default class PublicMissionaryProfileTransformer extends BaseTransformer<
       username: user.username,
       fullName: user.fullName,
       biography: user.biography ?? null,
+      profilePictureUrl: user.profilePicture ? mediaAssetUrl(user.profilePicture) : null,
       role: user.role,
       missionaryAgency: agency ? { id: agency.id, name: agency.name } : null,
       faithCommunity: faithCommunity ? { id: faithCommunity.id, name: faithCommunity.name } : null,

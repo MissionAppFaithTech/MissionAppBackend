@@ -59,6 +59,12 @@ export const MEDIA_ASSET_RULES: Record<
     storagePrefix: 'posts/images',
     maxDimensionPx: 1600,
   },
+  [MediaAssetPurpose.PROFILE_PICTURE]: {
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    maxSizeBytes: 5 * 1024 * 1024,
+    storagePrefix: 'users/profile-pictures',
+    maxDimensionPx: 512,
+  },
 }
 
 /** Extensão de arquivo usada na chave do storage para cada mime type aceito. */
