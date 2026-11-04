@@ -20,7 +20,15 @@ body:json {
     "missionStorySummary": "Resumo da historia missionaria",
     "originLocation": "Sao Paulo - SP",
     "prayerRequest": "Orar por sabedoria",
-    "lifeVerse": "Joao 3:16"
+    "lifeVerse": "Joao 3:16",
+    "missionaryAgencyId": "{{missionary_agency_id}}",
+    "workAddress": {
+      "zip": "24020-000",
+      "district": "Centro",
+      "city": "Niteroi",
+      "state": "RJ",
+      "country": "Brasil"
+    }
   }
 }
 
@@ -28,5 +36,6 @@ docs {
   Atualiza a secao de apresentacao do missionario autenticado.
 
   Atualizacao parcial: campos omitidos nao sao alterados; enviar `null` (ou
-  string vazia) em qualquer campo limpa o valor salvo.
+  string vazia) em qualquer campo limpa o valor salvo, exceto `missionaryAgencyId`
+  (obrigatorio no perfil) e `workAddress` (substitui o endereco inteiro).
 }

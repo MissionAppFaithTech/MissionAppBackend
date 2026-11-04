@@ -1,5 +1,7 @@
 import FaithCommunity from '#models/faith_community'
 import Missionary from '#models/missionary'
+import MissionaryAgency from '#models/missionary_agency'
+import MissionaryWorkAddress from '#models/missionary_work_address'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { createMissionaryTestUser } from './helpers.ts'
@@ -126,6 +128,75 @@ test.group('Missionary - profile update', (group) => {
       assert.equal(persisted[field as keyof typeof expected], value, `${field} no banco`)
       assert.equal(body[field], value, `${field} na resposta`)
     }
+  })
+
+  test('troca a agência e grava o local de atuação pela seção sobre', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password, missionary } = await createFilledMissionary()
+    const accessToken = await loginAndGetAccessToken(client, user.email, password)
+    const newAgency = await MissionaryAgency.create({ name: 'Nova Agência', userId: user.id })
+    const workAddress = {
+      zip: '24020-000',
+      district: 'Centro',
+      city: 'Niterói',
+      state: 'RJ',
+      country: 'Brasil',
+    }
+
+    const response = await client
+      .patch(router.builder().make('v1.missionary.about.update')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ missionaryAgencyId: newAgency.id, workAddress })
+
+    response.assertStatus(200)
+    const body = (response.body() as { data: Record<string, any> }).data
+    assert.equal(body.missionary.missionaryAgencyId, newAgency.id)
+    assert.deepEqual(body.missionaryAgency, { id: newAgency.id, name: 'Nova Agência' })
+    assert.containsSubset(body.workAddress, workAddress)
+    assert.equal(body.faithCommunity.name, 'Comunidade Teste')
+    assert.equal(body.missionary.aboutMe, 'Sobre mim original')
+
+    const updated = await client
+      .patch(router.builder().make('v1.missionary.about.update')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ workAddress: { ...workAddress, city: 'Maricá' } })
+
+    updated.assertStatus(200)
+    const rows = await MissionaryWorkAddress.query().where('missionaryId', missionary.id)
+    assert.lengthOf(rows, 1)
+    assert.equal(rows[0].city, 'Maricá')
+    const persisted = await Missionary.findOrFail(missionary.id)
+    assert.equal(persisted.missionaryAgencyId, newAgency.id)
+  })
+
+  test('rejeita agência inexistente e local de atuação incompleto, e ignora agência nula', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password, missionary } = await createFilledMissionary()
+    const accessToken = await loginAndGetAccessToken(client, user.email, password)
+    const patch = (body: Record<string, unknown>) =>
+      client
+        .patch(router.builder().make('v1.missionary.about.update')!)
+        .header('Authorization', `Bearer ${accessToken}`)
+        .json(body)
+
+    const unknownAgency = await patch({
+      missionaryAgencyId: '01a1a768-27e4-72e3-9ecb-cf5c7f5ccc01',
+    })
+    unknownAgency.assertStatus(422)
+    assert.equal((unknownAgency.body() as any).errors[0].field, 'missionaryAgencyId')
+
+    const nullAgency = await patch({ missionaryAgencyId: null })
+    nullAgency.assertStatus(200)
+    const persisted = await Missionary.findOrFail(missionary.id)
+    assert.equal(persisted.missionaryAgencyId, missionary.missionaryAgencyId)
+
+    const partialAddress = await patch({ workAddress: { city: 'Niterói' } })
+    partialAddress.assertStatus(422)
+    assert.lengthOf(await MissionaryWorkAddress.query().where('missionaryId', missionary.id), 0)
   })
 
   test('limpa os campos públicos do perfil ao enviar {label}')
