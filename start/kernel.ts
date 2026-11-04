@@ -51,4 +51,5 @@ export const middleware = router.named({
     import('#middleware/username_availability_rate_limit_middleware'),
   publicCatalogRateLimit: () => import('#middleware/public_catalog_rate_limit_middleware'),
   publicProfileRateLimit: () => import('#middleware/public_profile_rate_limit_middleware'),
+  signupRateLimit: () => import('#middleware/signup_rate_limit_middleware'),
 })

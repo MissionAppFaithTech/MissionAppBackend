@@ -65,6 +65,11 @@ router.get('/', () => {
 router
   .group(() => {
     router.post('accounts', [controllers.user.Account, 'store'])
+    // NOTE: público porque o candidato ainda não tem conta; cria a agência e a
+    // comunidade de fé novas no mesmo cadastro, daí o rate limit por IP
+    router
+      .post('accounts/missionaries', [controllers.user.MissionaryAccounts, 'store'])
+      .use(middleware.signupRateLimit())
     router
       .get('accounts/username-availability', [controllers.user.UsernameAvailability, 'show'])
       .use(middleware.usernameAvailabilityRateLimit())

@@ -6,7 +6,8 @@ import { text } from '#validators/shared/fields/text'
 import { username } from '#validators/shared/fields/username'
 import vine from '@vinejs/vine'
 
-export const signupValidator = vine.create({
+/** Dados de acesso e pessoais comuns aos cadastros de apoiador e de missionário. */
+export const signupFields = () => ({
   fullName: text(),
   username: username().unique({ table: 'users', column: 'username' }),
   phoneNumber: phoneNumber(),
@@ -14,3 +15,5 @@ export const signupValidator = vine.create({
   email: email().unique({ table: 'users', column: 'email' }),
   password: password().confirmed({ as: 'passwordConfirmation' }),
 })
+
+export const signupValidator = vine.create(signupFields())

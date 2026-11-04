@@ -19,6 +19,7 @@ export default class UserTransformer extends BaseTransformer<User> {
         'createdAt',
         'updatedAt',
       ]),
+      birthDate: this.resource.birthDate?.toISODate() ?? null,
       // NOTE: null também enquanto a foto está em processamento ou sem preload de
       // `profilePicture`
       profilePictureUrl: picture ? mediaAssetUrl(picture) : null,

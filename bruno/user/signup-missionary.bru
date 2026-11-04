@@ -1,0 +1,51 @@
+meta {
+  name: Signup Missionary
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/api/v1/accounts/missionaries
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "fullName": "QA Missionaria",
+    "username": "qa_missionaria_01",
+    "phoneNumber": "+5511922222222",
+    "gender": "FEMALE",
+    "email": "{{test_email}}",
+    "password": "{{test_password}}",
+    "passwordConfirmation": "{{test_password}}",
+    "birthDate": "1990-05-17",
+    "identityType": "CPF",
+    "identityDocument": "12345678909",
+    "aboutMe": "Atuo com criancas no sertao.",
+    "missionaryAgencyId": "{{missionary_agency_id}}",
+    "faithCommunity": {
+      "name": "Igreja Batista Central",
+      "city": "Niteroi",
+      "state": "RJ",
+      "country": "Brasil",
+      "pastorName": "Pr. Joao Batista",
+      "pastorPhone": "+5521912345678"
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("auth_token", res.getBody().data.accessToken);
+    bru.setEnvVar("refresh_token", res.getBody().data.refreshToken);
+  }
+}
+
+docs {
+  Cadastro de missionario em uma unica transacao: conta com role MISSIONARY,
+  perfil missionario e, se necessario, agencia/comunidade novas. Informe a
+  agencia por `missionaryAgencyId` ou `missionaryAgency` (exatamente um) e a
+  comunidade por `faithCommunityId` ou `faithCommunity` (opcional). Rate limit
+  de 10 cadastros por hora por IP.
+}
