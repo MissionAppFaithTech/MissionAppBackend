@@ -43,3 +43,20 @@ export function buildPublicReadBucketPolicy(bucket: string): string {
     ],
   })
 }
+
+/** Discos públicos do Drive, onde ficam as mídias exibidas no app (ADR-0013). */
+export type PublicMediaDisk = 's3_public' | 'r2_public'
+
+/**
+ * Disco público usado pelas mídias enviadas pelos usuários (capas, imagens de
+ * post): o público do mesmo provedor de `DRIVE_DISK`. Mesmo com `DRIVE_DISK`
+ * apontando para um disco privado, mídia exibida no app vai para o público.
+ *
+ * @param driveDisk Valor de `DRIVE_DISK`.
+ * @returns `r2_public` quando o provedor padrão é o R2, senão `s3_public`.
+ * @example
+ * publicMediaDisk('s3_private') // 's3_public'
+ */
+export function publicMediaDisk(driveDisk: string): PublicMediaDisk {
+  return driveDisk.startsWith('r2_') ? 'r2_public' : 's3_public'
+}

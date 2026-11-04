@@ -4,12 +4,19 @@ import {
   CreateBucketCommand,
   HeadBucketCommand,
   NotFound,
+  PutBucketCorsCommand,
   PutBucketPolicyCommand,
+  S3ServiceException,
 } from '@aws-sdk/client-s3'
 
 type EnsureBucketsPayload = {
   publicBucket: string
   privateBucket: string
+  /**
+   * Origens que podem enviar arquivos direto ao bucket público com a URL
+   * pré-assinada (ADR-0040), ex.: o site. Vazio, o CORS não é alterado.
+   */
+  uploadOrigins?: string[]
 }
 
 /**
@@ -57,7 +64,42 @@ export class EnsureBucketsService {
       })
     )
 
+    if (payload.uploadOrigins && payload.uploadOrigins.length > 0) {
+      await this.#allowUploadsFrom(payload.publicBucket, payload.uploadOrigins)
+    }
+
     return created
+  }
+
+  /**
+   * Libera o PUT da URL pré-assinada vindo do navegador. O MinIO não implementa
+   * CORS por bucket (já libera qualquer origem globalmente), então
+   * `NotImplemented` não é erro.
+   */
+  async #allowUploadsFrom(bucket: string, origins: string[]): Promise<void> {
+    try {
+      await this.#client.send(
+        new PutBucketCorsCommand({
+          Bucket: bucket,
+          CORSConfiguration: {
+            CORSRules: [
+              {
+                AllowedOrigins: origins,
+                AllowedMethods: ['PUT', 'GET'],
+                AllowedHeaders: ['Content-Type', 'Content-Length'],
+                ExposeHeaders: ['ETag'],
+                MaxAgeSeconds: 3600,
+              },
+            ],
+          },
+        })
+      )
+    } catch (error) {
+      if (error instanceof S3ServiceException && error.name === 'NotImplemented') {
+        return
+      }
+      throw error
+    }
   }
 
   async #exists(bucket: string): Promise<boolean> {

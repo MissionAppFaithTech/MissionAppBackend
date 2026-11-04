@@ -5,7 +5,6 @@ import {
 } from '#constants/media_asset'
 import type { MediaAssetPurpose } from '#enums/media_asset/media_asset_purpose'
 import { MediaAssetStatus } from '#enums/media_asset/media_asset_status'
-import { Provider } from '#enums/media_asset/provider'
 import MediaAssetUploaded from '#events/media_asset/media_asset_uploaded'
 import MediaAssetForbiddenException from '#exceptions/media_asset/media_asset_forbidden_exception'
 import MediaAssetInvalidStatusException from '#exceptions/media_asset/media_asset_invalid_status_exception'
@@ -13,7 +12,7 @@ import MediaAssetNotFoundException from '#exceptions/media_asset/media_asset_not
 import MediaUploadNotAllowedException from '#exceptions/media_asset/media_upload_not_allowed_exception'
 import MediaAsset from '#models/media_asset'
 import type User from '#models/user'
-import env from '#start/env'
+import { mediaStorageTarget } from '#utils/media_storage'
 import drive from '@adonisjs/drive/services/main'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
@@ -61,11 +60,13 @@ export class MediaUploadService {
     // grava no bucket, o que impede sobrescrever arquivos de outros usuários
     const fileKey = `${rules.storagePrefix}/${actor.id}/${randomUUID()}.${MIME_TYPE_EXTENSIONS[payload.mimeType]}`
 
+    const target = mediaStorageTarget()
+
     const mediaAsset = await db.transaction(async (trx) => {
       return MediaAsset.create(
         {
-          provider: Provider.S3,
-          bucket: env.get('S3_BUCKET'),
+          provider: target.provider,
+          bucket: target.bucket,
           fileKey,
           mimeType: payload.mimeType,
           fileSizeBytes: payload.fileSizeBytes,
@@ -80,7 +81,7 @@ export class MediaUploadService {
     // NOTE: assinar a URL é cálculo local (HMAC sobre a requisição), sem I/O
     // no storage — por isso fica no request path e não no pipeline de jobs.
     // Tipo e tamanho entram na assinatura (ver `config/drive.ts`)
-    const url = await drive.use().getSignedUploadUrl(fileKey, {
+    const url = await drive.use(target.disk).getSignedUploadUrl(fileKey, {
       contentType: payload.mimeType,
       expiresIn: MEDIA_UPLOAD_URL_TTL_SECONDS,
       ContentLength: payload.fileSizeBytes,
