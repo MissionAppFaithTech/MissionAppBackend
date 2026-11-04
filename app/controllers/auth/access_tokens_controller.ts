@@ -25,6 +25,8 @@ export default class AccessTokensController {
       new AuthRevocationService()
     )
 
+    await user.load('profilePicture')
+
     return serialize({
       ...tokens,
       user: UserTransformer.transform(user),

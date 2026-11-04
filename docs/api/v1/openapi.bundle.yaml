@@ -2456,6 +2456,12 @@ components:
         profilePictureId:
           type: [string, 'null']
           format: uuid
+        profilePictureUrl:
+          type: [string, 'null']
+          format: uri
+          description: >-
+            URL pública da foto de perfil; `null` sem foto ou enquanto ela ainda
+            está sendo processada.
         role:
           type: string
           enum: [ADMIN, MISSIONARY, SUPPORTER]
@@ -2466,6 +2472,7 @@ components:
         updatedAt:
           type: string
           format: date-time
+
     LoginResponse:
       type: object
       properties:
@@ -2660,9 +2667,9 @@ components:
     UpdateProfileRequest:
       type: object
       description: >-
-        Atualização parcial: campos omitidos não são alterados. Apenas
-        `biography` aceita `null` (ou string vazia) para ser limpo; `null` em
-        `fullName`, `username` ou `profilePictureId` é ignorado.
+        Atualização parcial: campos omitidos não são alterados. `biography` e
+        `profilePictureId` aceitam `null` (ou string vazia) para ser limpos;
+        `null` em `fullName` ou `username` é ignorado.
       properties:
         fullName:
           type: string
@@ -2672,15 +2679,20 @@ components:
           type: string
           minLength: 3
           maxLength: 32
-          pattern: ^[a-z0-9_]+$
+          pattern: '^[a-z0-9_]+$'
         biography:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
           maxLength: 70
         profilePictureId:
-          type: string
+          type: [string, 'null']
           format: uuid
+          description: >-
+            Asset `PROFILE_PICTURE` enviado pelo próprio usuário com upload
+            confirmado (`POST /media-assets/uploads` e
+            `POST /media-assets/{id}/completion`); caso contrário, 422 em
+            `profilePictureId`. A foto anterior é removida do storage depois da
+            troca ou da remoção.
+
     AccountProfileResponse:
       type: object
       properties:
@@ -3148,6 +3160,7 @@ components:
           username,
           fullName,
           biography,
+          profilePictureUrl,
           role,
           missionaryAgency,
           faithCommunity,
@@ -3165,6 +3178,11 @@ components:
         biography:
           type: string
           nullable: true
+        profilePictureUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL pública da foto de perfil; null sem foto ou em processamento.
         role:
           type: string
           enum: [MISSIONARY]
@@ -3258,7 +3276,7 @@ components:
           type: integer
         purpose:
           type: [string, 'null']
-          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, null]
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, PROFILE_PICTURE, null]
         status:
           type: string
           enum: [PENDING_UPLOAD, PROCESSING, READY, FAILED]
@@ -3272,25 +3290,29 @@ components:
         createdAt:
           type: string
           format: date-time
+
     RequestMediaUploadRequest:
       type: object
       required: [purpose, mimeType, fileSizeBytes]
       properties:
         purpose:
           type: string
-          enum: [IMPACT_PROJECT_COVER, POST_IMAGE]
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, PROFILE_PICTURE]
           description: >-
-            Finalidade do arquivo. Toda mídia enviada é imagem: as duas
-            finalidades aceitam image/jpeg, image/png e image/webp até 10 MB, e
-            o worker comprime para WebP (até 1600 px no maior lado em
-            `POST_IMAGE`, até 1920 px em `IMPACT_PROJECT_COVER`). Vídeos não
-            são enviados: o projeto de impacto guarda só o link (`videoUrl`).
+            Finalidade do arquivo. Toda mídia enviada é imagem: todas as
+            finalidades aceitam image/jpeg, image/png e image/webp, até 10 MB
+            em `POST_IMAGE` e `IMPACT_PROJECT_COVER` e até 5 MB em
+            `PROFILE_PICTURE`. O worker comprime para WebP (até 1600 px no maior
+            lado em `POST_IMAGE`, 1920 px em `IMPACT_PROJECT_COVER` e 512 px em
+            `PROFILE_PICTURE`). Vídeos não são enviados: o projeto de impacto
+            guarda só o link (`videoUrl`).
         mimeType:
           type: string
           maxLength: 255
         fileSizeBytes:
           type: integer
           minimum: 1
+
     MediaUploadResponse:
       type: object
       properties:

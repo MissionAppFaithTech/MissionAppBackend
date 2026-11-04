@@ -1459,6 +1459,7 @@ components:
           username,
           fullName,
           biography,
+          profilePictureUrl,
           role,
           missionaryAgency,
           faithCommunity,
@@ -1476,6 +1477,11 @@ components:
         biography:
           type: string
           nullable: true
+        profilePictureUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL pública da foto de perfil; null sem foto ou em processamento.
         role:
           type: string
           enum: [MISSIONARY]

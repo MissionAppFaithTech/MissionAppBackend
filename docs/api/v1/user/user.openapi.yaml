@@ -254,9 +254,9 @@ components:
     UpdateProfileRequest:
       type: object
       description: >-
-        Atualização parcial: campos omitidos não são alterados. Apenas
-        `biography` aceita `null` (ou string vazia) para ser limpo; `null` em
-        `fullName`, `username` ou `profilePictureId` é ignorado.
+        Atualização parcial: campos omitidos não são alterados. `biography` e
+        `profilePictureId` aceitam `null` (ou string vazia) para ser limpos;
+        `null` em `fullName` ou `username` é ignorado.
       properties:
         fullName:
           type: string
@@ -271,8 +271,14 @@ components:
           type: [string, 'null']
           maxLength: 70
         profilePictureId:
-          type: string
+          type: [string, 'null']
           format: uuid
+          description: >-
+            Asset `PROFILE_PICTURE` enviado pelo próprio usuário com upload
+            confirmado (`POST /media-assets/uploads` e
+            `POST /media-assets/{id}/completion`); caso contrário, 422 em
+            `profilePictureId`. A foto anterior é removida do storage depois da
+            troca ou da remoção.
 
     UsernameAvailabilityResponse:
       type: object

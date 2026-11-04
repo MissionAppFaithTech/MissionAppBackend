@@ -31,7 +31,7 @@ export class PublicMissionaryProfileService {
           .where('membershipStatus', MembershipStatus.ACTIVE)
           .whereNull('deletedAt')
       })
-      .preload('user')
+      .preload('user', (user) => user.preload('profilePicture'))
       .preload('agency')
       .preload('faithCommunity')
       .preload('workAddresses')

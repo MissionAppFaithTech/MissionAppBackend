@@ -514,6 +514,12 @@ components:
         profilePictureId:
           type: [string, 'null']
           format: uuid
+        profilePictureUrl:
+          type: [string, 'null']
+          format: uri
+          description: >-
+            URL pública da foto de perfil; `null` sem foto ou enquanto ela ainda
+            está sendo processada.
         role:
           type: string
           enum: [ADMIN, MISSIONARY, SUPPORTER]

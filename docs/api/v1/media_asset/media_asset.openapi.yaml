@@ -189,7 +189,7 @@ components:
           type: integer
         purpose:
           type: [string, 'null']
-          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, null]
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, PROFILE_PICTURE, null]
         status:
           type: string
           enum: [PENDING_UPLOAD, PROCESSING, READY, FAILED]
@@ -210,13 +210,15 @@ components:
       properties:
         purpose:
           type: string
-          enum: [IMPACT_PROJECT_COVER, POST_IMAGE]
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, PROFILE_PICTURE]
           description: >-
-            Finalidade do arquivo. Toda mídia enviada é imagem: as duas
-            finalidades aceitam image/jpeg, image/png e image/webp até 10 MB, e
-            o worker comprime para WebP (até 1600 px no maior lado em
-            `POST_IMAGE`, até 1920 px em `IMPACT_PROJECT_COVER`). Vídeos não
-            são enviados: o projeto de impacto guarda só o link (`videoUrl`).
+            Finalidade do arquivo. Toda mídia enviada é imagem: todas as
+            finalidades aceitam image/jpeg, image/png e image/webp, até 10 MB
+            em `POST_IMAGE` e `IMPACT_PROJECT_COVER` e até 5 MB em
+            `PROFILE_PICTURE`. O worker comprime para WebP (até 1600 px no maior
+            lado em `POST_IMAGE`, 1920 px em `IMPACT_PROJECT_COVER` e 512 px em
+            `PROFILE_PICTURE`). Vídeos não são enviados: o projeto de impacto
+            guarda só o link (`videoUrl`).
         mimeType:
           type: string
           maxLength: 255
