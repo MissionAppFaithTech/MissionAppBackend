@@ -26,5 +26,9 @@ export function mediaAssetUrl(asset: MediaAsset): string | null {
       ? (env.get('R2_PUBLIC_URL') ?? '')
       : `${env.get('S3_ENDPOINT')}/${asset.bucket}`
 
-  return `${base.replace(/\/+$/, '')}/${asset.fileKey}`
+  // NOTE: cada trecho da chave é codificado (as barras dos diretórios ficam):
+  // `#`, `?` ou `%` num nome legado mudariam o objeto apontado pela URL
+  const path = asset.fileKey.split('/').map(encodeURIComponent).join('/')
+
+  return `${base.replace(/\/+$/, '')}/${path}`
 }

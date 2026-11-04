@@ -87,7 +87,10 @@ test.group('Media uploads', (group) => {
     response.assertStatus(422)
   })
 
-  test('confirma o upload uma única vez e só pelo autor', async ({ client, assert }) => {
+  test('confirma o upload só pelo autor; reconfirmar em processamento reenfileira', async ({
+    client,
+    assert,
+  }) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
 
@@ -118,10 +121,20 @@ test.group('Media uploads', (group) => {
     const asset = await MediaAsset.findOrFail(mediaAssetId)
     assert.equal(asset.status, MediaAssetStatus.PROCESSING)
 
-    const repeated = await client
+    // NOTE: o job pode não ter sido enfileirado (falha depois do commit) —
+    // confirmar de novo enquanto PROCESSING reenfileira em vez de travar
+    const retried = await client
       .post(completionUrl)
       .header('Authorization', `Bearer ${accessToken}`)
-    repeated.assertStatus(409)
+    retried.assertStatus(202)
+
+    asset.status = MediaAssetStatus.READY
+    await asset.save()
+    const afterReady = await client
+      .post(completionUrl)
+      .header('Authorization', `Bearer ${accessToken}`)
+    afterReady.assertStatus(409)
+    afterReady.assertBodyContains({ code: 'E_MEDIA_ASSET_INVALID_STATUS' })
   })
 
   test('detalha o asset apenas para o autor', async ({ client }) => {

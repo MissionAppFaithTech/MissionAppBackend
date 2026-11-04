@@ -6,6 +6,7 @@ import ImpactProjectForbiddenException from '#exceptions/impact_project/impact_p
 import ImpactProjectNotFoundException from '#exceptions/impact_project/impact_project_not_found_exception'
 import MediaAssetNotAttachableException from '#exceptions/media_asset/media_asset_not_attachable_exception'
 import ImpactProject from '#models/impact_project'
+import Missionary from '#models/missionary'
 import type User from '#models/user'
 import { MediaAttachmentService } from '#services/media_asset/media_attachment_service'
 import { ResolveMissionaryService } from '#services/missionary/resolve_missionary_service'
@@ -77,6 +78,11 @@ export class ImpactProjectsService {
     const missionary = await new ResolveMissionaryService().execute(actor, payload.missionaryId)
 
     const project = await db.transaction(async (trx) => {
+      // NOTE: serializa criações simultâneas do mesmo missionário — sem o lock,
+      // as duas veriam "nenhum projeto" e a segunda cairia na unique constraint
+      // em vez do 409 documentado
+      await Missionary.query({ client: trx }).where('id', missionary.id).forUpdate().firstOrFail()
+
       const existing = await ImpactProject.query({ client: trx })
         .where('missionaryId', missionary.id)
         .first()

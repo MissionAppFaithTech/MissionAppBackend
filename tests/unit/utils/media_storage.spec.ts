@@ -58,6 +58,13 @@ test.group('mediaAssetUrl', () => {
     )
   })
 
+  test('codifica cada trecho da chave, preservando as barras', ({ assert }) => {
+    assert.equal(
+      mediaAssetUrl(asset({ fileKey: 'avatars/u 1/foto#1?.png' })),
+      `${env.get('S3_ENDPOINT')}/missionapp-test-public-assets/avatars/u%201/foto%231%3F.png`
+    )
+  })
+
   test('sem URL enquanto o arquivo não está pronto ({status})')
     .with([
       { status: MediaAssetStatus.PENDING_UPLOAD },

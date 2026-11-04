@@ -125,10 +125,14 @@ export class MediaUploadService {
         throw new MediaAssetForbiddenException('Você não tem permissão para alterar este arquivo')
       }
 
+      // NOTE: confirmar de novo um asset em PROCESSING reenfileira o job — cobre
+      // a falha de enfileiramento depois do commit (o processamento é idempotente)
+      if (asset.status === MediaAssetStatus.PROCESSING) {
+        return asset
+      }
+
       if (asset.status !== MediaAssetStatus.PENDING_UPLOAD) {
-        throw new MediaAssetInvalidStatusException(
-          'O upload deste arquivo já foi confirmado anteriormente'
-        )
+        throw new MediaAssetInvalidStatusException('O upload deste arquivo já foi processado')
       }
 
       asset.status = MediaAssetStatus.PROCESSING
