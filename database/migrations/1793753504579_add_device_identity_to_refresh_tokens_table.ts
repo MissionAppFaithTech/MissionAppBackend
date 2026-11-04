@@ -27,12 +27,11 @@ export default class extends BaseSchema {
           "Tipo de aparelho da sessão ('desktop', 'mobile', 'tablet' ou 'unknown'), informado em x-device-kind; usado só para exibição"
         )
 
+      // NOTE: DDL não aceita parâmetros ($1...); os valores são as constantes do enum.
       const kinds = Object.values(DeviceKind)
-      table.check(
-        `device_kind in (${kinds.map(() => '?').join(', ')})`,
-        kinds,
-        'chk_refresh_tokens_device_kind'
-      )
+        .map((kind) => `'${kind}'`)
+        .join(', ')
+      table.check(`device_kind in (${kinds})`, [], 'chk_refresh_tokens_device_kind')
     })
 
     // NOTE: o login procura as sessões ativas do mesmo aparelho para substituí-las.
