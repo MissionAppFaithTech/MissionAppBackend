@@ -3,7 +3,12 @@ paths:
     get:
       operationId: postIndex
       tags: [post]
-      summary: Lista postagens (paginado, mais recentes primeiro)
+      summary: Lista postagens por cursor (mais recentes primeiro)
+      description: >-
+        Paginação por cursor (ADR-0033): envie o `meta.nextCursor` da resposta
+        anterior em `cursor` para buscar a próxima página. Um cursor que não
+        pode ser decodificado responde 422 `E_INVALID_CURSOR` sem o array
+        `errors`.
       security:
         - bearerAuth: []
       parameters:
@@ -14,8 +19,8 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: '../auth/auth.openapi.yaml#/components/parameters/Page'
-        - $ref: '../auth/auth.openapi.yaml#/components/parameters/PerPage'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/CursorParam'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/LimitParam'
       responses:
         '200':
           description: Página de postagens.
@@ -24,24 +29,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostsResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Filtro inválido (`missionaryId` que não é UUID, `limit` acima de 20)
+            ou cursor malformado. Códigos: `E_VALIDATION_ERROR`,
+            `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
     post:
       operationId: postStore
       tags: [post]
       summary: Cria uma postagem
       description: >-
-        Apenas missionários (ou ADMIN informando `missionaryId`) publicam. As
+        Apenas missionários (ou ADMIN informando `missionaryId`) publicam. O
+        texto é obrigatório e a postagem aceita até 3 imagens (RF 8.1). As
         imagens devem ter finalidade `POST_IMAGE`, ter sido enviadas pelo
-        próprio usuário e ter o upload confirmado. **Limite rotativo:** cada
-        missionário mantém no máximo 50 imagens somando todas as postagens.
-        Ao ultrapassar, as imagens vinculadas há mais tempo são desvinculadas
-        dos posts (o texto permanece) e os arquivos são removidos do storage
-        de forma assíncrona.
+        próprio usuário e ter o upload confirmado. **Limite de 50 imagens por
+        missionário** somando todas as postagens (RF 8.2): se a postagem
+        ultrapassar o limite sem `replaceOldestImages: true`, a API responde
+        409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado. Repetindo o pedido
+        com `replaceOldestImages: true`, as imagens vinculadas há mais tempo
+        são desvinculadas dos posts (o texto permanece) e os arquivos são
+        removidos do storage de forma assíncrona.
       security:
         - bearerAuth: []
       requestBody:
@@ -58,27 +77,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
+          description: >-
+            Usuário não é missionário, ADMIN sem `missionaryId` ou missionário
+            publicando em nome de outro. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Perfil missionário não encontrado.
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            A postagem levaria o missionário além de 50 imagens; repita com
+            `replaceOldestImages: true` para substituir as mais antigas.
+            Códigos: `E_POST_IMAGE_LIMIT_REACHED`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
           description: >-
-            Erro de validação, ou imagem inválida para vínculo
-            (`E_MEDIA_ASSET_NOT_ATTACHABLE`).
+            Erro de validação (inclusive mais de 3 imagens), ou imagem inválida
+            para vínculo (de outro usuário, com outra finalidade, upload não
+            confirmado ou já vinculada). Códigos: `E_VALIDATION_ERROR`,
+            `E_MEDIA_ASSET_NOT_ATTACHABLE`.
           content:
             application/json:
               schema:
@@ -101,27 +138,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Postagem não encontrada.
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
     patch:
       operationId: postUpdate
       tags: [post]
       summary: Atualiza uma postagem
       description: >-
-        O slug é imutável. Quando `imageAssetIds` é enviado, ele substitui a
-        galeria inteira na ordem informada: imagens ausentes da lista são
-        removidas do storage; imagens mantidas preservam a antiguidade para
-        fins do limite rotativo de 50 imagens por missionário.
+        O slug é imutável. Quando `imageAssetIds` é enviado (até 3 imagens),
+        ele substitui a galeria inteira na ordem informada: imagens ausentes
+        da lista são removidas do storage; imagens mantidas preservam a
+        antiguidade para fins do limite de 50 imagens por missionário. Se as
+        novas imagens ultrapassarem o limite, vale a mesma confirmação do
+        cadastro: 409 `E_POST_IMAGE_LIMIT_REACHED` sem
+        `replaceOldestImages: true`.
       security:
         - bearerAuth: []
       parameters:
@@ -140,25 +191,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para alterar a postagem.
+          description: >-
+            Usuário sem permissão para alterar a postagem. Códigos:
+            `E_POST_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Postagem não encontrada.
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            As novas imagens levariam o missionário além de 50 imagens; repita
+            com `replaceOldestImages: true` para substituir as mais antigas.
+            Códigos: `E_POST_IMAGE_LIMIT_REACHED`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação ou imagem inválida para vínculo.
+          description: >-
+            Erro de validação ou imagem inválida para vínculo. Códigos:
+            `E_VALIDATION_ERROR`, `E_MEDIA_ASSET_NOT_ATTACHABLE`.
           content:
             application/json:
               schema:
@@ -181,23 +248,36 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a postagem.
+          description: >-
+            Usuário sem permissão para remover a postagem. Códigos:
+            `E_POST_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Postagem não encontrada.
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
 components:
   parameters:
@@ -246,6 +326,7 @@ components:
           format: uuid
         images:
           type: array
+          maxItems: 3
           items:
             $ref: '#/components/schemas/PostImage'
         createdAt:
@@ -263,13 +344,18 @@ components:
 
     PostsResponse:
       type: object
+      required: [data, meta]
       properties:
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Post'
-        metadata:
-          $ref: '../auth/auth.openapi.yaml#/components/schemas/PaginationMetadata'
+          type: object
+          required: [posts]
+          properties:
+            posts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+        meta:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/CursorPaginationMeta'
 
     CreatePostRequest:
       type: object
@@ -289,12 +375,18 @@ components:
           maxLength: 255
         imageAssetIds:
           type: array
-          maxItems: 50
+          maxItems: 3
           uniqueItems: true
-          description: Ids de assets `POST_IMAGE`, na ordem de exibição da galeria.
+          description: Ids de assets `POST_IMAGE`, na ordem de exibição da galeria (até 3).
           items:
             type: string
             format: uuid
+        replaceOldestImages:
+          type: boolean
+          description: >-
+            Confirma substituir as imagens mais antigas do missionário quando a
+            postagem ultrapassa o limite de 50 imagens (RF 8.2). Sem ela, a API
+            responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.
 
     UpdatePostRequest:
       type: object
@@ -309,9 +401,15 @@ components:
           maxLength: 255
         imageAssetIds:
           type: array
-          maxItems: 50
+          maxItems: 3
           uniqueItems: true
-          description: Substitui a galeria inteira, na ordem informada.
+          description: Substitui a galeria inteira, na ordem informada (até 3).
           items:
             type: string
             format: uuid
+        replaceOldestImages:
+          type: boolean
+          description: >-
+            Confirma substituir as imagens mais antigas do missionário quando as
+            novas imagens ultrapassam o limite de 50 (RF 8.2). Sem ela, a API
+            responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.

@@ -28,7 +28,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaUploadResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -36,7 +38,8 @@ paths:
         '422':
           description: >-
             Erro de validação, ou mime type/tamanho não permitido para a
-            finalidade informada (`E_MEDIA_UPLOAD_NOT_ALLOWED`).
+            finalidade informada (só image/jpeg, image/png e image/webp até
+            10 MB). Códigos: `E_VALIDATION_ERROR`, `E_MEDIA_UPLOAD_NOT_ALLOWED`.
           content:
             application/json:
               schema:
@@ -63,23 +66,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaAssetDetailResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: O arquivo não foi enviado pelo usuário autenticado.
+          description: >-
+            O arquivo não foi enviado pelo usuário autenticado. Códigos:
+            `E_MEDIA_ASSET_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Media asset não encontrado.
+          description: >-
+            Media asset não encontrado. Códigos: `E_MEDIA_ASSET_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /media-assets/{id}/completion:
     post:
@@ -90,8 +106,7 @@ paths:
         Move o asset de `PENDING_UPLOAD` para `PROCESSING` e enfileira o
         processamento no worker. Imagens são redimensionadas (capa: até
         1920px; post: até 1600px no maior lado), convertidas para WebP e têm
-        os metadados (EXIF/GPS) removidos. Vídeos são apenas validados. A
-        partir de `PROCESSING` o asset já pode ser vinculado a um projeto ou
+        os metadados (EXIF/GPS) removidos. A partir de `PROCESSING` o asset já pode ser vinculado a um projeto ou
         post; a `url` fica disponível quando o status vira `READY`.
       security:
         - bearerAuth: []
@@ -105,29 +120,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaAssetDetailResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: O arquivo não foi enviado pelo usuário autenticado.
+          description: >-
+            O arquivo não foi enviado pelo usuário autenticado. Códigos:
+            `E_MEDIA_ASSET_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Media asset não encontrado.
+          description: >-
+            Media asset não encontrado. Códigos: `E_MEDIA_ASSET_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '409':
-          description: O upload deste asset já foi confirmado.
+          description: >-
+            O upload deste asset já foi confirmado. Códigos:
+            `E_MEDIA_ASSET_INVALID_STATUS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
 components:
   parameters:
@@ -159,14 +189,17 @@ components:
           type: integer
         purpose:
           type: [string, 'null']
-          enum: [IMPACT_PROJECT_COVER, IMPACT_PROJECT_VIDEO, POST_IMAGE, null]
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, null]
         status:
           type: string
           enum: [PENDING_UPLOAD, PROCESSING, READY, FAILED]
         url:
           type: [string, 'null']
           format: uri
-          description: URL pública do arquivo; `null` enquanto o status não for `READY`.
+          description: >-
+            URL pública do arquivo no disco público do storage
+            (`S3_ENDPOINT/<bucket>/<fileKey>` no MinIO, `R2_PUBLIC_URL/<fileKey>`
+            no R2); `null` enquanto o status não for `READY`.
         createdAt:
           type: string
           format: date-time
@@ -177,12 +210,13 @@ components:
       properties:
         purpose:
           type: string
-          enum: [IMPACT_PROJECT_COVER, IMPACT_PROJECT_VIDEO, POST_IMAGE]
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE]
           description: >-
-            Finalidade do arquivo. Imagens (`IMPACT_PROJECT_COVER`, `POST_IMAGE`)
-            aceitam image/jpeg, image/png e image/webp até 10 MB;
-            `IMPACT_PROJECT_VIDEO` aceita video/mp4, video/quicktime e
-            video/webm até 200 MB.
+            Finalidade do arquivo. Toda mídia enviada é imagem: as duas
+            finalidades aceitam image/jpeg, image/png e image/webp até 10 MB, e
+            o worker comprime para WebP (até 1600 px no maior lado em
+            `POST_IMAGE`, até 1920 px em `IMPACT_PROJECT_COVER`). Vídeos não
+            são enviados: o projeto de impacto guarda só o link (`videoUrl`).
         mimeType:
           type: string
           maxLength: 255

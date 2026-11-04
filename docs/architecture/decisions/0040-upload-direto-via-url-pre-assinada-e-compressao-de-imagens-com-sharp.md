@@ -1,8 +1,8 @@
-# [ADR-0032]: Upload Direto via URL Pré-Assinada e Compressão de Imagens com sharp em Worker
+# [ADR-0040]: Upload Direto via URL Pré-Assinada e Compressão de Imagens com sharp em Worker
 
 ## Dados
 
-- **Status:** 🟡 Proposto
+- **Status:** 🟢 Aceito
 - **Data:** 2026-10-19
 - **Proponentes:** [Henrique Mendonça](https://github.com/devhenriquemendonca)
 
@@ -78,6 +78,16 @@ Descartado porque adiciona um fornecedor externo pago com dados pessoais de usu�
 - **Binário nativo:** o sharp depende de binários por plataforma. Uma imagem Docker em plataforma sem binário pré-compilado (ex: Alpine/musl em arquitetura incomum) exigiria compilar a libvips.
 - **CORS e leitura pública no bucket:** para o `PUT` direto do browser e a exibição das imagens, o bucket precisa liberar a origem do frontend e permitir `s3:GetObject` público. Em dev, `node ace storage:setup` (executado por `just start`) aplica isso no MinIO; em staging/produção é configuração de infraestrutura — ver [`docs/deployment/storage.md`](../../deployment/storage.md).
 - O endpoint legado `POST /media-assets` (registro com chave escolhida pelo cliente) continua existindo e deve ser descontinuado quando nenhum cliente o usar.
+
+## Ajustes na integração com a main (2026-11-04)
+
+Ao integrar esta decisão com a `main`, alguns pontos mudaram em relação ao texto original. Prevalece o que está abaixo:
+
+- **Discos do Drive e CORS:** o storage passou a ter discos separados por visibilidade (`s3_public`/`s3_private` no MinIO, `r2_public`/`r2_private` no Cloudflare R2), escolhidos por `DRIVE_DISK`. As mídias sempre vão para o disco **público** do provedor em uso, e só os discos públicos assinam `content-type` e `content-length` na URL de upload. O `node ace storage:setup` (`EnsureBucketsService`) cria `S3_PUBLIC_BUCKET` e `S3_PRIVATE_BUCKET`, aplica leitura pública só ao bucket público e libera CORS de `PUT`/`GET` para `FRONTEND_URL` (o MinIO ignora CORS por bucket e já libera qualquer origem). Ver [`docs/deployment/storage.md`](../../deployment/storage.md).
+- **Vídeo é link externo:** o projeto de impacto não recebe mais arquivo de vídeo. O vídeo é um link do YouTube ou do Vimeo (`videoUrl`, RF 9.2), guardado no formato de embed. A finalidade `IMPACT_PROJECT_VIDEO` e o limite de 200 MB deixaram de existir: toda mídia enviada é imagem (JPEG, PNG ou WebP até 10 MB), comprimida para WebP.
+- **Até 3 imagens por postagem e confirmação no limite de 50:** cada postagem aceita até 3 imagens (RF 8.1). O limite de 50 imagens por missionário deixou de ser rotativo automático: ao ultrapassá-lo, a API responde 409 `E_POST_IMAGE_LIMIT_REACHED` sem gravar nada, e só substitui as imagens mais antigas quando o pedido é repetido com `replaceOldestImages: true` (RF 8.2).
+- **Paginação por cursor:** as listas de postagens e de projetos de impacto seguem o [ADR-0033](./0033-paginacao-por-cursor-para-feeds-e-listas-incrementais.md) (`cursor` + `limit` até 20, resposta com `meta.nextCursor` e `meta.hasMore`), em vez de `page`/`perPage`.
+- **Fora do escopo desta entrega:** feed, curtidas, comentários, denúncia, os links extras da postagem previstos no RF 8.1 e o vínculo do projeto de impacto com uma campanha continuam pendentes e terão decisões próprias.
 
 ## Referências
 

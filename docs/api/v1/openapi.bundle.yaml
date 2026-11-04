@@ -16,6 +16,12 @@ tags:
     description: Conta do usuário — cadastro, leitura de perfil, troca de senha. Mesmo quando o atributo é sensível (senha), a operação é sobre o recurso User.
   - name: missionary
     description: Perfil estendido de missionários — informações públicas, identidade e endereço de atuação.
+  - name: media_asset
+    description: Upload direto ao storage via URL pré-assinada e acompanhamento do processamento (validação e compressão em background) dos arquivos.
+  - name: impact_project
+    description: Projeto de impacto do missionário — vitrine principal da causa, com capa e link de vídeo opcional (YouTube ou Vimeo). Um por missionário.
+  - name: post
+    description: Postagens de missionários para o feed, com até 3 imagens por postagem e limite de 50 imagens por missionário (substituir as mais antigas exige confirmação).
 paths:
   /auth/login:
     post:
@@ -516,6 +522,704 @@ paths:
         '422':
           description: >-
             Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /media-assets/uploads:
+    post:
+      operationId: mediaUploadStore
+      tags: [media_asset]
+      summary: Solicita URL pré-assinada para upload direto ao storage
+      description: >-
+        Reserva um media asset em `PENDING_UPLOAD` e devolve uma URL pré-assinada
+        (validade de 15 min) para o cliente enviar o arquivo direto ao storage
+        com `PUT`. A chave no bucket é gerada pelo servidor. Os headers
+        `Content-Type` e `Content-Length` fazem parte da assinatura: o envio
+        precisa usar exatamente o tipo e o tamanho declarados, senão o storage
+        rejeita. Depois do envio, o cliente confirma em
+        `POST /media-assets/{id}/completion`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMediaUploadRequest'
+      responses:
+        '200':
+          description: Asset reservado e URL de upload emitida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaUploadResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação, ou mime type/tamanho não permitido para a
+            finalidade informada (só image/jpeg, image/png e image/webp até
+            10 MB). Códigos: `E_VALIDATION_ERROR`, `E_MEDIA_UPLOAD_NOT_ALLOWED`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /media-assets/{id}:
+    get:
+      operationId: mediaAssetShow
+      tags: [media_asset]
+      summary: Exibe um media asset enviado pelo usuário autenticado
+      description: >-
+        Usado para acompanhar o processamento após a confirmação do upload:
+        `PROCESSING` enquanto o worker valida/comprime, `READY` quando a `url`
+        pública já está disponível e `FAILED` quando o conteúdo foi rejeitado.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MediaAssetId'
+      responses:
+        '200':
+          description: Media asset encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDetailResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            O arquivo não foi enviado pelo usuário autenticado. Códigos:
+            `E_MEDIA_ASSET_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Media asset não encontrado. Códigos: `E_MEDIA_ASSET_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /media-assets/{id}/completion:
+    post:
+      operationId: mediaUploadCompletionStore
+      tags: [media_asset]
+      summary: Confirma o upload e dispara validação e compressão
+      description: >-
+        Move o asset de `PENDING_UPLOAD` para `PROCESSING` e enfileira o
+        processamento no worker. Imagens são redimensionadas (capa: até
+        1920px; post: até 1600px no maior lado), convertidas para WebP e têm
+        os metadados (EXIF/GPS) removidos. A partir de `PROCESSING` o asset já pode ser vinculado a um projeto ou
+        post; a `url` fica disponível quando o status vira `READY`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MediaAssetId'
+      responses:
+        '202':
+          description: Upload confirmado; processamento enfileirado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDetailResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            O arquivo não foi enviado pelo usuário autenticado. Códigos:
+            `E_MEDIA_ASSET_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Media asset não encontrado. Códigos: `E_MEDIA_ASSET_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            O upload deste asset já foi confirmado. Códigos:
+            `E_MEDIA_ASSET_INVALID_STATUS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /impact-projects:
+    get:
+      operationId: impactProjectIndex
+      tags: [impact_project]
+      summary: Lista projetos de impacto por cursor (mais recentes primeiro)
+      description: >-
+        Paginação por cursor (ADR-0033): envie o `meta.nextCursor` da resposta
+        anterior em `cursor` para buscar a próxima página. Um cursor que não
+        pode ser decodificado responde 422 `E_INVALID_CURSOR` sem o array
+        `errors`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Busca parcial (sem diferenciar maiúsculas) pelo título do projeto.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelo missionário dono do projeto.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de projetos de impacto, do mais recente para o mais antigo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Filtro inválido (`missionaryId` que não é UUID, `limit` acima de 20)
+            ou cursor malformado. Códigos: `E_VALIDATION_ERROR`,
+            `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    post:
+      operationId: impactProjectStore
+      tags: [impact_project]
+      summary: Cria o projeto de impacto do missionário
+      description: >-
+        Cada missionário tem no máximo um projeto. Missionários criam o
+        próprio projeto; ADMIN informa `missionaryId`. A capa deve ter sido
+        enviada pelo próprio usuário autenticado via
+        `POST /media-assets/uploads` e ter o upload confirmado. O vídeo não é
+        enviado ao storage: é um link externo do YouTube ou do Vimeo
+        (`videoUrl`, RF 9.2), guardado no formato de embed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário não é missionário, ADMIN sem `missionaryId` ou missionário
+            criando projeto de outro. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            Missionário já possui um projeto de impacto. Códigos:
+            `E_IMPACT_PROJECT_ALREADY_EXISTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação (inclusive `videoUrl` que não é do YouTube nem do
+            Vimeo), ou capa inválida para vínculo (de outro usuário, com outra
+            finalidade, upload não confirmado ou já vinculada). Códigos:
+            `E_VALIDATION_ERROR`, `E_MEDIA_ASSET_NOT_ATTACHABLE`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /impact-projects/{id}:
+    get:
+      operationId: impactProjectShow
+      tags: [impact_project]
+      summary: Exibe um projeto de impacto
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Projeto de impacto não encontrado. Códigos:
+            `E_IMPACT_PROJECT_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    patch:
+      operationId: impactProjectUpdate
+      tags: [impact_project]
+      summary: Atualiza um projeto de impacto
+      description: >-
+        Ao trocar a capa, a anterior é removida do storage de forma
+        assíncrona. `videoUrl: null` remove o link de vídeo do projeto.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão para alterar o projeto. Códigos:
+            `E_IMPACT_PROJECT_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Projeto de impacto não encontrado. Códigos:
+            `E_IMPACT_PROJECT_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação ou capa inválida para vínculo. Códigos:
+            `E_VALIDATION_ERROR`, `E_MEDIA_ASSET_NOT_ATTACHABLE`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    delete:
+      operationId: impactProjectDestroy
+      tags: [impact_project]
+      summary: Remove um projeto de impacto
+      description: A capa do projeto é removida do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto removido com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão para remover o projeto. Códigos:
+            `E_IMPACT_PROJECT_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Projeto de impacto não encontrado. Códigos:
+            `E_IMPACT_PROJECT_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /posts:
+    get:
+      operationId: postIndex
+      tags: [post]
+      summary: Lista postagens por cursor (mais recentes primeiro)
+      description: >-
+        Paginação por cursor (ADR-0033): envie o `meta.nextCursor` da resposta
+        anterior em `cursor` para buscar a próxima página. Um cursor que não
+        pode ser decodificado responde 422 `E_INVALID_CURSOR` sem o array
+        `errors`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelas postagens de um missionário.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de postagens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Filtro inválido (`missionaryId` que não é UUID, `limit` acima de 20)
+            ou cursor malformado. Códigos: `E_VALIDATION_ERROR`,
+            `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    post:
+      operationId: postStore
+      tags: [post]
+      summary: Cria uma postagem
+      description: >-
+        Apenas missionários (ou ADMIN informando `missionaryId`) publicam. O
+        texto é obrigatório e a postagem aceita até 3 imagens (RF 8.1). As
+        imagens devem ter finalidade `POST_IMAGE`, ter sido enviadas pelo
+        próprio usuário e ter o upload confirmado. **Limite de 50 imagens por
+        missionário** somando todas as postagens (RF 8.2): se a postagem
+        ultrapassar o limite sem `replaceOldestImages: true`, a API responde
+        409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado. Repetindo o pedido
+        com `replaceOldestImages: true`, as imagens vinculadas há mais tempo
+        são desvinculadas dos posts (o texto permanece) e os arquivos são
+        removidos do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '200':
+          description: Postagem criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário não é missionário, ADMIN sem `missionaryId` ou missionário
+            publicando em nome de outro. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            A postagem levaria o missionário além de 50 imagens; repita com
+            `replaceOldestImages: true` para substituir as mais antigas.
+            Códigos: `E_POST_IMAGE_LIMIT_REACHED`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação (inclusive mais de 3 imagens), ou imagem inválida
+            para vínculo (de outro usuário, com outra finalidade, upload não
+            confirmado ou já vinculada). Códigos: `E_VALIDATION_ERROR`,
+            `E_MEDIA_ASSET_NOT_ATTACHABLE`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /posts/{id}:
+    get:
+      operationId: postShow
+      tags: [post]
+      summary: Exibe uma postagem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    patch:
+      operationId: postUpdate
+      tags: [post]
+      summary: Atualiza uma postagem
+      description: >-
+        O slug é imutável. Quando `imageAssetIds` é enviado (até 3 imagens),
+        ele substitui a galeria inteira na ordem informada: imagens ausentes
+        da lista são removidas do storage; imagens mantidas preservam a
+        antiguidade para fins do limite de 50 imagens por missionário. Se as
+        novas imagens ultrapassarem o limite, vale a mesma confirmação do
+        cadastro: 409 `E_POST_IMAGE_LIMIT_REACHED` sem
+        `replaceOldestImages: true`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Postagem atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão para alterar a postagem. Códigos:
+            `E_POST_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            As novas imagens levariam o missionário além de 50 imagens; repita
+            com `replaceOldestImages: true` para substituir as mais antigas.
+            Códigos: `E_POST_IMAGE_LIMIT_REACHED`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação ou imagem inválida para vínculo. Códigos:
+            `E_VALIDATION_ERROR`, `E_MEDIA_ASSET_NOT_ATTACHABLE`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+    delete:
+      operationId: postDestroy
+      tags: [post]
+      summary: Remove uma postagem
+      description: As imagens da postagem são removidas do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem removida com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão para remover a postagem. Códigos:
+            `E_POST_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1682,6 +2386,27 @@ components:
       schema:
         type: string
         format: uuid
+    MediaAssetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ImpactProjectId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PostId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   schemas:
     CursorPaginationMeta:
       type: object
@@ -2513,3 +3238,315 @@ components:
           properties:
             missionary:
               $ref: '#/components/schemas/PublicMissionaryProfile'
+
+    MediaAsset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [S3, R2, GCS, AZURE]
+        bucket:
+          type: string
+        fileKey:
+          type: string
+        mimeType:
+          type: string
+        fileSizeBytes:
+          type: integer
+        purpose:
+          type: [string, 'null']
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE, null]
+        status:
+          type: string
+          enum: [PENDING_UPLOAD, PROCESSING, READY, FAILED]
+        url:
+          type: [string, 'null']
+          format: uri
+          description: >-
+            URL pública do arquivo no disco público do storage
+            (`S3_ENDPOINT/<bucket>/<fileKey>` no MinIO, `R2_PUBLIC_URL/<fileKey>`
+            no R2); `null` enquanto o status não for `READY`.
+        createdAt:
+          type: string
+          format: date-time
+    RequestMediaUploadRequest:
+      type: object
+      required: [purpose, mimeType, fileSizeBytes]
+      properties:
+        purpose:
+          type: string
+          enum: [IMPACT_PROJECT_COVER, POST_IMAGE]
+          description: >-
+            Finalidade do arquivo. Toda mídia enviada é imagem: as duas
+            finalidades aceitam image/jpeg, image/png e image/webp até 10 MB, e
+            o worker comprime para WebP (até 1600 px no maior lado em
+            `POST_IMAGE`, até 1920 px em `IMPACT_PROJECT_COVER`). Vídeos não
+            são enviados: o projeto de impacto guarda só o link (`videoUrl`).
+        mimeType:
+          type: string
+          maxLength: 255
+        fileSizeBytes:
+          type: integer
+          minimum: 1
+    MediaUploadResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            mediaAsset:
+              $ref: '#/components/schemas/MediaAsset'
+            upload:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                method:
+                  type: string
+                  enum: [PUT]
+                headers:
+                  type: object
+                  description: Headers que devem ser enviados exatamente como estão no PUT.
+                  properties:
+                    Content-Type:
+                      type: string
+                    Content-Length:
+                      type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+    MediaAssetDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            mediaAsset:
+              $ref: '#/components/schemas/MediaAsset'
+    ImpactProject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        coverImageAssetId:
+          type: string
+          format: uuid
+        videoUrl:
+          type: [string, 'null']
+          format: uri
+          description: >-
+            Link de embed do vídeo (`https://www.youtube.com/embed/<id>` ou
+            `https://player.vimeo.com/video/<id>`); `null` quando o projeto não
+            tem vídeo.
+        coverImage:
+          $ref: '#/components/schemas/MediaAsset'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ImpactProjectResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            impactProject:
+              $ref: '#/components/schemas/ImpactProject'
+    ImpactProjectsResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [impactProjects]
+          properties:
+            impactProjects:
+              type: array
+              items:
+                $ref: '#/components/schemas/ImpactProject'
+        meta:
+          $ref: '#/components/schemas/CursorPaginationMeta'
+    CreateImpactProjectRequest:
+      type: object
+      required: [title, description, coverImageAssetId]
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários criam o próprio projeto.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+          description: Asset com finalidade `IMPACT_PROJECT_COVER`.
+        videoUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: >-
+            Link de um vídeo do YouTube ou do Vimeo (RF 9.2), guardado no formato
+            de embed. Outros endereços respondem 422 na regra `videoUrl`.
+    UpdateImpactProjectRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+          description: >-
+            Nova capa (`IMPACT_PROJECT_COVER`); a anterior é removida do storage
+            de forma assíncrona.
+        videoUrl:
+          type: [string, 'null']
+          format: uri
+          maxLength: 2048
+          description: >-
+            Link de um vídeo do YouTube ou do Vimeo (RF 9.2), guardado no formato
+            de embed; `null` remove o vídeo do projeto. Outros endereços
+            respondem 422 na regra `videoUrl`.
+    PostImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order:
+          type: integer
+          minimum: 0
+        imageAssetId:
+          type: string
+          format: uuid
+        image:
+          $ref: '#/components/schemas/MediaAsset'
+        createdAt:
+          type: string
+          format: date-time
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        highlightLink:
+          type: [string, 'null']
+          format: uri
+        slug:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        images:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/PostImage'
+        createdAt:
+          type: string
+          format: date-time
+    PostResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            post:
+              $ref: '#/components/schemas/Post'
+    PostsResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [posts]
+          properties:
+            posts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+        meta:
+          $ref: '#/components/schemas/CursorPaginationMeta'
+    CreatePostRequest:
+      type: object
+      required: [content]
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários publicam em nome próprio.
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        highlightLink:
+          type: string
+          format: uri
+          maxLength: 255
+        imageAssetIds:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          description: Ids de assets `POST_IMAGE`, na ordem de exibição da galeria (até 3).
+          items:
+            type: string
+            format: uuid
+        replaceOldestImages:
+          type: boolean
+          description: >-
+            Confirma substituir as imagens mais antigas do missionário quando a
+            postagem ultrapassa o limite de 50 imagens (RF 8.2). Sem ela, a API
+            responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.
+    UpdatePostRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        highlightLink:
+          type: [string, 'null']
+          format: uri
+          maxLength: 255
+        imageAssetIds:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          description: Substitui a galeria inteira, na ordem informada (até 3).
+          items:
+            type: string
+            format: uuid
+        replaceOldestImages:
+          type: boolean
+          description: >-
+            Confirma substituir as imagens mais antigas do missionário quando as
+            novas imagens ultrapassam o limite de 50 (RF 8.2). Sem ela, a API
+            responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.

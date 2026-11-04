@@ -21,6 +21,9 @@ body:json {
 }
 
 docs {
-  Atualiza a postagem. imageAssetIds, quando enviado, substitui a galeria inteira
-  na ordem informada; imagens removidas da lista sao apagadas do storage.
+  Atualiza a postagem. imageAssetIds (ate 3), quando enviado, substitui a galeria
+  inteira na ordem informada; imagens removidas da lista sao apagadas do storage.
+  Se as novas imagens passarem do limite de 50 por missionario, a API responde 409
+  E_POST_IMAGE_LIMIT_REACHED; repita com "replaceOldestImages": true para
+  substituir as mais antigas.
 }

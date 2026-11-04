@@ -559,5 +559,10 @@ flowchart LR
          <td align="left">PIX Somente com Chave</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0040-upload-direto-via-url-pre-assinada-e-compressao-de-imagens-com-sharp.md">ADR-0040</a></td>
+         <td align="left">Upload Direto via URL Pré-Assinada e Compressão de Imagens com sharp em Worker</td>
+         <td>🟢 Aceito</td>
+      </tr>
    </tbody>
 </table>

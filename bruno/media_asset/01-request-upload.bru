@@ -30,6 +30,8 @@ script:post-response {
 
 docs {
   Reserva um media asset e devolve a URL pre-assinada (PUT, 15 min).
+  purpose: IMPACT_PROJECT_COVER ou POST_IMAGE; ambos aceitam image/jpeg,
+  image/png e image/webp ate 10 MB (videos nao sao enviados, so linkados).
   Envie o arquivo direto ao storage com os headers devolvidos em upload.headers
   (Content-Type e Content-Length fazem parte da assinatura), por exemplo:
     curl -X PUT -H "Content-Type: image/jpeg" --data-binary @foto.jpg "<upload.url>"

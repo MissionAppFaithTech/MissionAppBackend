@@ -36,11 +36,12 @@ tags:
   - name: impact_project
     description: >-
       Projeto de impacto do missionário — vitrine principal da causa, com capa
-      e vídeo opcional. Um por missionário.
+      e link de vídeo opcional (YouTube ou Vimeo). Um por missionário.
   - name: post
     description: >-
-      Postagens de missionários para o feed, com galeria de imagens sujeita ao
-      limite rotativo de 50 imagens por missionário.
+      Postagens de missionários para o feed, com até 3 imagens por postagem e
+      limite de 50 imagens por missionário (substituir as mais antigas exige
+      confirmação).
 
 paths:
   /auth/login:
