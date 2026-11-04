@@ -10,6 +10,9 @@ paths:
       security: []
       parameters:
         - $ref: '../auth/auth.openapi.yaml#/components/parameters/ClientType'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/DeviceName'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/DeviceId'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/DeviceKind'
       requestBody:
         required: true
         content:

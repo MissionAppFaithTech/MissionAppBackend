@@ -549,5 +549,10 @@ flowchart LR
          <td align="left">API Avisa o Site para Descartar o Cache do Perfil Público</td>
          <td>🟡 Proposto</td>
       </tr>
+      <tr>
+         <td><a href="./0038-uma-sessao-por-aparelho.md">ADR-0038</a></td>
+         <td align="left">Uma Sessão por Aparelho</td>
+         <td>🟢 Aceito</td>
+      </tr>
    </tbody>
 </table>

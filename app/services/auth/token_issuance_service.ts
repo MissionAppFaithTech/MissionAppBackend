@@ -1,4 +1,5 @@
 import type User from '#models/user'
+import type { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import type { RefreshTokenService } from '#services/auth/refresh_token_service'
 import type { AuthContext } from '#types/http/context'
 import type { DeviceMetadata } from '#types/services/auth/refresh_token'
@@ -16,7 +17,7 @@ import type { IssuedTokens } from '#types/services/auth/token_issuance'
  */
 export class TokenIssuanceService {
   /**
-   * Emite um novo refresh token (nova família de sessão) e entrega o par.
+   * Abre a sessão (uma por aparelho, ADR-0038) e entrega o par.
    * Usado por login e signup.
    *
    * @param auth Guard de autenticação — usado para gerar o access token JWT.
@@ -25,17 +26,20 @@ export class TokenIssuanceService {
    * @param refreshTokenService Instância usada para criar o refresh token —
    *                             injetada em vez de instanciada aqui, mesmo
    *                             padrão de `AuthRevocationService`.
+   * @param revocation Bloqueia os access tokens das sessões substituídas no
+   *                   mesmo aparelho.
    * @returns `{ accessToken, refreshToken }`.
    * @example
-   * const tokens = await service.issue(auth, user, meta, new RefreshTokenService())
+   * const tokens = await service.issue(auth, user, meta, new RefreshTokenService(), new AuthRevocationService())
    */
   async issue(
     auth: AuthContext,
     user: User,
     meta: DeviceMetadata,
-    refreshTokenService: RefreshTokenService
+    refreshTokenService: RefreshTokenService,
+    revocation: Pick<AuthRevocationService, 'blockFamily'>
   ): Promise<IssuedTokens> {
-    const { raw, familyId } = await refreshTokenService.create(user.id, meta)
+    const { raw, familyId } = await refreshTokenService.startSession(user.id, meta, revocation)
     return this.deliver(auth, user, raw, familyId)
   }
 

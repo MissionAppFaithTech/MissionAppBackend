@@ -6,6 +6,7 @@ import {
 import InvalidRefreshTokenException from '#exceptions/auth/invalid_refresh_token_exception'
 import RefreshUnavailableException from '#exceptions/auth/refresh_unavailable_exception'
 import SessionNotFoundException from '#exceptions/auth/session_not_found_exception'
+import { DeviceKind } from '#enums/refresh_token/device_kind'
 import RefreshToken from '#models/refresh_token'
 import type { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import defaultCache from '#services/shared/cache/cache'
@@ -33,6 +34,12 @@ import { v7 as uuidv7 } from 'uuid'
  */
 /** Operações de cache usadas pela janela de tolerância (injetáveis em testes). */
 type IssuedTokenCache = Pick<CacheClient, 'get' | 'set'>
+
+/** Identidade do aparelho herdada pelo sucessor quando o pedido não a informa (ADR-0038). */
+type DeviceIdentity = Pick<RefreshToken, 'deviceId' | 'deviceKind'>
+
+/** Aparelho de um login sem `x-device-id` nem `x-device-kind`. */
+const NO_DEVICE: DeviceIdentity = { deviceId: null, deviceKind: DeviceKind.UNKNOWN }
 
 /** Resultado de uma rotação bem-sucedida (normal ou replay dentro da janela). */
 type RotationResult = { userId: string; newRaw: string; familyId: string }
@@ -79,6 +86,22 @@ export class RefreshTokenService {
   }
 
   /**
+   * Hash do identificador do aparelho (`x-device-id`): o valor bruto não é
+   * persistido, só comparado (ADR-0038).
+   */
+  #hashDeviceId(raw: string | null | undefined): string | null {
+    return raw ? createHash('sha256').update(raw).digest('hex') : null
+  }
+
+  /** Aparelho do pedido; o que faltar vem do token anterior (ADR-0038). */
+  #deviceIdentity(meta: DeviceMetadata, inherited: DeviceIdentity = NO_DEVICE): DeviceIdentity {
+    return {
+      deviceId: this.#hashDeviceId(meta.deviceId) ?? inherited.deviceId,
+      deviceKind: meta.deviceKind ?? inherited.deviceKind,
+    }
+  }
+
+  /**
    * Gera um novo par de refresh token: valor bruto (entregue ao cliente) e
    * hash SHA-256 (persistido) — o valor bruto nunca é salvo em nenhuma tabela.
    *
@@ -101,6 +124,8 @@ export class RefreshTokenService {
    * @param familyId Quando fornecido, vincula o token a uma sessão existente (rotação).
    *                 Quando omitido, uma nova família é criada (novo login).
    * @param trx Transação em curso (rotação), quando houver.
+   * @param inherited Identidade do aparelho do token anterior (rotação), usada
+   *                  quando o pedido não envia `x-device-id`/`x-device-kind`.
    * @returns `raw` (valor bruto, entregue ao cliente), `familyId` (nova ou reaproveitada) e o `id` do token.
    * @example
    * const { raw, familyId } = await service.create(user.id, { deviceType: DeviceType.WEB })
@@ -109,7 +134,8 @@ export class RefreshTokenService {
     userId: string,
     meta: DeviceMetadata,
     familyId?: string,
-    trx?: TransactionClientContract
+    trx?: TransactionClientContract,
+    inherited?: DeviceIdentity
   ) {
     const { raw, hash } = this.generate()
     const resolvedFamilyId = familyId ?? uuidv7()
@@ -122,6 +148,7 @@ export class RefreshTokenService {
         deviceType: meta.deviceType,
         deviceName: meta.deviceName ?? null,
         ipAddress: meta.ipAddress ?? null,
+        ...this.#deviceIdentity(meta, inherited),
         lastUsedAt: DateTime.now(),
         expiresAt: DateTime.now().plus({ days: refreshTokenTtlInDays(meta.deviceType) }),
       },
@@ -219,7 +246,7 @@ export class RefreshTokenService {
     token: RefreshToken,
     meta: DeviceMetadata
   ): Promise<RotationOutcome> {
-    const successor = await this.create(token.userId, meta, token.familyId, trx)
+    const successor = await this.create(token.userId, meta, token.familyId, trx, token)
 
     try {
       await this.#issuedCache.set(
@@ -305,12 +332,22 @@ export class RefreshTokenService {
     return token.revokedAt.plus({ seconds: this.#reuseWindowSeconds }) >= DateTime.now()
   }
 
-  /** Mesmo `device_type` e `device_name` do token que fez a rotação. */
+  /**
+   * Mesmo `device_type` e `device_name` do token que fez a rotação e, quando os
+   * dois lados identificam o aparelho, o mesmo `device_id` (ADR-0038).
+   */
   #sameDevice(token: RefreshToken, meta: DeviceMetadata): boolean {
     return (
+      this.#sameDeviceId(token.deviceId, meta.deviceId) &&
       token.deviceType === meta.deviceType &&
       (token.deviceName ?? null) === (meta.deviceName ?? null)
     )
+  }
+
+  /** Só diverge quando os dois lados identificam o aparelho. */
+  #sameDeviceId(stored: string | null, requested: string | null | undefined): boolean {
+    const hashed = this.#hashDeviceId(requested)
+    return !stored || !hashed || stored === hashed
   }
 
   /**
@@ -351,6 +388,55 @@ export class RefreshTokenService {
   #unexpired(link: RefreshToken | 'ended' | null): RefreshToken | 'ended' | null {
     if (link instanceof RefreshToken && link.expiresAt < DateTime.now()) return null
     return link
+  }
+
+  /**
+   * Abre a sessão de um login ou cadastro: uma por aparelho (ADR-0038). Com
+   * `x-device-id`, as sessões ativas do mesmo usuário naquele aparelho são
+   * revogadas na mesma transação que cria a nova, e os access tokens delas são
+   * bloqueados em seguida. Sem o header, só cria a família nova (comportamento
+   * anterior).
+   *
+   * @param userId Usuário que entrou.
+   * @param meta Metadados do aparelho do request.
+   * @param revocation Bloqueia os access tokens das sessões substituídas.
+   * @returns Valor bruto e família da sessão nova.
+   * @example
+   * const { raw, familyId } = await service.startSession(user.id, meta, new AuthRevocationService())
+   */
+  async startSession(
+    userId: string,
+    meta: DeviceMetadata,
+    revocation: Pick<AuthRevocationService, 'blockFamily'>
+  ) {
+    const deviceId = this.#hashDeviceId(meta.deviceId)
+    const { created, replaced } = await db.transaction(async (trx) => {
+      const families = deviceId ? await this.#activeFamiliesOnDevice(trx, userId, deviceId) : []
+      if (families.length > 0) {
+        await RefreshToken.query({ client: trx })
+          .whereIn('familyId', families)
+          .whereNull('revokedAt')
+          .update({ revokedAt: DateTime.now() })
+      }
+      return { created: await this.create(userId, meta, undefined, trx), replaced: families }
+    })
+
+    await Promise.all(replaced.map((familyId) => revocation.blockFamily(familyId)))
+    return { raw: created.raw, familyId: created.familyId }
+  }
+
+  /** Famílias com token ativo do usuário naquele aparelho. */
+  async #activeFamiliesOnDevice(
+    trx: TransactionClientContract,
+    userId: string,
+    deviceId: string
+  ): Promise<string[]> {
+    const rows = await RefreshToken.query({ client: trx })
+      .where('userId', userId)
+      .where('deviceId', deviceId)
+      .whereNull('revokedAt')
+      .distinct('familyId')
+    return rows.map((row) => row.familyId)
   }
 
   /**
@@ -418,11 +504,35 @@ export class RefreshTokenService {
    * const sessions = await service.listActiveSessions(user.id)
    */
   async listActiveSessions(userId: string) {
-    return RefreshToken.query()
+    const sessions = await RefreshToken.query()
       .where('userId', userId)
       .whereNull('revokedAt')
       .where('expiresAt', '>', DateTime.now().toSQL())
       .orderBy('lastUsedAt', 'desc')
+
+    // NOTE: cada rotação cria um token novo; o início da sessão é o primeiro da família.
+    const startedAt = await this.#familyStarts(sessions.map((session) => session.familyId))
+    for (const session of sessions) {
+      session.$extras.startedAt = startedAt.get(session.familyId) ?? session.createdAt
+    }
+    return sessions
+  }
+
+  /** Data do primeiro token de cada família. */
+  async #familyStarts(familyIds: string[]): Promise<Map<string, DateTime>> {
+    if (familyIds.length === 0) return new Map()
+    const rows = await db
+      .from('refresh_tokens')
+      .select('family_id')
+      .min('created_at as started_at')
+      .whereIn('family_id', familyIds)
+      .groupBy('family_id')
+    return new Map(
+      rows.map((row: { family_id: string; started_at: Date }) => [
+        row.family_id,
+        DateTime.fromJSDate(row.started_at),
+      ])
+    )
   }
 
   /**

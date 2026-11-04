@@ -458,6 +458,8 @@ export class RedirectSchema extends BaseModel {
 export class RefreshTokenSchema extends BaseModel {
   static $columns = [
     'createdAt',
+    'deviceId',
+    'deviceKind',
     'deviceName',
     'deviceType',
     'expiresAt',
@@ -474,6 +476,10 @@ export class RefreshTokenSchema extends BaseModel {
   $columns = RefreshTokenSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare deviceId: string | null
+  @column()
+  declare deviceKind: string
   @column()
   declare deviceName: string | null
   @column()
