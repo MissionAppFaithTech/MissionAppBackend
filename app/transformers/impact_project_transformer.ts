@@ -11,12 +11,11 @@ export default class ImpactProjectTransformer extends BaseTransformer<ImpactProj
         'description',
         'missionaryId',
         'coverImageAssetId',
-        'videoAssetId',
+        'videoUrl',
         'createdAt',
         'updatedAt',
       ]),
       coverImage: MediaAssetTransformer.transform(this.whenLoaded(this.resource.coverImage)),
-      video: MediaAssetTransformer.transform(this.whenLoaded(this.resource.video)),
     }
   }
 }

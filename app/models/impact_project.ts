@@ -20,9 +20,6 @@ export default class ImpactProject extends compose(
   @belongsTo(() => MediaAsset, { foreignKey: 'coverImageAssetId' })
   declare coverImage: BelongsTo<typeof MediaAsset>
 
-  @belongsTo(() => MediaAsset, { foreignKey: 'videoAssetId' })
-  declare video: BelongsTo<typeof MediaAsset>
-
   @hasMany(() => CampaignProject, { foreignKey: 'projectId' })
   declare campaignProjects: HasMany<typeof CampaignProject>
 }

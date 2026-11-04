@@ -4,14 +4,20 @@ import { createImpactProjectValidator } from '#validators/impact_project/create_
 import { impactProjectIdValidator } from '#validators/impact_project/impact_project_id'
 import { listImpactProjectsValidator } from '#validators/impact_project/list_impact_projects'
 import { updateImpactProjectValidator } from '#validators/impact_project/update_impact_project'
+import { serializeCursorPage } from '#utils/cursor_pagination'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class ImpactProjectsController {
   async index({ request, serialize }: HttpContext) {
     const filters = await request.validateUsing(listImpactProjectsValidator)
-    const projects = await new ImpactProjectsService().list(filters)
+    const page = await new ImpactProjectsService().list(filters)
 
-    return serialize(ImpactProjectTransformer.paginate(projects.all(), projects.getMeta()))
+    return serializeCursorPage(
+      serialize,
+      'impactProjects',
+      ImpactProjectTransformer.transform(page.items),
+      page
+    )
   }
 
   async show({ request, serialize }: HttpContext) {

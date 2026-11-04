@@ -34,9 +34,9 @@ export const COMPRESSED_IMAGE_FORMAT = { extension: 'webp', mimeType: 'image/web
 export const COMPRESSED_IMAGE_QUALITY = 80
 
 /**
- * Regras de upload por finalidade do arquivo. `maxDimensionPx` presente
- * indica que o arquivo é uma imagem a ser redimensionada e comprimida pelo
- * worker; ausente, o arquivo é apenas validado (ex: vídeo).
+ * Regras de upload por finalidade do arquivo. Toda mídia enviada é imagem,
+ * redimensionada até `maxDimensionPx` e comprimida pelo worker. Vídeos são só
+ * links externos (RF 9.2), nunca arquivos enviados.
  */
 export const MEDIA_ASSET_RULES: Record<
   MediaAssetPurpose,
@@ -44,7 +44,7 @@ export const MEDIA_ASSET_RULES: Record<
     mimeTypes: readonly string[]
     maxSizeBytes: number
     storagePrefix: string
-    maxDimensionPx?: number
+    maxDimensionPx: number
   }
 > = {
   [MediaAssetPurpose.IMPACT_PROJECT_COVER]: {
@@ -52,11 +52,6 @@ export const MEDIA_ASSET_RULES: Record<
     maxSizeBytes: 10 * 1024 * 1024,
     storagePrefix: 'impact-projects/covers',
     maxDimensionPx: 1920,
-  },
-  [MediaAssetPurpose.IMPACT_PROJECT_VIDEO]: {
-    mimeTypes: ['video/mp4', 'video/quicktime', 'video/webm'],
-    maxSizeBytes: 200 * 1024 * 1024,
-    storagePrefix: 'impact-projects/videos',
   },
   [MediaAssetPurpose.POST_IMAGE]: {
     mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
@@ -71,7 +66,4 @@ export const MIME_TYPE_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
-  'video/mp4': 'mp4',
-  'video/quicktime': 'mov',
-  'video/webm': 'webm',
 }

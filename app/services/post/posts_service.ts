@@ -4,6 +4,7 @@ import { UserRole } from '#enums/user/user_role'
 import MediaAssetsDiscarded from '#events/media_asset/media_assets_discarded'
 import MediaAssetNotAttachableException from '#exceptions/media_asset/media_asset_not_attachable_exception'
 import PostForbiddenException from '#exceptions/post/post_forbidden_exception'
+import PostImageLimitReachedException from '#exceptions/post/post_image_limit_reached_exception'
 import PostNotFoundException from '#exceptions/post/post_not_found_exception'
 import Missionary from '#models/missionary'
 import Post from '#models/post'
@@ -11,6 +12,7 @@ import PostImage from '#models/post_image'
 import type User from '#models/user'
 import { MediaAttachmentService } from '#services/media_asset/media_attachment_service'
 import { ResolveMissionaryService } from '#services/missionary/resolve_missionary_service'
+import { paginateByCursor } from '#utils/cursor_pagination'
 import string from '@adonisjs/core/helpers/string'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
@@ -20,8 +22,8 @@ import { randomBytes } from 'node:crypto'
 
 type ListPostsFilters = {
   missionaryId?: string
-  page?: number
-  perPage?: number
+  cursor?: string
+  limit?: number
 }
 
 type CreatePostPayload = {
@@ -29,19 +31,21 @@ type CreatePostPayload = {
   content: string
   highlightLink?: string
   imageAssetIds?: string[]
+  replaceOldestImages?: boolean
 }
 
 type UpdatePostPayload = {
   content?: string
   highlightLink?: string | null
   imageAssetIds?: string[]
+  replaceOldestImages?: boolean
 }
 
 /**
- * Centraliza o CRUD de postagens de missionários e aplica o limite rotativo
- * de imagens por missionário: ao ultrapassar
- * `POST_IMAGES_PER_MISSIONARY_LIMIT`, as imagens vinculadas há mais tempo são
- * desvinculadas e seus arquivos descartados.
+ * Centraliza o CRUD de postagens de missionários (RF 8.1/8.2) e o limite de
+ * imagens por missionário: passar de `POST_IMAGES_PER_MISSIONARY_LIMIT` exige
+ * confirmação (`replaceOldestImages`); confirmado, as imagens vinculadas há mais
+ * tempo são desvinculadas e seus arquivos descartados.
  */
 export class PostsService {
   async list(filters: ListPostsFilters = {}) {
@@ -51,7 +55,13 @@ export class PostsService {
       query.where('missionaryId', filters.missionaryId)
     }
 
-    return query.orderBy('createdAt', 'desc').paginate(filters.page ?? 1, filters.perPage ?? 20)
+    return paginateByCursor(query, {
+      column: 'created_at',
+      valueOf: (post) => post.createdAt.toISO()!,
+      idOf: (post) => post.id,
+      cursor: filters.cursor,
+      limit: filters.limit,
+    })
   }
 
   async show(id: string): Promise<Post> {
@@ -83,7 +93,13 @@ export class PostsService {
 
       await this.attachImages(created.id, imageAssetIds, trx)
 
-      return { post: created, discarded: await this.enforceImageLimit(missionary.id, trx) }
+      const evicted = await this.enforceImageLimit(
+        missionary.id,
+        trx,
+        payload.replaceOldestImages ?? false
+      )
+
+      return { post: created, discarded: evicted }
     })
 
     await this.dispatchDiscarded(discarded)
@@ -138,7 +154,11 @@ export class PostsService {
         added.map((assetId) => requested.indexOf(assetId))
       )
 
-      const evicted = await this.enforceImageLimit(post.missionaryId, trx)
+      const evicted = await this.enforceImageLimit(
+        post.missionaryId,
+        trx,
+        payload.replaceOldestImages ?? false
+      )
 
       return [...removed.map((image) => image.imageAssetId), ...evicted]
     })
@@ -243,11 +263,15 @@ export class PostsService {
 
   /**
    * Desvincula as imagens excedentes do missionário (as vinculadas há mais
-   * tempo) e devolve os ids dos assets para descarte após o commit.
+   * tempo) e devolve os ids dos assets para descarte após o commit. Sem
+   * confirmação, recusa a escrita inteira (a transação é desfeita).
+   *
+   * @throws {PostImageLimitReachedException} Há excedente e `confirmed` é falso.
    */
   private async enforceImageLimit(
     missionaryId: string,
-    trx: TransactionClientContract
+    trx: TransactionClientContract,
+    confirmed: boolean
   ): Promise<string[]> {
     const excess = await PostImage.query({ client: trx })
       .select('post_images.id', 'post_images.image_asset_id')
@@ -259,6 +283,12 @@ export class PostsService {
 
     if (excess.length === 0) {
       return []
+    }
+
+    if (!confirmed) {
+      throw new PostImageLimitReachedException(
+        `Você atingiu o limite de ${POST_IMAGES_PER_MISSIONARY_LIMIT} imagens. Confirme para substituir as ${excess.length} mais antigas.`
+      )
     }
 
     await PostImage.query({ client: trx })

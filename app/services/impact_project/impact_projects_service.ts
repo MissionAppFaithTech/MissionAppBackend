@@ -9,6 +9,7 @@ import ImpactProject from '#models/impact_project'
 import type User from '#models/user'
 import { MediaAttachmentService } from '#services/media_asset/media_attachment_service'
 import { ResolveMissionaryService } from '#services/missionary/resolve_missionary_service'
+import { paginateByCursor } from '#utils/cursor_pagination'
 import { escapeLike } from '#utils/escape_like'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
@@ -17,8 +18,8 @@ import type { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 type ListImpactProjectsFilters = {
   search?: string
   missionaryId?: string
-  page?: number
-  perPage?: number
+  cursor?: string
+  limit?: number
 }
 
 type CreateImpactProjectPayload = {
@@ -26,20 +27,21 @@ type CreateImpactProjectPayload = {
   title: string
   description: string
   coverImageAssetId: string
-  videoAssetId?: string
+  /** Link de embed (o validador já converte o link colado). */
+  videoUrl?: string
 }
 
 type UpdateImpactProjectPayload = {
   title?: string
   description?: string
   coverImageAssetId?: string
-  videoAssetId?: string | null
+  videoUrl?: string | null
 }
 
 /**
  * Centraliza o CRUD de projetos de impacto — um por missionário — com
- * controle de autorização por dono e administrador, e o ciclo de vida dos
- * arquivos de capa e vídeo vinculados.
+ * controle de autorização por dono e administrador e o ciclo de vida da
+ * imagem de capa. O vídeo é só um link externo (RF 9.2).
  */
 export class ImpactProjectsService {
   async list(filters: ListImpactProjectsFilters = {}) {
@@ -53,7 +55,13 @@ export class ImpactProjectsService {
       query.where('missionaryId', filters.missionaryId)
     }
 
-    return query.orderBy('createdAt', 'desc').paginate(filters.page ?? 1, filters.perPage ?? 20)
+    return paginateByCursor(query, {
+      column: 'created_at',
+      valueOf: (project) => project.createdAt.toISO()!,
+      idOf: (project) => project.id,
+      cursor: filters.cursor,
+      limit: filters.limit,
+    })
   }
 
   async show(id: string): Promise<ImpactProject> {
@@ -79,10 +87,7 @@ export class ImpactProjectsService {
         )
       }
 
-      await this.assertMediaAttachable(actor, trx, {
-        coverImageAssetId: payload.coverImageAssetId,
-        videoAssetId: payload.videoAssetId,
-      })
+      await this.assertCoverAttachable(actor, trx, payload.coverImageAssetId)
 
       return ImpactProject.create(
         {
@@ -90,7 +95,7 @@ export class ImpactProjectsService {
           title: payload.title,
           description: payload.description,
           coverImageAssetId: payload.coverImageAssetId,
-          videoAssetId: payload.videoAssetId ?? null,
+          videoUrl: payload.videoUrl ?? null,
         },
         { client: trx }
       )
@@ -117,18 +122,25 @@ export class ImpactProjectsService {
 
       this.assertCanManage(actor, project.missionary.userId)
 
-      const { incoming, replaced } = this.diffMedia(project, payload)
-      await this.assertMediaAttachable(actor, trx, incoming)
+      const coverChanged =
+        payload.coverImageAssetId !== undefined &&
+        payload.coverImageAssetId !== project.coverImageAssetId
+      const previousCover = project.coverImageAssetId
+
+      if (coverChanged) {
+        await this.assertCoverAttachable(actor, trx, payload.coverImageAssetId!)
+      }
 
       project.merge({
         title: payload.title,
         description: payload.description,
         coverImageAssetId: payload.coverImageAssetId,
-        videoAssetId: payload.videoAssetId,
+        videoUrl: payload.videoUrl,
       })
       await project.save()
 
-      return replaced
+      // NOTE: a capa trocada só é descartada depois do commit
+      return coverChanged ? [previousCover] : []
     })
 
     if (discarded.length > 0) {
@@ -154,77 +166,31 @@ export class ImpactProjectsService {
 
       await project.delete()
 
-      return [project.coverImageAssetId, project.videoAssetId].filter(
-        (assetId): assetId is string => !!assetId
-      )
+      return [project.coverImageAssetId]
     })
 
     await MediaAssetsDiscarded.dispatch(discarded)
   }
 
-  /**
-   * Separa, na atualização, os arquivos que passam a ser vinculados (a
-   * validar) dos que deixam de ser (a descartar após o commit).
-   */
-  private diffMedia(project: ImpactProject, payload: UpdateImpactProjectPayload) {
-    const coverChanged =
-      payload.coverImageAssetId !== undefined &&
-      payload.coverImageAssetId !== project.coverImageAssetId
-    const videoChanged =
-      payload.videoAssetId !== undefined && payload.videoAssetId !== project.videoAssetId
-
-    return {
-      incoming: {
-        coverImageAssetId: coverChanged ? payload.coverImageAssetId : undefined,
-        videoAssetId: videoChanged ? (payload.videoAssetId ?? undefined) : undefined,
-      },
-      replaced: [
-        coverChanged ? project.coverImageAssetId : null,
-        videoChanged ? project.videoAssetId : null,
-      ].filter((assetId): assetId is string => !!assetId),
-    }
-  }
-
   private withMedia(query: ModelQueryBuilderContract<typeof ImpactProject>) {
-    return query.preload('coverImage').preload('video')
+    return query.preload('coverImage')
   }
 
-  private async assertMediaAttachable(
+  /** A capa precisa ser imagem do próprio ator, com upload confirmado e livre. */
+  private async assertCoverAttachable(
     actor: User,
     trx: TransactionClientContract,
-    media: { coverImageAssetId?: string; videoAssetId?: string }
+    coverImageAssetId: string
   ): Promise<void> {
-    const attachment = new MediaAttachmentService()
-
-    if (media.coverImageAssetId) {
-      await attachment.assertAttachable(
-        actor,
-        [media.coverImageAssetId],
-        MediaAssetPurpose.IMPACT_PROJECT_COVER,
-        trx
-      )
-    }
-
-    if (media.videoAssetId) {
-      await attachment.assertAttachable(
-        actor,
-        [media.videoAssetId],
-        MediaAssetPurpose.IMPACT_PROJECT_VIDEO,
-        trx
-      )
-    }
-
-    const assetIds = [media.coverImageAssetId, media.videoAssetId].filter(
-      (assetId): assetId is string => !!assetId
+    await new MediaAttachmentService().assertAttachable(
+      actor,
+      [coverImageAssetId],
+      MediaAssetPurpose.IMPACT_PROJECT_COVER,
+      trx
     )
 
-    if (assetIds.length === 0) {
-      return
-    }
-
     const alreadyAttached = await ImpactProject.query({ client: trx })
-      .whereIn('coverImageAssetId', assetIds)
-      .orWhereIn('videoAssetId', assetIds)
+      .where('coverImageAssetId', coverImageAssetId)
       .first()
 
     if (alreadyAttached) {

@@ -1,5 +1,6 @@
 import { id } from '#validators/shared/fields/id'
 import { text } from '#validators/shared/fields/text'
+import { videoUrl } from '#validators/shared/fields/video_url'
 import vine from '@vinejs/vine'
 
 export const createImpactProjectValidator = vine.create({
@@ -7,5 +8,5 @@ export const createImpactProjectValidator = vine.create({
   title: text(1, 255),
   description: text(1, 10000),
   coverImageAssetId: id(),
-  videoAssetId: id().optional(),
+  videoUrl: videoUrl().optional(),
 })

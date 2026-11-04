@@ -1,10 +1,11 @@
+import { cursor } from '#validators/shared/fields/cursor'
 import { id } from '#validators/shared/fields/id'
-import { page } from '#validators/shared/fields/page'
-import { perPage } from '#validators/shared/fields/per_page'
+import { limit } from '#validators/shared/fields/limit'
 import vine from '@vinejs/vine'
 
+/** Lista por cursor (ADR-0033): mais recentes primeiro, até 20 por página. */
 export const listPostsValidator = vine.create({
   missionaryId: id().optional(),
-  page: page(),
-  perPage: perPage(),
+  cursor: cursor(),
+  limit: limit(),
 })

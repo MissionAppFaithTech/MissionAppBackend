@@ -4,14 +4,15 @@ import { createPostValidator } from '#validators/post/create_post'
 import { listPostsValidator } from '#validators/post/list_posts'
 import { postIdValidator } from '#validators/post/post_id'
 import { updatePostValidator } from '#validators/post/update_post'
+import { serializeCursorPage } from '#utils/cursor_pagination'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PostsController {
   async index({ request, serialize }: HttpContext) {
     const filters = await request.validateUsing(listPostsValidator)
-    const posts = await new PostsService().list(filters)
+    const page = await new PostsService().list(filters)
 
-    return serialize(PostTransformer.paginate(posts.all(), posts.getMeta()))
+    return serializeCursorPage(serialize, 'posts', PostTransformer.transform(page.items), page)
   }
 
   async show({ request, serialize }: HttpContext) {

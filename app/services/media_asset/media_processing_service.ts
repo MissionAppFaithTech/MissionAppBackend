@@ -5,6 +5,7 @@ import {
 } from '#constants/media_asset'
 import { MediaAssetStatus } from '#enums/media_asset/media_asset_status'
 import MediaAsset from '#models/media_asset'
+import { mediaDiskFor } from '#utils/media_storage'
 import drive from '@adonisjs/drive/services/main'
 import logger from '@adonisjs/core/services/logger'
 import db from '@adonisjs/lucid/services/db'
@@ -29,12 +30,6 @@ export class MediaProcessingService {
       return
     }
 
-    if (!rules.maxDimensionPx) {
-      asset.merge({ fileSizeBytes: contentLength, status: MediaAssetStatus.READY })
-      await asset.save()
-      return
-    }
-
     await this.compressImage(asset, rules.maxDimensionPx)
   }
 
@@ -46,7 +41,7 @@ export class MediaProcessingService {
     asset: MediaAsset,
     rules: (typeof MEDIA_ASSET_RULES)[keyof typeof MEDIA_ASSET_RULES]
   ): Promise<number | null> {
-    const disk = drive.use()
+    const disk = drive.use(mediaDiskFor(asset))
 
     if (!(await disk.exists(asset.fileKey))) {
       await this.fail(asset, 'arquivo não encontrado no storage após confirmação do upload')
@@ -61,20 +56,13 @@ export class MediaProcessingService {
       return null
     }
 
-    // WARNING: arquivos sem re-encode (vídeo) são servidos como foram enviados —
-    // o content-type gravado é a única barreira contra conteúdo ativo no bucket
-    const contentTypeAllowed =
-      !!metadata.contentType && rules.mimeTypes.includes(metadata.contentType)
-    if (!rules.maxDimensionPx && !contentTypeAllowed) {
-      await this.fail(asset, `content-type não permitido: ${metadata.contentType}`, true)
-      return null
-    }
-
+    // NOTE: o content-type gravado não importa: toda mídia é imagem e o sharp a
+    // decodifica e regrava como WebP; o que não for imagem falha na compressão
     return metadata.contentLength
   }
 
   private async compressImage(asset: MediaAsset, maxDimensionPx: number): Promise<void> {
-    const disk = drive.use()
+    const disk = drive.use(mediaDiskFor(asset))
 
     let compressed: Buffer
     try {
@@ -117,9 +105,9 @@ export class MediaProcessingService {
 
   async deleteMany(mediaAssetIds: string[]): Promise<void> {
     const assets = await MediaAsset.query().whereIn('id', mediaAssetIds)
-    const disk = drive.use()
 
     for (const asset of assets) {
+      const disk = drive.use(mediaDiskFor(asset))
       const trx = await db.transaction()
 
       try {
@@ -152,7 +140,7 @@ export class MediaProcessingService {
     await asset.save()
 
     if (deleteObject) {
-      await drive.use().delete(asset.fileKey)
+      await drive.use(mediaDiskFor(asset)).delete(asset.fileKey)
     }
   }
 }
