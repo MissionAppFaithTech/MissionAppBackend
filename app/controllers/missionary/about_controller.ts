@@ -1,5 +1,5 @@
 import { UpdateMissionaryAboutService } from '#services/missionary/update_about_service'
-import MissionaryTransformer from '#transformers/missionary_transformer'
+import { missionaryProfilePayload } from '#utils/missionary_profile_payload'
 import { updateAboutValidator } from '#validators/missionary/update_about'
 import { missionaryIdValidator } from '#validators/missionary/missionary_id'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -17,8 +17,6 @@ export default class AboutController {
       targetMissionaryId
     )
 
-    return serialize({
-      missionary: MissionaryTransformer.transform(missionary),
-    })
+    return serialize(missionaryProfilePayload(missionary))
   }
 }

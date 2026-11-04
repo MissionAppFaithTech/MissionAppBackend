@@ -1244,7 +1244,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissionaryResponse'
+                $ref: '#/components/schemas/MissionaryAboutResponse'
         '401':
           description: >-
             Access token ausente, inválido ou revogado. Códigos:
@@ -1520,7 +1520,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissionaryResponse'
+                $ref: '#/components/schemas/MissionaryAboutResponse'
         '401':
           description: >-
             Access token ausente, inválido ou revogado. Códigos:
@@ -2802,6 +2802,16 @@ components:
             - string
             - 'null'
           format: uuid
+        missionaryAgencyId:
+          type: string
+          format: uuid
+          description: Troca a agência missionária; não aceita limpar (`null` é ignorado).
+        workAddress:
+          description: >-
+            Local de atuação. Substitui o endereço inteiro, com todos os campos
+            obrigatórios (mesmas regras de `PATCH /missionaries/work-address`).
+          allOf:
+            - $ref: '#/components/schemas/UpdateMissionaryWorkAddressRequest'
         prayerRequest:
           type:
             - string
@@ -2892,6 +2902,26 @@ components:
       properties:
         data:
           type: object
+    MissionaryAboutResponse:
+      type: object
+      description: Mesmo formato do perfil missionário em `GET /account/profile`.
+      properties:
+        data:
+          type: object
+          properties:
+            missionary:
+              type: object
+            workAddress:
+              type:
+                - object
+                - 'null'
+              description: Local de atuação; null quando não cadastrado.
+            missionaryAgency:
+              $ref: '#/components/schemas/CatalogReference'
+            faithCommunity:
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
     MissionaryAgency:
       type: object
       properties:

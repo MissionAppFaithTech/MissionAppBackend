@@ -1,9 +1,10 @@
 import MissionaryWorkAddress from '#models/missionary_work_address'
 import type User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
+import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'
 
-type UpsertMissionaryWorkAddressPayload = {
+export type UpsertMissionaryWorkAddressPayload = {
   zip: string
   district: string
   city: string
@@ -22,24 +23,28 @@ export class UpsertMissionaryWorkAddressService {
   ): Promise<MissionaryWorkAddress> {
     const missionary = await new ResolveMissionaryService().execute(actor, targetMissionaryId)
 
-    return db.transaction(async (trx) => {
-      const existing = await MissionaryWorkAddress.query({ client: trx })
-        .where('missionaryId', missionary.id)
-        .first()
+    return db.transaction((trx) => this.upsert(missionary.id, payload, trx))
+  }
 
-      if (existing) {
-        existing.merge(payload)
-        await existing.save()
-        return existing
-      }
+  /**
+   * Substitui o endereço de atuação dentro de uma transação já aberta, para
+   * quem grava o endereço junto com outros dados do perfil.
+   */
+  async upsert(
+    missionaryId: string,
+    payload: UpsertMissionaryWorkAddressPayload,
+    trx: TransactionClientContract
+  ): Promise<MissionaryWorkAddress> {
+    const existing = await MissionaryWorkAddress.query({ client: trx })
+      .where('missionaryId', missionaryId)
+      .first()
 
-      return MissionaryWorkAddress.create(
-        {
-          missionaryId: missionary.id,
-          ...payload,
-        },
-        { client: trx }
-      )
-    })
+    if (existing) {
+      existing.merge(payload)
+      await existing.save()
+      return existing
+    }
+
+    return MissionaryWorkAddress.create({ missionaryId, ...payload }, { client: trx })
   }
 }
