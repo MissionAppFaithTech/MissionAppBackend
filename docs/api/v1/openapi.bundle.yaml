@@ -3405,8 +3405,10 @@ components:
           format: uri
           maxLength: 2048
           description: >-
-            Link de um vídeo do YouTube ou do Vimeo (RF 9.2), guardado no formato
-            de embed. Outros endereços respondem 422 na regra `videoUrl`.
+            Link de um vídeo do YouTube (watch, youtu.be, shorts, embed, live) ou do
+            Vimeo (direto, canal, grupo, showcase ou player; em vídeo não listado, o
+            código de acesso é mantido como `?h=`) (RF 9.2), guardado no formato de
+            embed. Outros endereços respondem 422 na regra `videoUrl`.
     UpdateImpactProjectRequest:
       type: object
       properties:

@@ -79,7 +79,9 @@ test.group('Upload direto de mídia - fluxo completo (MinIO real)', (group) => {
     assert.equal(pending.status, MediaAssetStatus.PENDING_UPLOAD)
     assert.equal(pending.provider, Provider.S3)
     assert.equal(pending.bucket, env.get('S3_PUBLIC_BUCKET'))
-    assert.match(pending.fileKey, new RegExp(`^posts/images/${user.id}/[\\w-]+\\.jpg$`))
+    // NOTE: comparação de texto, sem montar regex a partir de dados da resposta
+    assert.isTrue(pending.fileKey.startsWith(`posts/images/${user.id}/`))
+    assert.isTrue(pending.fileKey.endsWith('.jpg'))
     uploadedKeys.push(pending.fileKey)
 
     const stored = await put(upload, file)
@@ -102,7 +104,7 @@ test.group('Upload direto de mídia - fluxo completo (MinIO real)', (group) => {
     uploadedKeys.push(ready.fileKey)
     assert.equal(ready.status, MediaAssetStatus.READY)
     assert.equal(ready.mimeType, 'image/webp')
-    assert.match(ready.fileKey, /\.webp$/)
+    assert.isTrue(ready.fileKey.endsWith('.webp'))
     assert.isBelow(ready.fileSizeBytes, file.byteLength)
     assert.isFalse(await drive.use('s3_public').exists(pending.fileKey))
 

@@ -29,6 +29,26 @@ test.group('toVideoEmbedUrl', () => {
       assert.equal(toVideoEmbedUrl(url), 'https://player.vimeo.com/video/76979871')
     })
 
+  test('converte link de canal, grupo e showcase do Vimeo ({url})')
+    .with([
+      { url: 'https://vimeo.com/channels/staffpicks/76979871' },
+      { url: 'https://vimeo.com/groups/motion/videos/76979871' },
+      { url: 'https://vimeo.com/showcase/9876543/video/76979871' },
+    ])
+    .run(({ assert }, { url }) => {
+      assert.equal(toVideoEmbedUrl(url), 'https://player.vimeo.com/video/76979871')
+    })
+
+  test('mantém o código de acesso de vídeo não listado do Vimeo ({url})')
+    .with([
+      { url: 'https://vimeo.com/76979871/8272103f6e' },
+      { url: 'https://vimeo.com/76979871/8272103F6E?share=copy' },
+      { url: 'https://player.vimeo.com/video/76979871?h=8272103f6e&badge=0' },
+    ])
+    .run(({ assert }, { url }) => {
+      assert.equal(toVideoEmbedUrl(url), 'https://player.vimeo.com/video/76979871?h=8272103f6e')
+    })
+
   test('recusa link que não é de vídeo suportado ({url})')
     .with([
       { url: 'https://www.tiktok.com/@user/video/123' },
@@ -36,6 +56,8 @@ test.group('toVideoEmbedUrl', () => {
       { url: 'https://www.youtube.com/watch?v=curto' },
       { url: 'https://www.youtube.com/channel/UC123' },
       { url: 'https://vimeo.com/canal/abc' },
+      { url: 'https://vimeo.com/76979871/nao-hex' },
+      { url: 'https://vimeo.com/channels/staffpicks' },
       { url: 'https://evil.com/?u=https://youtu.be/dQw4w9WgXcQ' },
       { url: 'ftp://youtu.be/dQw4w9WgXcQ' },
       { url: 'não é link' },
