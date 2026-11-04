@@ -2,6 +2,7 @@ import { email } from '#validators/shared/fields/email'
 import { loginValidator } from '#validators/user/login'
 import { test } from '@japa/runner'
 import vine from '@vinejs/vine'
+import { randomBytes } from 'node:crypto'
 
 const emailValidator = vine.create({ email: email() })
 
@@ -21,7 +22,8 @@ test.group('Validators - campo email', () => {
   test('normaliza o login com a mesma regra do cadastro', async ({ assert }) => {
     const output = await loginValidator.validate({
       login: 'Pedro.Amaro.Fe@gmail.com',
-      password: 'qualquer-senha',
+      // NOTE: senha aleatória: os testes nunca carregam senhas fixas.
+      password: randomBytes(12).toString('base64url'),
     })
     assert.equal(output.login, 'pedro.amaro.fe@gmail.com')
   })
