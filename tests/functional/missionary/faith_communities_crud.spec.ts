@@ -4,6 +4,7 @@ import FaithCommunity from '#models/faith_community'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 
 type TokensBody = { data: { accessToken: string } }
 type ApiBody = { data: Record<string, any> }
@@ -29,6 +30,7 @@ test.group('Faith communities - CRUD', (group) => {
   test('cria, lista, detalha, atualiza e remove comunidade de fé', async ({ client, assert }) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const clientIp = uniqueClientIp()
 
     const store = await client
       .post(router.builder().make('v1.faith_communities.store')!)
@@ -40,6 +42,7 @@ test.group('Faith communities - CRUD', (group) => {
 
     const index = await client
       .get(router.builder().make('v1.faith_communities.index')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     index.assertStatus(200)
@@ -47,6 +50,7 @@ test.group('Faith communities - CRUD', (group) => {
 
     const show = await client
       .get(router.builder().params({ id: storedCommunityId }).make('v1.faith_communities.show')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     show.assertStatus(200)
@@ -125,6 +129,7 @@ test.group('Faith communities - CRUD', (group) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
     const url = router.builder().make('v1.faith_communities.index')!
+    const clientIp = uniqueClientIp()
 
     for (const body of [
       { name: 'Alfa Central', city: 'São Paulo', state: 'SP', country: 'Brasil' },
@@ -138,12 +143,18 @@ test.group('Faith communities - CRUD', (group) => {
       created.assertStatus(200)
     }
 
+    const createdNames = new Set(['Alfa Central', 'Beta Norte', 'Gamma 100%'])
     const names = async (qs: Record<string, string>) => {
-      const res = await client.get(url).qs(qs).header('Authorization', `Bearer ${accessToken}`)
+      const res = await client
+        .get(url)
+        .qs(qs)
+        .header('X-Forwarded-For', clientIp)
+        .header('Authorization', `Bearer ${accessToken}`)
       res.assertStatus(200)
-      return ((res.body() as ApiBody).data.faithCommunities as { name: string }[]).map(
-        (item) => item.name
-      )
+      // NOTE: o banco local pode ter outros registros (seed); só os criados aqui importam
+      return ((res.body() as ApiBody).data.faithCommunities as { name: string }[])
+        .map((item) => item.name)
+        .filter((name) => createdNames.has(name))
     }
 
     assert.deepEqual(await names({ search: 'alfa' }), ['Alfa Central'])
@@ -153,5 +164,33 @@ test.group('Faith communities - CRUD', (group) => {
     assert.deepEqual(await names({ country: 'brasil', search: 'norte' }), ['Beta Norte'])
     assert.deepEqual(await names({ search: '100%' }), ['Gamma 100%'])
     assert.deepEqual(await names({ search: '%' }), ['Gamma 100%'])
+  })
+
+  test('reaproveita a comunidade com mesmo nome e cidade, ignorando acentos e maiúsculas', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createTestUser()
+    const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const store = (payload: Record<string, string>) =>
+      client
+        .post(router.builder().make('v1.faith_communities.store')!)
+        .header('Authorization', `Bearer ${accessToken}`)
+        .json(payload)
+
+    const first = await store({ name: 'Igreja Muito Abençoada', city: 'Niterói' })
+    const again = await store({ name: '  igreja  muito abencoada ', city: 'NITEROI' })
+    const otherCity = await store({ name: 'Igreja Muito Abençoada', city: 'Maricá' })
+
+    first.assertStatus(200)
+    again.assertStatus(200)
+    otherCity.assertStatus(200)
+    const idOf = (response: typeof first) =>
+      (response.body() as ApiBody).data.faithCommunity.id as string
+
+    assert.equal(idOf(again), idOf(first))
+    assert.notEqual(idOf(otherCity), idOf(first))
+    const rows = await FaithCommunity.query().where('user_id', user.id)
+    assert.lengthOf(rows, 2)
   })
 })

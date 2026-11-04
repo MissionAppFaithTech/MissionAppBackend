@@ -1,114 +1,34 @@
+import { s3ClientConfig } from '#config/drive'
+import { EnsureBucketsService } from '#services/storage/ensure_buckets_service'
 import env from '#start/env'
-import { BaseCommand, flags } from '@adonisjs/core/ace'
+import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
-import {
-  CreateBucketCommand,
-  HeadBucketCommand,
-  PutBucketCorsCommand,
-  PutBucketPolicyCommand,
-  S3Client,
-  S3ServiceException,
-} from '@aws-sdk/client-s3'
+import { S3Client } from '@aws-sdk/client-s3'
 
 export default class StorageSetup extends BaseCommand {
   static commandName = 'storage:setup'
   static description =
-    'Cria o bucket de assets (se ausente) e aplica leitura pública e CORS para upload direto'
+    'Cria os buckets S3_PUBLIC_BUCKET/S3_PRIVATE_BUCKET no storage S3-compatível e aplica a policy pública'
 
-  static options: CommandOptions = { loadApp: true }
-
-  @flags.boolean({
-    description: 'Permite rodar com NODE_ENV=production (altera política de um bucket real)',
-  })
-  declare allowProduction: boolean
+  static options: CommandOptions = { startApp: true }
 
   async run() {
-    // WARNING: o comando torna o bucket publicamente legível — em produção a
-    // infraestrutura deve ser gerida fora da aplicação, então exige opt-in explícito
-    if (env.get('NODE_ENV') === 'production' && !this.allowProduction) {
-      this.logger.error('NODE_ENV=production — use --allow-production para continuar')
-      this.exitCode = 1
-      return
-    }
+    const client = new S3Client(s3ClientConfig)
 
-    const bucket = env.get('S3_BUCKET')
-    const client = new S3Client({
-      credentials: {
-        accessKeyId: env.get('S3_ACCESS_KEY'),
-        secretAccessKey: env.get('S3_SECRET_KEY'),
-      },
-      region: env.get('S3_REGION'),
-      endpoint: env.get('S3_ENDPOINT'),
-      forcePathStyle: env.get('S3_FORCE_PATH_STYLE', false),
-    })
-
-    await this.ensureBucket(client, bucket)
-    await this.applyPublicReadPolicy(client, bucket)
-    await this.applyCors(client, bucket)
-  }
-
-  private async ensureBucket(client: S3Client, bucket: string): Promise<void> {
     try {
-      await client.send(new HeadBucketCommand({ Bucket: bucket }))
-      this.logger.info(`bucket "${bucket}" já existe`)
-    } catch (error) {
-      if (!(error instanceof S3ServiceException) || error.$metadata.httpStatusCode !== 404) {
-        throw error
-      }
+      const created = await new EnsureBucketsService(client).execute({
+        publicBucket: env.get('S3_PUBLIC_BUCKET'),
+        privateBucket: env.get('S3_PRIVATE_BUCKET'),
+      })
 
-      await client.send(new CreateBucketCommand({ Bucket: bucket }))
-      this.logger.success(`bucket "${bucket}" criado`)
-    }
-  }
-
-  private async applyPublicReadPolicy(client: S3Client, bucket: string): Promise<void> {
-    // NOTE: só leitura de objetos — listagem do bucket e escrita continuam privadas;
-    // escrita acontece apenas via URL pré-assinada emitida pela API
-    const policy = {
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Principal: { AWS: ['*'] },
-          Action: ['s3:GetObject'],
-          Resource: [`arn:aws:s3:::${bucket}/*`],
-        },
-      ],
-    }
-
-    await client.send(
-      new PutBucketPolicyCommand({ Bucket: bucket, Policy: JSON.stringify(policy) })
-    )
-    this.logger.success('política de leitura pública aplicada')
-  }
-
-  private async applyCors(client: S3Client, bucket: string): Promise<void> {
-    try {
-      await client.send(
-        new PutBucketCorsCommand({
-          Bucket: bucket,
-          CORSConfiguration: {
-            CORSRules: [
-              {
-                AllowedOrigins: [env.get('FRONTEND_URL')],
-                AllowedMethods: ['PUT', 'GET'],
-                AllowedHeaders: ['Content-Type', 'Content-Length'],
-                ExposeHeaders: ['ETag'],
-                MaxAgeSeconds: 3600,
-              },
-            ],
-          },
-        })
+      this.logger.success(
+        created.length > 0 ? `buckets criados: ${created.join(', ')}` : 'buckets já existiam'
       )
-      this.logger.success(`CORS liberado para ${env.get('FRONTEND_URL')}`)
     } catch (error) {
-      // NOTE: algumas versões do MinIO não implementam CORS por bucket e já
-      // liberam qualquer origem globalmente — em dev isso não bloqueia o upload
-      if (error instanceof S3ServiceException && error.name === 'NotImplemented') {
-        this.logger.warning('storage não suporta CORS por bucket; mantendo CORS global')
-        return
-      }
-      throw error
+      this.exitCode = 1
+      this.logger.error(`falha ao provisionar buckets: ${(error as Error).message}`)
+    } finally {
+      client.destroy()
     }
   }
 }

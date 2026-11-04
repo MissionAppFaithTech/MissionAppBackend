@@ -9,10 +9,15 @@ paths:
         refresh token opaco. Ambos sempre voltam no corpo da resposta — não há
         entrega via cookie nesta API, já que o consumidor web é um BFF
         (Next.js), não um browser. Ver ADR-0023, seção "Entrega de Tokens".
+        Com `x-device-id`, há uma sessão por aparelho (ADR-0038) — as sessões
+        ativas do mesmo usuário naquele aparelho são encerradas e seus access
+        tokens deixam de valer. Sem o header, cada login abre uma sessão nova.
       security: []
       parameters:
         - $ref: '#/components/parameters/ClientType'
         - $ref: '#/components/parameters/DeviceName'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceKind'
       requestBody:
         required: true
         content:
@@ -27,22 +32,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '400':
-          description: Credenciais inválidas.
+          description: >-
+            Credenciais inválidas. Códigos: `E_INVALID_CREDENTIALS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
         '423':
           description: >-
-            Conta temporariamente bloqueada por excesso de tentativas de
-            login falhadas. A mensagem informa quantos segundos faltam para
-            o desbloqueio.
+            Conta temporariamente bloqueada por excesso de tentativas de login
+            falhadas. A mensagem informa quantos segundos faltam para o
+            desbloqueio. Códigos: `E_ACCOUNT_LOCKED`.
           content:
             application/json:
               schema:
@@ -74,7 +82,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -105,13 +115,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Token inexistente ou expirado.
+          description: >-
+            Token inexistente ou expirado. Códigos:
+            `E_INVALID_PASSWORD_RESET_TOKEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -124,10 +138,16 @@ paths:
       summary: Renovação de access token
       description: >-
         Rotaciona o refresh token e emite um novo access token. O refresh
-        token vai sempre no corpo — não há mais fallback via cookie.
-        Reutilizar um refresh token já rotacionado invalida toda a família de
-        tokens da sessão (detecção de roubo — ver ADR-0023). O TTL do novo
-        refresh token é recalculado a partir de agora (sliding window).
+        token vai sempre no corpo — não há mais fallback via cookie. A rotação
+        é serializada por token e idempotente dentro da janela de tolerância
+        (ADR-0035, padrão 30 s): reapresentar um refresh token já rotacionado,
+        do mesmo dispositivo (x-client-type, x-device-name e, quando os dois
+        lados o têm, x-device-id), devolve o refresh
+        token atual da sessão e um novo access token. Fora da janela, de outro
+        dispositivo ou sem o registro da rotação, o reuso é tratado como roubo e
+        invalida toda a família (ADR-0023). Reapresentar um token de sessão já
+        encerrada (logout, troca de senha, revogação) responde 401 sem efeito.
+        O TTL do novo refresh token é recalculado a partir de agora (sliding window).
       security: []
       requestBody:
         required: true
@@ -144,8 +164,26 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: >-
-            Refresh token ausente, inválido, expirado ou já revogado
-            (reuso detectado — toda a família foi invalidada).
+            Refresh token inválido, expirado, de sessão encerrada ou reusado
+            fora da janela de tolerância (`E_INVALID_REFRESH_TOKEN`; no último
+            caso, toda a família foi invalidada). Códigos:
+            `E_INVALID_REFRESH_TOKEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '503':
+          description: >-
+            Não foi possível registrar a rotação na janela de tolerância
+            (`E_REFRESH_UNAVAILABLE`). Nada foi alterado; tente de novo após
+            `Retry-After`. Códigos: `E_REFRESH_UNAVAILABLE`.
           content:
             application/json:
               schema:
@@ -187,11 +225,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '422':
-          description: Corpo da requisição inválido (refreshToken ausente).
+          description: >-
+            Corpo da requisição inválido (refreshToken ausente). Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
 
   /auth/sessions:
     get:
@@ -218,7 +258,9 @@ paths:
                     items:
                       $ref: '#/components/schemas/SessionSummary'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -243,7 +285,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -277,26 +321,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Sessão não encontrada, ou pertence a outro usuário.
+          description: >-
+            Sessão não encontrada, ou pertence a outro usuário. Códigos:
+            `E_SESSION_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: familyId ausente ou não é um UUID válido.
+          description: >-
+            familyId ausente ou não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
 
 components:
   parameters:
+    CursorParam:
+      name: cursor
+      in: query
+      required: false
+      description: >-
+        Cursor opaco da próxima página (`meta.nextCursor` da resposta anterior).
+        Ausente = primeira página. Cursor malformado responde 422 `E_INVALID_CURSOR`
+        (ADR-0033).
+      schema:
+        type: string
+        maxLength: 512
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      description: Itens por página; padrão 20, máximo 20 (NF 2.3, ADR-0033).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 20
+        default: 20
+
     ClientType:
       name: x-client-type
       in: header
@@ -321,26 +393,47 @@ components:
         type: string
         maxLength: 120
 
-    Page:
-      name: page
-      in: query
+    DeviceId:
+      name: x-device-id
+      in: header
       required: false
+      description: >-
+        Identificador aleatório e estável do aparelho (ex.: cookie de
+        dispositivo do BFF). Só o hash SHA-256 é guardado. No login, encerra as
+        sessões ativas do mesmo usuário naquele aparelho (ADR-0038). No refresh,
+        quando ausente, vale o do token anterior.
       schema:
-        type: integer
-        minimum: 1
-        default: 1
+        type: string
+        minLength: 16
+        maxLength: 128
+        pattern: '^[\w-]+$'
 
-    PerPage:
-      name: perPage
-      in: query
+    DeviceKind:
+      name: x-device-kind
+      in: header
       required: false
+      description: >-
+        Tipo do aparelho, exibido em `GET /auth/sessions` (ADR-0038). Ausente no
+        login vira `unknown`; no refresh, vale o do token anterior.
       schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
+        type: string
+        enum: [desktop, mobile, tablet, unknown]
 
   schemas:
+    CursorPaginationMeta:
+      type: object
+      description: >-
+        Metadados de listas paginadas por cursor (ADR-0033). Sem `total`: contagens
+        exibidas vêm de contadores desnormalizados no recurso pai.
+      required: [nextCursor, hasMore]
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor da próxima página; `null` na última.
+        hasMore:
+          type: boolean
+
     LoginRequest:
       type: object
       required: [login, password]
@@ -408,9 +501,23 @@ components:
           format: uuid
         fullName:
           type: string
+        username:
+          type: string
         email:
           type: string
           format: email
+        phoneNumber:
+          type: string
+          description: E.164
+        biography:
+          type: [string, 'null']
+        profilePictureId:
+          type: [string, 'null']
+          format: uuid
+        role:
+          type: string
+          enum: [ADMIN, MISSIONARY, SUPPORTER]
+          description: Cadastro público sempre cria SUPPORTER.
         createdAt:
           type: string
           format: date-time
@@ -430,6 +537,10 @@ components:
           enum: [web, mobile]
         deviceName:
           type: [string, 'null']
+        deviceKind:
+          type: string
+          enum: [desktop, mobile, tablet, unknown]
+          description: Tipo do aparelho (`x-device-kind`); `unknown` quando não informado.
         ipAddress:
           type: [string, 'null']
         lastUsedAt:
@@ -438,6 +549,11 @@ components:
         createdAt:
           type: string
           format: date-time
+          description: Emissão do refresh token atual (última rotação).
+        startedAt:
+          type: string
+          format: date-time
+          description: Início da sessão (primeiro token da família).
         current:
           type: boolean
           description: Se é a sessão do access token usado nesta requisição.
@@ -450,44 +566,56 @@ components:
 
     ErrorResponse:
       type: object
+      description: >-
+        Envelope único de erro (ADR-0034), igual em todos os ambientes. Clientes
+        decidem pelo `code` (estável) e pelo status; `message` é só para humanos.
+      required: [message, code]
       properties:
         message:
           type: string
-
-    ValidationErrorResponse:
-      type: object
-      properties:
+          description: Texto em pt-BR para exibir ao usuário.
+          example: Agência missionária não encontrada
+        code:
+          type: string
+          pattern: '^E_[A-Z0-9_]+$'
+          description: >-
+            Identificador estável do erro. Cada resposta de erro documenta os
+            códigos possíveis daquela operação ("Códigos: …"). Além deles,
+            qualquer operação pode responder 500 `E_INTERNAL_SERVER_ERROR` e,
+            com corpo, os erros do body parser (400 `E_BAD_REQUEST` para JSON
+            malformado, 413 `E_REQUEST_ENTITY_TOO_LARGE`, 415
+            `E_ENCODING_UNSUPPORTED`, 400 `E_REQUEST_ABORTED`). Rotas
+            inexistentes respondem 404 `E_ROUTE_NOT_FOUND`. Renomear um code é
+            breaking change.
+          example: E_MISSIONARY_AGENCY_NOT_FOUND
         errors:
           type: array
+          description: Só em erros de validação (422), um item por campo.
           items:
             type: object
+            required: [field, rule, message]
             properties:
-              message:
+              field:
                 type: string
               rule:
                 type: string
-              field:
+              message:
                 type: string
+        meta:
+          type: object
+          description: Dados estruturados para o cliente reagir.
+          properties:
+            retryAfterSeconds:
+              type: integer
+              minimum: 1
+              description: Segundos até poder tentar de novo (423 e 429; igual ao header Retry-After).
 
-    PaginationMetadata:
-      type: object
-      description: Metadados de paginação do Lucid devolvidos junto de listagens paginadas.
-      properties:
-        total:
-          type: integer
-        perPage:
-          type: integer
-        currentPage:
-          type: integer
-        lastPage:
-          type: integer
-        firstPage:
-          type: integer
-        firstPageUrl:
-          type: string
-        lastPageUrl:
-          type: string
-        nextPageUrl:
-          type: [string, 'null']
-        previousPageUrl:
-          type: [string, 'null']
+    ValidationErrorResponse:
+      description: >-
+        Envelope de erro de validação (422). `errors` traz um item por campo,
+        tanto na validação de esquema (VineJS) quanto nas regras verificadas no
+        service (ex.: username já em uso, `database.unique`; comunidade de fé ou
+        foto inexistente, `database.exists`). Só um corpo que não é objeto JSON
+        responde sem `errors`.
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'

@@ -1,9 +1,13 @@
 import { UserRole } from '#enums/user/user_role'
 import MissionaryAgencyForbiddenException from '#exceptions/missionary/missionary_agency_forbidden_exception'
+import MissionaryAgencyInUseException from '#exceptions/missionary/missionary_agency_in_use_exception'
 import MissionaryAgencyNotFoundException from '#exceptions/missionary/missionary_agency_not_found_exception'
+import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
 import type User from '#models/user'
 import { applySearchFilters } from '#services/shared/apply_search_filters'
+import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
+import { isForeignKeyViolation } from '#utils/postgres_errors'
 import type { SearchFilters } from '#services/shared/apply_search_filters'
 import db from '@adonisjs/lucid/services/db'
 
@@ -47,6 +51,10 @@ export class MissionaryAgenciesService {
 
   async create(actor: User, payload: CreateMissionaryAgencyPayload): Promise<MissionaryAgency> {
     return db.transaction(async (trx) => {
+      // NOTE: mesmo nome e cidade reaproveita o registro existente em vez de duplicar
+      const existing = await findCatalogDuplicate(MissionaryAgency, trx, payload)
+      if (existing) return existing
+
       return MissionaryAgency.create(
         {
           name: payload.name,
@@ -80,15 +88,38 @@ export class MissionaryAgenciesService {
     })
   }
 
+  /**
+   * Remove a agência. Missionários vinculados impedem a exclusão (a FK é
+   * `ON DELETE RESTRICT`): responde 409 em vez de deixar o banco virar 500.
+   *
+   * @throws {MissionaryAgencyInUseException} Ainda há missionários vinculados.
+   */
   async destroy(actor: User, id: string): Promise<void> {
     const agency = await this.show(id)
 
     this.assertCanManage(actor, agency.userId)
 
-    await db.transaction(async (trx) => {
-      agency.useTransaction(trx)
-      await agency.delete()
-    })
+    try {
+      await db.transaction(async (trx) => {
+        const linked = await Missionary.query({ client: trx })
+          .where('missionaryAgencyId', agency.id)
+          .first()
+        if (linked) throw this.inUse()
+
+        agency.useTransaction(trx)
+        await agency.delete()
+      })
+    } catch (error) {
+      // NOTE: um missionário vinculado entre a checagem e o delete cai aqui.
+      if (isForeignKeyViolation(error)) throw this.inUse()
+      throw error
+    }
+  }
+
+  private inUse(): MissionaryAgencyInUseException {
+    return new MissionaryAgencyInUseException(
+      'Esta agência missionária tem missionários vinculados e não pode ser excluída'
+    )
   }
 
   private addressOf(payload: Address): Address {

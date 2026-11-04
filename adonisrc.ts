@@ -59,8 +59,8 @@ export default defineConfig({
     () => import('#providers/cache_provider'),
     () => import('#providers/elasticsearch_provider'),
     () => import('@adonisjs/mail/mail_provider'),
-    () => import('@adonisjs/drive/drive_provider'),
     () => import('@adonisjs/core/providers/edge_provider'),
+    () => import('@adonisjs/drive/drive_provider'),
   ],
 
   /*

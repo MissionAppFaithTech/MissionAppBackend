@@ -4,7 +4,6 @@ import { BankAccountType } from '#enums/financial_config/bank_account_type'
 import { compose } from '@adonisjs/core/helpers'
 import { belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import MediaAsset from './media_asset.ts'
 import Missionary from './missionary.ts'
 import { WithPrimaryUuid } from './mixins/with_primary_uuid.ts'
 import { WithTimestamps } from './mixins/with_timestamps.ts'
@@ -18,7 +17,4 @@ export default class FinancialConfig extends compose(
 
   @belongsTo(() => Missionary)
   declare missionary: BelongsTo<typeof Missionary>
-
-  @belongsTo(() => MediaAsset, { foreignKey: 'qrCodeAssetId' })
-  declare qrCodeAsset: BelongsTo<typeof MediaAsset>
 }

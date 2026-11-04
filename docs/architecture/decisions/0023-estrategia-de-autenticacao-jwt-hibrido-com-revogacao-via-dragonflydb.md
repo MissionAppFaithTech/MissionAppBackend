@@ -56,6 +56,9 @@ Token opaco gerado com `crypto.randomBytes(64)`. Armazenado no PostgreSQL como h
 - `last_used_at` — data da última rotação bem-sucedida, usada para ordenar a listagem de sessões
 - `expires_at` — expiração absoluta, recalculada a cada rotação (sliding window — ver abaixo)
 - `revoked_at` — `null` enquanto válido; preenchido na revogação
+- `device_id` e `device_kind` — hash do identificador do aparelho e tipo do aparelho (`desktop`, `mobile`, `tablet`, `unknown`), acrescentados pelo [ADR-0038](./0038-uma-sessao-por-aparelho.md)
+
+> **Nota (2026-11-03):** com o cabeçalho `x-device-id`, o login passa a manter **uma sessão por aparelho**: entrar de novo no mesmo aparelho encerra a família anterior. Ver [ADR-0038](./0038-uma-sessao-por-aparelho.md).
 
 **TTL por tipo de dispositivo, recalculado a cada rotação (sliding window):** o TTL não é um valor fixo desde a emissão original — a cada rotação bem-sucedida, `expires_at` é recalculado a partir do momento atual (`JWT_REFRESH_EXPIRES_IN_WEB`, padrão 7 dias; `JWT_REFRESH_EXPIRES_IN_MOBILE`, padrão 30 dias). Na prática: um app mobile usado diariamente nunca desautentica por inatividade, porque cada uso adia a expiração por mais 30 dias a partir daquele instante; só pede login novamente após um período real de inatividade maior que o TTL configurado. O TTL mais longo do mobile reflete o padrão observável de apps como Instagram e é adequado ao contexto mobile-first do MissionApp (NF.6.1) — sessões web (via BFF) usam um TTL mais curto por padrão de segurança.
 

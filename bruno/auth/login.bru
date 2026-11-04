@@ -10,6 +10,12 @@ post {
   auth: none
 }
 
+headers {
+  x-device-id: 6f1c2a9e-4b7d-4e2a-9c3f-1d2e3f4a5b6c
+  x-device-kind: desktop
+  x-device-name: Chrome no Windows
+}
+
 body:json {
   {
     "login": "usuario@example.com",
@@ -22,6 +28,11 @@ docs {
   token no corpo da resposta — não existe mais entrega via cookie nesta
   camada, já que o consumidor web é um BFF (Next.js), não um browser. Ver
   ADR-0023, seção "Entrega de Tokens".
+
+  O BFF envia `x-device-id` (cookie de dispositivo), `x-device-kind` e
+  `x-device-name`. Repetir o login com o mesmo `x-device-id` encerra a sessão
+  anterior desse aparelho: a lista de sessões fica com um item por aparelho
+  (ADR-0038). Sem `x-device-id`, cada login abre uma sessão nova.
 
   Copie o `accessToken` da resposta para a variável de ambiente `auth_token`,
   e o `refreshToken` para `refresh_token`, antes de rodar as demais

@@ -39,22 +39,40 @@ export default await Env.create(new URL('../', import.meta.url), {
   REDIS_HOST: Env.schema.string({ format: 'host' }),
   REDIS_PORT: Env.schema.number(),
   REDIS_PASSWORD: Env.schema.string(),
+  // NOTE: banco lógico do Dragonfly (0-15). O .env.test usa outro banco para
+  // que workers/cache de desenvolvimento não disputem filas e chaves dos testes.
+  REDIS_DB: Env.schema.number.optional(),
 
-  S3_ENDPOINT: Env.schema.string(),
+  /*
+  |----------------------------------------------------------
+  | Storage de objetos (@adonisjs/drive) — ADR-0008 e ADR-0013
+  |----------------------------------------------------------
+  */
+  DRIVE_DISK: Env.schema.enum(['s3_public', 's3_private', 'r2_public', 'r2_private'] as const),
+
+  S3_ENDPOINT: Env.schema.string({ format: 'url', tld: false }),
   S3_REGION: Env.schema.string(),
-  S3_BUCKET: Env.schema.string(),
+  S3_PUBLIC_BUCKET: Env.schema.string(),
+  S3_PRIVATE_BUCKET: Env.schema.string(),
   S3_ACCESS_KEY: Env.schema.string(),
   S3_SECRET_KEY: Env.schema.string(),
-  // NOTE: MinIO exige path-style (`endpoint/bucket/key`); o S3 da AWS aceita os dois formatos
-  S3_FORCE_PATH_STYLE: Env.schema.boolean.optional(),
-  // NOTE: base pública (CDN ou endpoint) para montar a URL dos arquivos; ausente, a URL
-  // é derivada de `S3_ENDPOINT/S3_BUCKET`
-  S3_PUBLIC_URL: Env.schema.string.optional({ format: 'url', tld: false }),
-  DRIVE_DISK: Env.schema.enum(['s3'] as const),
+
+  // NOTE: opcionais — só são exigidas no boot quando DRIVE_DISK aponta para
+  // um disco R2 (ver config/drive.ts).
+  R2_ENDPOINT: Env.schema.string.optional({ format: 'url', tld: false }),
+  R2_ACCESS_KEY: Env.schema.string.optional(),
+  R2_SECRET_KEY: Env.schema.string.optional(),
+  R2_PUBLIC_BUCKET: Env.schema.string.optional(),
+  R2_PRIVATE_BUCKET: Env.schema.string.optional(),
+  R2_PUBLIC_URL: Env.schema.string.optional({ format: 'url', tld: false }),
 
   ELASTIC_NODE: Env.schema.string(),
 
   JWT_SECRET: Env.schema.string(),
+
+  // NOTE: segredo compartilhado com o BFF (Next.js) para confiar no IP do usuário
+  // que ele repassa nos rate limits (ADR-0032). Opcional: ausente, vale request.ip().
+  BFF_SHARED_SECRET: Env.schema.string.optional(),
 
   JWT_ACCESS_EXPIRES_IN: Env.schema.string(),
 
@@ -64,6 +82,18 @@ export default await Env.create(new URL('../', import.meta.url), {
   // inatividade.
   JWT_REFRESH_EXPIRES_IN_WEB: Env.schema.string(),
   JWT_REFRESH_EXPIRES_IN_MOBILE: Env.schema.string(),
+
+  // NOTE: janela de tolerância (segundos) em que reapresentar um refresh token já
+  // rotacionado, do mesmo dispositivo, devolve o token atual em vez de revogar a
+  // sessão (ADR-0035). Opcional: ausente, vale 30.
+  REFRESH_TOKEN_REUSE_WINDOW_SECONDS: Env.schema.number.optional(),
+
+  // Inclui nome e mensagem do erro interno no corpo dos 500 (`debug`). Opt-in:
+  // ausente ou `false`, nenhum detalhe sai; em produção é sempre ignorado.
+  ERROR_DEBUG: Env.schema.boolean.optional(),
+
+  // Senha dos usuários de seed (só development/testing). Ausente, vale `password123`.
+  SEED_USER_PASSWORD: Env.schema.string.optional(),
 
   /*
   |----------------------------------------------------------

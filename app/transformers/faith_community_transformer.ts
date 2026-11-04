@@ -14,7 +14,6 @@ export default class FaithCommunityTransformer extends BaseTransformer<FaithComm
       'country',
       'postalCode',
       'website',
-      'userId',
       'createdAt',
     ])
   }

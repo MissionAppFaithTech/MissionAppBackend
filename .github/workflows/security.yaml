@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: '0 17 * * 1'
 
+permissions:
+  contents: read
+
+# NOTE: o SARIF vai completo para o Security tab; o gate só bloqueia achado high/critical
+# que já tem versão corrigida — os sem correção publicada ficam visíveis sem travar o merge.
+# Sem SNYK_TOKEN (PR vindo de fork) os scans são pulados; o push na main roda de novo.
 jobs:
   sca:
     name: Snyk Open Source
@@ -15,30 +21,46 @@ jobs:
     permissions:
       security-events: write
       contents: read
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: '.node-version'
+      - uses: snyk/actions/setup@v1.0.0
+        if: env.SNYK_TOKEN != ''
 
-      - run: corepack enable && pnpm install --frozen-lockfile
-
+      # WARNING: com pnpm-workspace.yaml o Snyk exige --all-projects, e o --fail-on é
+      # ignorado para pnpm (sai 0 mesmo com achados) — por isso o gate lê o JSON abaixo.
       - name: Snyk SCA
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: >
-            --sarif-file-output=snyk-sca.sarif
-            --severity-threshold=high
+        if: env.SNYK_TOKEN != ''
+        run: |
+          snyk test --all-projects \
+            --json-file-output=snyk-sca.json \
+            --sarif-file-output=snyk-sca.sarif || true
 
       - name: Upload SCA results ao GitHub Security
         uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk-sca.sarif') != ''
         with:
           sarif_file: snyk-sca.sarif
-        if: always() && hashFiles('snyk-sca.sarif') != ''
+          category: snyk-open-source
+
+      - name: Gate — high/critical com correção disponível
+        if: env.SNYK_TOKEN != ''
+        run: |
+          test -s snyk-sca.json || { echo "::error::Snyk SCA não gerou resultado"; exit 1; }
+          FIXABLE=$(jq '[ (if type == "array" then .[] else . end)
+            | if .error then error(.error) else . end
+            | .vulnerabilities[]
+            | select(.severity == "high" or .severity == "critical")
+            | select((.fixedIn // []) | length > 0)
+            | .id ] | unique' snyk-sca.json)
+          COUNT=$(jq 'length' <<< "$FIXABLE")
+          if [ "$COUNT" -gt 0 ]; then
+            echo "::error::$COUNT vulnerabilidade(s) high/critical com correção disponível: $(jq -c . <<< "$FIXABLE")"
+            exit 1
+          fi
+          echo "Nenhuma vulnerabilidade high/critical corrigível."
 
   sast:
     name: Snyk Code
@@ -46,19 +68,34 @@ jobs:
     permissions:
       security-events: write
       contents: read
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v7
 
-      - uses: snyk/actions/setup@master
+      - uses: snyk/actions/setup@v1.0.0
+        if: env.SNYK_TOKEN != ''
 
       - name: Snyk Code SAST
-        continue-on-error: true
-        run: snyk code test --sarif-file-output=snyk-code.sarif
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        if: env.SNYK_TOKEN != ''
+        run: snyk code test --sarif-file-output=snyk-code.sarif || true
 
       - name: Upload SAST results ao GitHub Security
         uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk-code.sarif') != ''
         with:
           sarif_file: snyk-code.sarif
-        if: always() && hashFiles('snyk-code.sarif') != ''
+          category: snyk-code
+
+      # NOTE: o Snyk Code mapeia severidade high para o level "error" do SARIF.
+      - name: Gate — achados high
+        if: env.SNYK_TOKEN != ''
+        run: |
+          test -s snyk-code.sarif || { echo "::error::Snyk Code não gerou resultado"; exit 1; }
+          COUNT=$(jq '[.runs[].results[] | select(.level == "error")] | length' snyk-code.sarif)
+          if [ "$COUNT" -gt 0 ]; then
+            jq -r '.runs[].results[] | select(.level == "error")
+              | "::error file=\(.locations[0].physicalLocation.artifactLocation.uri),line=\(.locations[0].physicalLocation.region.startLine)::\(.ruleId): \(.message.text)"' snyk-code.sarif
+            exit 1
+          fi
+          echo "Nenhum achado high no Snyk Code."

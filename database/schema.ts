@@ -149,7 +149,6 @@ export class FinancialConfigSchema extends BaseModel {
     'id',
     'missionaryId',
     'pixKey',
-    'qrCodeAssetId',
     'updatedAt',
   ] as const
   $columns = FinancialConfigSchema.$columns
@@ -175,8 +174,6 @@ export class FinancialConfigSchema extends BaseModel {
   declare missionaryId: string
   @column()
   declare pixKey: string | null
-  @column()
-  declare qrCodeAssetId: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
@@ -289,6 +286,7 @@ export class MissionarySchema extends BaseModel {
     'prayerRequest',
     'publicEmail',
     'publicPhone',
+    'publicPhoneIsWhatsapp',
     'status',
     'userId',
   ] as const
@@ -321,6 +319,8 @@ export class MissionarySchema extends BaseModel {
   declare publicEmail: string | null
   @column()
   declare publicPhone: string | null
+  @column()
+  declare publicPhoneIsWhatsapp: boolean
   @column()
   declare status: string
   @column()
@@ -464,6 +464,8 @@ export class RedirectSchema extends BaseModel {
 export class RefreshTokenSchema extends BaseModel {
   static $columns = [
     'createdAt',
+    'deviceId',
+    'deviceKind',
     'deviceName',
     'deviceType',
     'expiresAt',
@@ -471,6 +473,7 @@ export class RefreshTokenSchema extends BaseModel {
     'id',
     'ipAddress',
     'lastUsedAt',
+    'replacedById',
     'revokedAt',
     'tokenHash',
     'updatedAt',
@@ -479,6 +482,10 @@ export class RefreshTokenSchema extends BaseModel {
   $columns = RefreshTokenSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare deviceId: string | null
+  @column()
+  declare deviceKind: string
   @column()
   declare deviceName: string | null
   @column()
@@ -493,6 +500,8 @@ export class RefreshTokenSchema extends BaseModel {
   declare ipAddress: string | null
   @column.dateTime()
   declare lastUsedAt: DateTime | null
+  @column()
+  declare replacedById: string | null
   @column.dateTime()
   declare revokedAt: DateTime | null
   @column()

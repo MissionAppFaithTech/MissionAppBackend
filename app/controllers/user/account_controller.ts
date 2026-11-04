@@ -1,5 +1,6 @@
 import UserRegistered from '#events/user/user_registered'
 import User from '#models/user'
+import { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import { RefreshTokenService } from '#services/auth/refresh_token_service'
 import { TokenIssuanceService } from '#services/auth/token_issuance_service'
 import { toDeviceMetadata } from '#utils/client_metadata'
@@ -10,6 +11,9 @@ import UserTransformer from '#transformers/user_transformer'
 export default class AccountController {
   async store({ request, serialize, auth }: HttpContext) {
     const validated = await request.validateUsing(signupValidator)
+    // NOTE: headers inválidos respondem 422 antes de criar a conta; depois disso
+    // a nova tentativa falharia com "e-mail já em uso".
+    const meta = await toDeviceMetadata(request)
 
     // NOTE: passwordHash recebe o valor em texto plano — o hook beforeSave do
     // AuthFinder faz o hash automaticamente antes de persistir.
@@ -21,12 +25,16 @@ export default class AccountController {
       email: validated.email,
       passwordHash: validated.password,
     })
-    const meta = await toDeviceMetadata(request)
+    // NOTE: `create` não relê os defaults do banco (`role`, `biography`...). Sem o
+    // refresh, o JWT sai sem o claim `role`, o evento leva `role` indefinido e a
+    // resposta omite esses campos.
+    await user.refresh()
     const tokens = await new TokenIssuanceService().issue(
       auth,
       user,
       meta,
-      new RefreshTokenService()
+      new RefreshTokenService(),
+      new AuthRevocationService()
     )
 
     await UserRegistered.dispatch(user.id, user.fullName, user.email, user.role)

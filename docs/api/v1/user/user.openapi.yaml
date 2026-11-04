@@ -10,6 +10,9 @@ paths:
       security: []
       parameters:
         - $ref: '../auth/auth.openapi.yaml#/components/parameters/ClientType'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/DeviceName'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/DeviceId'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/DeviceKind'
       requestBody:
         required: true
         content:
@@ -24,7 +27,9 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/LoginResponse'
         '422':
-          description: 'Erro de validação (ex: email já em uso, senhas não conferem).'
+          description: >-
+            Erro de validação (ex: email já em uso, senhas não conferem).
+            Códigos: `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -57,11 +62,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsernameAvailabilityResponse'
         '422':
-          description: Nome de usuário fora do formato esperado.
+          description: >-
+            Nome de usuário fora do formato esperado. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de requisições atingido; veja `Retry-After`. Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
 
   /account/profile:
     get:
@@ -76,12 +91,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '../auth/auth.openapi.yaml#/components/schemas/UserSummary'
+                $ref: '#/components/schemas/AccountProfileResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -105,8 +119,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação dos campos de perfil.
+          description: >-
+            Erro de validação dos campos de perfil. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -132,6 +156,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MediaAssetResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /account/password:
     patch:
@@ -159,13 +198,17 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Senha atual incorreta, ou nova senha/confirmação inválidas.
+          description: >-
+            Senha atual incorreta, ou nova senha/confirmação inválidas. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -210,6 +253,10 @@ components:
 
     UpdateProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados. Apenas
+        `biography` aceita `null` (ou string vazia) para ser limpo; `null` em
+        `fullName`, `username` ou `profilePictureId` é ignorado.
       properties:
         fullName:
           type: string
@@ -221,8 +268,8 @@ components:
           maxLength: 32
           pattern: '^[a-z0-9_]+$'
         biography:
-          type: string
-          maxLength: 200
+          type: [string, 'null']
+          maxLength: 70
         profilePictureId:
           type: string
           format: uuid
@@ -244,6 +291,46 @@ components:
                 type: string
               description: Até 3 variações livres quando available é false; caso contrário, retorna um array vazio.
 
+    AccountProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '../auth/auth.openapi.yaml#/components/schemas/UserSummary'
+            missionary:
+              type: [object, 'null']
+              description: Perfil missionário do usuário; null quando ele não é missionário.
+            workAddress:
+              type: [object, 'null']
+              description: Endereço de atuação do missionário; null quando não cadastrado.
+            missionaryAgency:
+              description: >-
+                Agência missionária vinculada (id e nome), para exibir o nome sem
+                consultar o catálogo público, que tem rate limit por IP. Null
+                quando o usuário não é missionário.
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+            faithCommunity:
+              description: >-
+                Comunidade de fé vinculada (id e nome). Null quando o usuário não
+                é missionário ou não informou comunidade.
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+
+    CatalogReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
     UserProfileResponse:
       type: object
       properties:
@@ -262,13 +349,14 @@ components:
           maxLength: 255
         fileKey:
           type: string
-          maxLength: 1024
+          maxLength: 255
         mimeType:
           type: string
           maxLength: 255
         fileSizeBytes:
           type: integer
           minimum: 1
+          maximum: 2147483647
 
     MediaAssetResponse:
       type: object

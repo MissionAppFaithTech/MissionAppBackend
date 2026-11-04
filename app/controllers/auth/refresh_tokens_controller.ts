@@ -1,4 +1,5 @@
 import User from '#models/user'
+import { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import { RefreshTokenService } from '#services/auth/refresh_token_service'
 import { TokenIssuanceService } from '#services/auth/token_issuance_service'
 import { toDeviceMetadata } from '#utils/client_metadata'
@@ -12,7 +13,8 @@ export default class RefreshTokensController {
 
     const { userId, newRaw, familyId } = await new RefreshTokenService().rotate(
       validated.refreshToken,
-      meta
+      meta,
+      new AuthRevocationService()
     )
 
     const user = await User.findOrFail(userId)

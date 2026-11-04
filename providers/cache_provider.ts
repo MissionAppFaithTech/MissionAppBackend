@@ -8,22 +8,28 @@ import { CacheClient } from '#services/shared/cache/cache_client'
  * autenticação — hoje apoiado em DragonflyDB via ioredis. Ver
  * `app/services/shared/cache/cache_client.ts` para a interface exposta aos
  * consumidores.
- *
- * NOTE: sem hook `shutdown()` de propósito — o boot interno do `node ace
- * test` (fase de codegen) termina e reinicia o ciclo de vida da aplicação
- * dentro do mesmo processo antes dos testes reais rodarem. Um `shutdown()`
- * chamando `.quit()` aqui fecharia a conexão permanentemente (ioredis nunca
- * reconecta após `.quit()`) nesse ponto intermediário, quebrando os testes
- * reais que rodam depois. O encerramento explícito da conexão nos testes é
- * feito em `tests/bootstrap.ts`, que roda no teardown real do Japa.
  */
 export default class CacheProvider {
+  #client?: CacheClient
+
   constructor(protected app: ApplicationService) {}
 
   /**
    * Registra o binding singleton de `CacheClient` no container.
    */
   register() {
-    this.app.container.singleton(CacheClient, () => new CacheClient(new Redis(redisConnection)))
+    this.app.container.singleton(CacheClient, () => {
+      this.#client = new CacheClient(new Redis(redisConnection))
+      return this.#client
+    })
+  }
+
+  /**
+   * Fecha a conexão com o DragonflyDB quando a aplicação termina — sem isso o
+   * socket aberto mantém o event loop vivo e comandos Ace que carregam a app
+   * (ex.: `migration:run`) nunca encerram sozinhos.
+   */
+  async shutdown() {
+    await this.#client?.quit()
   }
 }

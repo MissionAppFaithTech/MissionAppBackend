@@ -150,6 +150,24 @@ _wait-elasticsearch:
 [group('infra')]
 _wait-infra: _wait-db _wait-dragonfly _wait-minio _wait-elasticsearch
 
+# Falha se o .env não tiver alguma variável declarada no .env.example
+[group('dev')]
+check-env:
+    @if [ ! -f .env ]; then echo "ERRO: .env não encontrado — rode: cp .env.example .env"; exit 1; fi
+    @missing=$(comm -23 <(grep -oE '^[A-Z0-9_]+=' .env.example | sort -u) <(grep -oE '^[A-Z0-9_]+=' .env | sort -u) | tr -d '='); \
+    if [ -n "$missing" ]; then \
+        echo "ERRO: variáveis do .env.example ausentes no .env:"; \
+        echo "$missing" | sed 's/^/  - /'; \
+        echo "Copie-as do .env.example (veja a seção de storage em CONTRIBUTING.md)."; \
+        exit 1; \
+    fi
+    @echo "OK: .env contém todas as variáveis do .env.example."
+
+# Cria os buckets do MinIO (S3_PUBLIC_BUCKET/S3_PRIVATE_BUCKET) — idempotente
+[group('dev')]
+storage-setup:
+    node ace storage:setup
+
 # Instala dependências
 [group('dev')]
 install:
@@ -157,13 +175,8 @@ install:
 
 # Sobe a infraestrutura, aguarda, migra e inicia o servidor de desenvolvimento
 [group('dev')]
-start: up _wait-infra migrate storage-setup
+start: check-env up _wait-infra storage-setup migrate
     pnpm dev
-
-# Cria o bucket de assets no MinIO (se ausente) com leitura pública e CORS — idempotente
-[group('infra')]
-storage-setup:
-    node ace storage:setup
 
 # Inicia servidor de desenvolvimento com HMR
 [group('dev')]
@@ -235,20 +248,25 @@ migrate-rollback:
 seed:
     node ace db:seed
 
+# NOTE: o dotenv-load exporta o .env para o processo, e o AdonisJS dá
+# precedência ao process.env sobre o .env.test — sem reexportar o .env.test,
+# os testes rodariam com os valores de desenvolvimento (ex.: REDIS_DB=0).
+LOAD_TEST_ENV := "set -a && . ./.env.test && set +a"
+
 # Todos os suites de teste
 [group('testes')]
 test:
-    pnpm test
+    {{LOAD_TEST_ENV}} && pnpm test
 
 # Apenas testes unitários
 [group('testes')]
 test-unit:
-    node ace test --suite=unit
+    {{LOAD_TEST_ENV}} && node ace test unit
 
 # Apenas testes funcionais
 [group('testes')]
 test-functional:
-    node ace test --suite=functional
+    {{LOAD_TEST_ENV}} && node ace test functional
 
 # Análise completa do projeto: código morto + duplicatas + saúde
 [group('fallow')]
@@ -299,3 +317,13 @@ fallow-audit-ci:
 [group('fallow')]
 fallow-verify: fallow-audit fallow-security
     pnpm audit
+
+# Snyk Open Source (requer `snyk auth`) — mesmo escopo do CI; build/ guarda um lockfile copiado pelo build
+[group('segurança')]
+snyk:
+    pnpm dlx snyk@1.1308.3 test --all-projects --exclude=build
+
+# Snyk Code (SAST) — exige org com Snyk Code habilitado (ex.: SNYK_CFG_ORG=missionapp.faithtech)
+[group('segurança')]
+snyk-code:
+    pnpm dlx snyk@1.1308.3 code test

@@ -520,9 +520,44 @@ flowchart LR
          <td>🟢 Aceito</td>
       </tr>
       <tr>
-         <td><a href="./0032-upload-direto-via-url-pre-assinada-e-compressao-de-imagens-com-sharp.md">ADR-0032</a></td>
-         <td align="left">Upload Direto via URL Pré-Assinada e Compressão de Imagens com sharp em Worker</td>
+         <td><a href="./0032-ip-do-usuario-repassado-pelo-bff-com-segredo-compartilhado.md">ADR-0032</a></td>
+         <td align="left">IP do Usuário Repassado pelo BFF com Segredo Compartilhado</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0033-paginacao-por-cursor-para-feeds-e-listas-incrementais.md">ADR-0033</a></td>
+         <td align="left">Paginação por Cursor para Feeds e Listas Incrementais</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0034-envelope-de-erro-unico-com-codigo.md">ADR-0034</a></td>
+         <td align="left">Envelope de Erro Único com Código Estável</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0035-rotacao-idempotente-de-refresh-token-com-janela-de-tolerancia.md">ADR-0035</a></td>
+         <td align="left">Rotação Idempotente de Refresh Token com Janela de Tolerância</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0036-perfil-publico-anonimo-e-orcamento-de-rate-limit-do-servidor-do-bff.md">ADR-0036</a></td>
+         <td align="left">Perfil Público Anônimo e Orçamento de Rate Limit para o Servidor do BFF</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0037-api-avisa-o-site-para-descartar-o-cache-do-perfil-publico.md">ADR-0037</a></td>
+         <td align="left">API Avisa o Site para Descartar o Cache do Perfil Público</td>
          <td>🟡 Proposto</td>
+      </tr>
+      <tr>
+         <td><a href="./0038-uma-sessao-por-aparelho.md">ADR-0038</a></td>
+         <td align="left">Uma Sessão por Aparelho</td>
+         <td>🟢 Aceito</td>
+      </tr>
+      <tr>
+         <td><a href="./0039-pix-somente-com-chave.md">ADR-0039</a></td>
+         <td align="left">PIX Somente com Chave</td>
+         <td>🟢 Aceito</td>
       </tr>
    </tbody>
 </table>

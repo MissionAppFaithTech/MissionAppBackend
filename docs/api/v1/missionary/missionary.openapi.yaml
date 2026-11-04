@@ -19,12 +19,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
-        '403':
-          description: Perfil sem permissão para editar dados missionários.
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Perfil sem permissão para editar dados missionários. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/profile:
     post:
@@ -56,31 +81,41 @@ paths:
                   message:
                     type: string
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Role sem permissão para conversão.
+          description: >-
+            Role sem permissão para conversão. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária informada não encontrada.
+          description: >-
+            Agência missionária informada não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '409':
-          description: Usuário já possui perfil missionário.
+          description: >-
+            Usuário já possui perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_ALREADY_EXISTS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -105,6 +140,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/identity:
     patch:
@@ -126,6 +192,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/work-address:
     patch:
@@ -147,6 +244,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/{id}/about:
     patch:
@@ -170,6 +298,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/{id}/profile:
     patch:
@@ -193,6 +352,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/{id}/identity:
     patch:
@@ -216,6 +406,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionaries/{id}/work-address:
     patch:
@@ -239,14 +460,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /missionary-agencies:
     get:
       operationId: missionaryAgencyIndex
       tags: [missionary]
       summary: Lista agências missionárias
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher agências missionárias antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - name: search
           in: query
@@ -287,8 +542,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgenciesResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -314,13 +583,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -331,8 +604,11 @@ paths:
       operationId: missionaryAgencyShow
       tags: [missionary]
       summary: Exibe uma agência missionária
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher agências missionárias antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - $ref: '#/components/parameters/MissionaryAgencyId'
       responses:
@@ -342,14 +618,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '404':
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
-        '404':
-          description: Agência missionária não encontrada.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -377,25 +669,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para atualizar a agência.
+          description: >-
+            Usuário sem permissão para atualizar a agência. Códigos:
+            `E_MISSIONARY_AGENCY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -417,31 +717,55 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a agência.
+          description: >-
+            Usuário sem permissão para remover a agência. Códigos:
+            `E_MISSIONARY_AGENCY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            Agência com missionários vinculados; nada foi excluído. Códigos:
+            `E_MISSIONARY_AGENCY_IN_USE`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
   /faith-communities:
     get:
       operationId: faithCommunityIndex
       tags: [missionary]
       summary: Lista comunidades de fé
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher comunidades de fé antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - name: search
           in: query
@@ -482,8 +806,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunitiesResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -509,13 +847,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -526,8 +868,11 @@ paths:
       operationId: faithCommunityShow
       tags: [missionary]
       summary: Exibe uma comunidade de fé
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher comunidades de fé antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - $ref: '#/components/parameters/FaithCommunityId'
       responses:
@@ -537,14 +882,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '404':
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
-        '404':
-          description: Comunidade de fé não encontrada.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -572,25 +933,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para atualizar a comunidade.
+          description: >-
+            Usuário sem permissão para atualizar a comunidade. Códigos:
+            `E_FAITH_COMMUNITY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -612,19 +981,95 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a comunidade.
+          description: >-
+            Usuário sem permissão para remover a comunidade. Códigos:
+            `E_FAITH_COMMUNITY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /public/missionaries/{username}:
+    get:
+      operationId: publicMissionaryProfileShow
+      tags: [missionary]
+      summary: Perfil público de missionário
+      description: >-
+        Consulta anônima, só leitura (RF 1.4, RF 10). Devolve apenas os campos
+        públicos aprovados (ADR-0036): identificação, agência, comunidade de fé,
+        aba Sobre, local de atuação (cidade/estado/país), contadores e contato
+        público. Só missionários com perfil aprovado e conta ativa são visíveis;
+        os demais respondem o mesmo 404. Rate limit de 60 consultas por minuto
+        por IP; o servidor do BFF sem IP de usuário (renderização pública com
+        cache) tem orçamento próprio de 600 por minuto.
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username do missionário (maiúsculas são aceitas e normalizadas).
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[A-Za-z0-9_]+$'
+      responses:
+        '200':
+          description: Perfil público encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicMissionaryProfileResponse'
+        '404':
+          description: >-
+            Perfil inexistente ou não público
+            (`E_MISSIONARY_PROFILE_NOT_FOUND`). Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Username com formato inválido (`E_VALIDATION_ERROR`). Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas excedido (`E_TOO_MANY_REQUESTS`). Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -701,9 +1146,6 @@ components:
           type: [string, 'null']
         website:
           type: [string, 'null']
-        userId:
-          type: [string, 'null']
-          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -831,9 +1273,6 @@ components:
           type: [string, 'null']
         website:
           type: [string, 'null']
-        userId:
-          type: [string, 'null']
-          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -939,37 +1378,46 @@ components:
 
     UpdateMissionaryAboutRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         aboutMe:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
         missionStorySummary:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
         originLocation:
-          type: string
+          type: [string, 'null']
           maxLength: 255
         faithCommunityId:
-          type: string
+          type: [string, 'null']
           format: uuid
         prayerRequest:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
         lifeVerse:
-          type: string
+          type: [string, 'null']
           maxLength: 255
 
     UpdateMissionaryProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         publicEmail:
-          type: string
+          type: [string, 'null']
           format: email
         publicPhone:
-          type: string
+          type: [string, 'null']
           example: '+5511912345678'
+        publicPhoneIsWhatsapp:
+          type: boolean
+          description: Indica se o telefone público aceita WhatsApp; o perfil só oferece WhatsApp quando true.
         donationMessage:
-          type: string
+          type: [string, 'null']
           maxLength: 5000
 
     UpdateMissionaryIdentityRequest:
@@ -1002,3 +1450,102 @@ components:
         country:
           type: string
           maxLength: 255
+
+    PublicMissionaryProfile:
+      type: object
+      description: Campos públicos do perfil de missionário (ADR-0036). Nunca inclui PII.
+      required:
+        [
+          username,
+          fullName,
+          biography,
+          role,
+          missionaryAgency,
+          faithCommunity,
+          about,
+          workLocation,
+          followersCount,
+          followingCount,
+          contact,
+        ]
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        biography:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [MISSIONARY]
+        missionaryAgency:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        faithCommunity:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        about:
+          type: object
+          properties:
+            aboutMe:
+              type: string
+              nullable: true
+            missionStorySummary:
+              type: string
+              nullable: true
+            originLocation:
+              type: string
+              nullable: true
+            prayerRequest:
+              type: string
+              nullable: true
+            lifeVerse:
+              type: string
+              nullable: true
+        workLocation:
+          type: object
+          nullable: true
+          properties:
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        contact:
+          type: object
+          properties:
+            publicEmail:
+              type: string
+              nullable: true
+            publicPhone:
+              type: string
+              nullable: true
+            publicPhoneIsWhatsapp:
+              type: boolean
+
+    PublicMissionaryProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            missionary:
+              $ref: '#/components/schemas/PublicMissionaryProfile'

@@ -8,7 +8,7 @@ export default class QueueWorkers extends BaseCommand {
   static commandName = 'queue:workers'
   static description = 'Inicia os workers BullMQ registrados em app/queues/worker_registry.ts'
 
-  static options: CommandOptions = { loadApp: true }
+  static options: CommandOptions = { startApp: true }
 
   @flags.string({
     description: 'Processa só a fila informada (padrão: todas as registradas)',
@@ -29,38 +29,48 @@ export default class QueueWorkers extends BaseCommand {
     // NOTE: mais de uma entrada pode compartilhar a mesma fila (ex: todos os
     // emails) — 1 Worker por fila única, processor despacha por `job.name`.
     const queueNames = [...new Set(entries.map((entry) => entry.queueName))]
+    const workers = queueNames.map((queueName) => this.#startWorker(queueName, entries))
 
-    for (const queueName of queueNames) {
-      const handlersByJobName = new Map(
-        entries
-          .filter((entry) => entry.queueName === queueName)
-          .map((entry) => [entry.jobName, entry.handle])
-      )
-
-      const worker = new Worker(
-        queueName,
-        async (job) => {
-          const handle = handlersByJobName.get(job.name)
-          if (!handle) {
-            throw new Error(
-              `nenhum handler registrado para o job "${job.name}" na fila "${queueName}"`
-            )
-          }
-          await handle(job.data)
-        },
-        { connection: bullMQConnection }
-      )
-
-      worker.on('failed', (job, err) => {
-        this.logger.error(`[${queueName}] job ${job?.id} (${job?.name}) falhou: ${err.message}`)
-      })
-
-      this.logger.info(
-        `worker escutando fila "${queueName}" (jobs: ${[...handlersByJobName.keys()].join(', ')})`
-      )
-    }
+    // NOTE: no SIGTERM (ex.: `docker stop`) o `app.terminate()` dispara este
+    // hook — `close()` espera os jobs em andamento terminarem e libera as
+    // conexões com o DragonflyDB; sem isso o processo não encerra sozinho.
+    this.app.terminating(async () => {
+      await Promise.all(workers.map((worker) => worker.close()))
+    })
 
     // NOTE: mantém o processo do comando vivo enquanto os workers escutam as filas
     await new Promise(() => {})
+  }
+
+  #startWorker(queueName: string, entries: typeof workerRegistry): Worker {
+    const handlersByJobName = new Map(
+      entries
+        .filter((entry) => entry.queueName === queueName)
+        .map((entry) => [entry.jobName, entry.handle])
+    )
+
+    const worker = new Worker(
+      queueName,
+      async (job) => {
+        const handle = handlersByJobName.get(job.name)
+        if (!handle) {
+          throw new Error(
+            `nenhum handler registrado para o job "${job.name}" na fila "${queueName}"`
+          )
+        }
+        await handle(job.data)
+      },
+      { connection: bullMQConnection }
+    )
+
+    worker.on('failed', (job, err) => {
+      this.logger.error(`[${queueName}] job ${job?.id} (${job?.name}) falhou: ${err.message}`)
+    })
+
+    this.logger.info(
+      `worker escutando fila "${queueName}" (jobs: ${[...handlersByJobName.keys()].join(', ')})`
+    )
+
+    return worker
   }
 }

@@ -10,6 +10,17 @@ import type { Redis } from 'ioredis'
  * diretamente.
  */
 export class CacheClient {
+  static readonly #INCR_WITH_INITIAL_TTL_SCRIPT = `
+    local current = redis.call('INCR', KEYS[1])
+    local ttl = redis.call('TTL', KEYS[1])
+
+    if current == 1 or ttl == -1 then
+      redis.call('EXPIRE', KEYS[1], ARGV[1])
+    end
+
+    return current
+  `
+
   #redis: Redis
 
   constructor(redis: Redis) {
@@ -52,6 +63,26 @@ export class CacheClient {
    */
   async incr(key: string): Promise<number> {
     return this.#redis.incr(key)
+  }
+
+  /**
+   * Incrementa um contador e garante TTL inicial em uma única operação atômica.
+   *
+   * @param key Chave do contador.
+   * @param ttlSeconds Tempo de vida em segundos para a janela fixa.
+   * @returns Novo valor do contador após o incremento.
+   * @example
+   * const attempts = await cache.incrWithInitialTtl('rate-limit:ip:127.0.0.1', 60)
+   */
+  async incrWithInitialTtl(key: string, ttlSeconds: number): Promise<number> {
+    const result = await this.#redis.eval(
+      CacheClient.#INCR_WITH_INITIAL_TTL_SCRIPT,
+      1,
+      key,
+      ttlSeconds.toString()
+    )
+
+    return Number(result)
   }
 
   /**

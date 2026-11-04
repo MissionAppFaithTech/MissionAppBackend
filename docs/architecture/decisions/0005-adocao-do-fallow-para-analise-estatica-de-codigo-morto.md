@@ -24,7 +24,7 @@ O fallow é um analisador de codebase TypeScript/JavaScript desenvolvido em Rust
 
 ### Configuração adotada
 
-A configuração em `.fallowrc.json` é dividida em três camadas:
+A configuração em `.fallowrc.json` é dividida em quatro camadas:
 
 **1. Entry points (`entry`)**
 
@@ -81,6 +81,19 @@ Métodos chamados via padrão interno do projeto — sem referência estática r
 ```
 
 `toObject` é o método do padrão de transformers do projeto (`app/transformers/**`), invocado pela camada de apresentação sem chamada estática direta. O supressor via `overrides` (que desativa `unused-class-members` em `app/transformers/**`) funciona corretamente no CLI, mas a extensão VS Code do fallow lê apenas a configuração de nível raiz e ignora `overrides` — por isso `toObject` também precisa constar em `usedClassMembers`. Métodos de guards e outros contratos do AdonisJS são tratados via `// fallow-ignore-next-line unused-class-member` inline no arquivo, que é respeitado tanto pelo CLI quanto pela extensão.
+
+**4. Dependências de desenvolvimento importadas por entrypoints fora de produção (`ignoreDependencies`)**
+
+A regra `dev-dependencies-in-production` trata como código de produção todo arquivo alcançado a partir de um entry point que não siga um padrão de teste (`*.spec.*`, `*.test.*`, `tests/` etc.). Dois entrypoints do AdonisJS ficam fora desses padrões e nunca rodam em produção:
+
+- `bin/test.ts` importa `@japa/runner` — é o entrypoint do test runner, executado apenas por `node ace test`.
+- `ace.js` importa `@poppinss/ts-exec` — registra o hook que executa TypeScript em desenvolvimento; o `node ace build` gera outro `ace.js` em `build/`, que importa o JavaScript compilado sem esse hook.
+
+Mover os pacotes para `dependencies` levaria o test runner e o hook de TypeScript para a instalação de produção sem necessidade. Essa regra não aceita supressão inline nem por `overrides` (o achado pertence ao `package.json`, não ao arquivo importador), então os dois pacotes constam em `ignoreDependencies`:
+
+```json
+"ignoreDependencies": ["pg", "hot-hook", "@aws-sdk/s3-request-presigner", "@japa/runner", "@poppinss/ts-exec"]
+```
 
 ### Escopo das regras
 

@@ -1,12 +1,16 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
+import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
+import { MissionaryStatus } from '#enums/missionary/missionary_status'
 import { UserRole } from '#enums/user/user_role'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
 import { test } from '@japa/runner'
+import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 
 type TokensBody = { data: { accessToken: string } }
 type ApiBody = { data: Record<string, any> }
+type ErrorBody = { code: string; message: string }
 
 async function loginAndGetAccessToken(
   login: string,
@@ -32,6 +36,7 @@ test.group('Missionary agencies - CRUD', (group) => {
   }) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const clientIp = uniqueClientIp()
 
     const store = await client
       .post(router.builder().make('v1.missionary_agencies.store')!)
@@ -43,6 +48,7 @@ test.group('Missionary agencies - CRUD', (group) => {
 
     const index = await client
       .get(router.builder().make('v1.missionary_agencies.index')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     index.assertStatus(200)
@@ -50,6 +56,7 @@ test.group('Missionary agencies - CRUD', (group) => {
 
     const show = await client
       .get(router.builder().params({ id: storedAgencyId }).make('v1.missionary_agencies.show')!)
+      .header('X-Forwarded-For', clientIp)
       .header('Authorization', `Bearer ${accessToken}`)
 
     show.assertStatus(200)
@@ -73,6 +80,40 @@ test.group('Missionary agencies - CRUD', (group) => {
 
     const deletedAgency = await MissionaryAgency.find(storedAgencyId)
     assert.isNull(deletedAgency)
+  })
+
+  test('responde 409 ao excluir agência com missionários vinculados e mantém a agência', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createTestUser()
+    const accessToken = await loginAndGetAccessToken(user.email, password, client)
+
+    const store = await client
+      .post(router.builder().make('v1.missionary_agencies.store')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+      .json({ name: 'Agência Vinculada' })
+    const agencyId = (store.body() as ApiBody).data.missionaryAgency.id as string
+
+    const { user: missionaryUser } = await createTestUser()
+    await Missionary.create({
+      userId: missionaryUser.id,
+      status: MissionaryStatus.PENDING_APPROVAL,
+      missionaryAgencyId: agencyId,
+    })
+
+    const destroy = await client
+      .delete(router.builder().params({ id: agencyId }).make('v1.missionary_agencies.destroy')!)
+      .header('Authorization', `Bearer ${accessToken}`)
+
+    destroy.assertStatus(409)
+    const error = destroy.body() as ErrorBody
+    assert.equal(error.code, 'E_MISSIONARY_AGENCY_IN_USE')
+    assert.equal(
+      error.message,
+      'Esta agência missionária tem missionários vinculados e não pode ser excluída'
+    )
+    assert.isNotNull(await MissionaryAgency.find(agencyId))
   })
 
   test('retorna 403 quando usuário não-admin tenta atualizar agência de outro usuário', async ({
@@ -128,6 +169,7 @@ test.group('Missionary agencies - CRUD', (group) => {
     const { user, password } = await createTestUser()
     const accessToken = await loginAndGetAccessToken(user.email, password, client)
     const url = router.builder().make('v1.missionary_agencies.index')!
+    const clientIp = uniqueClientIp()
 
     for (const body of [
       { name: 'Alfa Central', city: 'São Paulo', state: 'SP', country: 'Brasil' },
@@ -141,12 +183,18 @@ test.group('Missionary agencies - CRUD', (group) => {
       created.assertStatus(200)
     }
 
+    const createdNames = new Set(['Alfa Central', 'Beta Norte', 'Gamma 100%'])
     const names = async (qs: Record<string, string>) => {
-      const res = await client.get(url).qs(qs).header('Authorization', `Bearer ${accessToken}`)
+      const res = await client
+        .get(url)
+        .qs(qs)
+        .header('X-Forwarded-For', clientIp)
+        .header('Authorization', `Bearer ${accessToken}`)
       res.assertStatus(200)
-      return ((res.body() as ApiBody).data.missionaryAgencies as { name: string }[]).map(
-        (item) => item.name
-      )
+      // NOTE: o banco local pode ter outros registros (seed); só os criados aqui importam
+      return ((res.body() as ApiBody).data.missionaryAgencies as { name: string }[])
+        .map((item) => item.name)
+        .filter((name) => createdNames.has(name))
     }
 
     assert.deepEqual(await names({ search: 'alfa' }), ['Alfa Central'])
@@ -156,5 +204,30 @@ test.group('Missionary agencies - CRUD', (group) => {
     assert.deepEqual(await names({ country: 'brasil', search: 'norte' }), ['Beta Norte'])
     assert.deepEqual(await names({ search: '100%' }), ['Gamma 100%'])
     assert.deepEqual(await names({ search: '%' }), ['Gamma 100%'])
+  })
+
+  test('reaproveita a agência com mesmo nome e cidade em vez de duplicar', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createTestUser()
+    const accessToken = await loginAndGetAccessToken(user.email, password, client)
+    const store = (payload: Record<string, string>) =>
+      client
+        .post(router.builder().make('v1.missionary_agencies.store')!)
+        .header('Authorization', `Bearer ${accessToken}`)
+        .json(payload)
+
+    const first = await store({ name: 'Missão Esperança' })
+    const again = await store({ name: 'MISSAO ESPERANCA' })
+
+    first.assertStatus(200)
+    again.assertStatus(200)
+    assert.equal(
+      (again.body() as ApiBody).data.missionaryAgency.id,
+      (first.body() as ApiBody).data.missionaryAgency.id
+    )
+    const rows = await MissionaryAgency.query().where('user_id', user.id)
+    assert.lengthOf(rows, 1)
   })
 })

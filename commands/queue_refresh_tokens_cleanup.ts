@@ -14,7 +14,7 @@ export default class QueueRefreshTokensCleanup extends BaseCommand {
   static description =
     'Inicia o worker que expurga refresh_tokens expirados/revogados periodicamente'
 
-  static options: CommandOptions = { loadApp: true }
+  static options: CommandOptions = { startApp: true }
 
   async run() {
     const queue = new Queue(QUEUE_NAME, { connection: bullMQConnection })
@@ -36,6 +36,16 @@ export default class QueueRefreshTokensCleanup extends BaseCommand {
 
     worker.on('failed', (job, err) => {
       this.logger.error(`job ${job?.id} falhou: ${err.message}`)
+    })
+
+    this.logger.info(`worker escutando fila "${QUEUE_NAME}" (jobs: ${JOB_NAME})`)
+
+    // NOTE: no SIGTERM (ex.: `docker stop`) o `app.terminate()` dispara este
+    // hook — fecha worker e fila, liberando as conexões com o DragonflyDB;
+    // sem isso o processo não encerra sozinho.
+    this.app.terminating(async () => {
+      await worker.close()
+      await queue.close()
     })
 
     // NOTE: mantém o processo do comando vivo enquanto o worker escuta a fila

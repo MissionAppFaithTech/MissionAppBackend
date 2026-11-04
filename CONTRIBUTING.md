@@ -35,7 +35,9 @@ Antes de começar, recomenda-se ter instalado:
 
 ### Gerenciando a versão do Node.js
 
-O repositório contém um arquivo `.node-version` com a versão exata do Node.js utilizada no projeto (`24.16.0`). Use um gerenciador de versões que leia esse arquivo para garantir que seu ambiente use a versão correta automaticamente ao entrar no diretório do projeto.
+O repositório contém um arquivo `.node-version` com a versão exata do Node.js utilizada no projeto (`24.20.0`). Use um gerenciador de versões que leia esse arquivo para garantir que seu ambiente use a versão correta automaticamente ao entrar no diretório do projeto.
+
+> **Node 24.20 e o `node ace`:** o Node 24.20 passou a rejeitar uma URL que a biblioteca `jsonschema` 1.5.0 (usada internamente pelo Ace) monta ao validar comandos, o que quebrava qualquer `node ace` com `Invalid URL`. O repositório corrige isso com um patch de uma linha em `patches/jsonschema@1.5.0.patch`, aplicado automaticamente pelo `pnpm install` (`patchedDependencies` em `pnpm-workspace.yaml`). Remova o patch quando o `jsonschema` publicar uma versão corrigida.
 
 **Recomendado para todos os sistemas (Linux, macOS e Windows): [mise](https://mise.jdx.dev/)**
 
@@ -125,11 +127,16 @@ docker compose ps
 
 Todos os serviços devem estar com status `healthy` antes de continuar.
 
-### 6. Execute as migrations
+### 6. Execute as migrations e crie os buckets de storage
 
 ```bash
 node ace migration:run
+node ace storage:setup
 ```
+
+O `storage:setup` cria no MinIO os buckets definidos em `S3_PUBLIC_BUCKET` e `S3_PRIVATE_BUCKET` (convenção do ADR-0013) e libera leitura pública apenas no bucket público. É idempotente — pode ser executado quantas vezes quiser.
+
+> **Já tem um `.env` antigo?** Quando novas variáveis entram no `.env.example` (ex.: `DRIVE_DISK`, `S3_PUBLIC_BUCKET` e `S3_PRIVATE_BUCKET`, que substituíram `S3_BUCKET`), a aplicação recusa subir até que o `.env` seja atualizado. Rode `just check-env` para listar o que falta e copie as linhas correspondentes do `.env.example`.
 
 ### 7. Inicie o servidor de desenvolvimento
 
@@ -147,14 +154,17 @@ O repositório inclui um `justfile` com atalhos para os comandos mais usados. Se
 
 ```
 infra
-  just up        # Sobe a infraestrutura de desenvolvimento (PostgreSQL)
-  just down      # Derruba a infraestrutura de desenvolvimento
-  just migrate   # Aplica migrações pendentes e regenera database/schema.ts
+  just up              # Sobe a infraestrutura de desenvolvimento
+  just down            # Derruba a infraestrutura de desenvolvimento
+  just migrate         # Aplica migrações pendentes e regenera database/schema.ts
   ...
 
 dev
-  just dev       # Inicia servidor de desenvolvimento com HMR
-  just ci        # Lint + typecheck (equivalente ao CI)
+  just start           # check-env + up + aguarda a infra + storage-setup + migrate + dev
+  just check-env       # Lista variáveis do .env.example ausentes no .env
+  just storage-setup   # Cria os buckets do MinIO (idempotente)
+  just dev             # Inicia servidor de desenvolvimento com HMR
+  just ci              # Lint + typecheck (equivalente ao CI)
   ...
 ```
 
@@ -232,6 +242,8 @@ O CI rejeitará PRs com erros de lint ou falhas de typecheck.
 - **Listeners** são roteadores: recebem um evento e enfileiram um Job no BullMQ em menos de 1ms. Nenhuma lógica pesada dentro de Listeners.
 - **Jobs** executam o trabalho assíncrono real (indexação, email, compressão) como workers isolados.
 - **Workers** são criados exclusivamente via `node ace make:command` e vivem em `commands/`. Nunca crie `Dockerfiles` separados para workers — a aplicação usa imagem única com múltiplos entrypoints. Veja o [ADR-0015](./docs/architecture/decisions/0015-padrao-imagem-unica-multiplos-entrypoints-para-workers.md).
+- **Comandos Ace que precisam da aplicação** (workers, `storage:setup`) declaram `static options: CommandOptions = { startApp: true }`, conforme a [documentação oficial](https://docs.adonisjs.com/guides/ace/creating-commands). A opção `loadApp`, de versões antigas do AdonisJS, é ignorada no AdonisJS 7. Workers de longa duração registram um `this.app.terminating(...)` que fecha os `Worker`/`Queue` do BullMQ — sem isso o processo não encerra no `SIGTERM` (ex.: `docker stop`).
+- **Storage de arquivos** é acessado só pelo `@adonisjs/drive` (`drive.use(disco)`), nunca pelo SDK da AWS diretamente. Os discos e as variáveis estão em `config/drive.ts`; a explicação completa está na seção [Armazenamento de Arquivos](./README.md#armazenamento-de-arquivos) do README e no [ADR-0008](./docs/architecture/decisions/0008-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md). Como qualquer efeito colateral, operações de storage disparadas por uma requisição passam pelo pipeline evento → listener → job.
 - **Validators** usam VineJS e vivem em `app/validators/`. Nunca valide entrada de usuário no controller ou no service diretamente.
 - **Nunca use `npm install` ou `yarn`** — use exclusivamente `pnpm`. O arquivo `pnpm-lock.yaml` é o lockfile autoritativo.
 
@@ -276,6 +288,8 @@ O projeto usa **Japa** (framework de testes nativo do AdonisJS). Organize os tes
 
 - `tests/unit/` — testes de unidade para Services, Validators e utilitários isolados
 - `tests/functional/` — testes de integração que exercitam a API HTTP end-to-end
+
+Os testes usam a infraestrutura real: PostgreSQL, DragonflyDB, MinIO e Elasticsearch precisam estar no ar (`docker compose up -d`), com as migrations aplicadas e os buckets criados (`node ace storage:setup`). O `.env.test` sobrescreve o `.env`: traz valores fictícios para as variáveis `R2_*` (o R2 nunca é acessado nos testes) e usa `REDIS_DB=1`, um banco lógico do Dragonfly separado do de desenvolvimento (`REDIS_DB=0`). Assim um `node ace queue:workers` aberto durante o desenvolvimento não consome os jobs que os testes inspecionam. Os testes que sobem subprocessos (`node ace ...`) sempre os encerram com `SIGKILL` ao final, mesmo quando falham. O `tests/bootstrap.ts` cria o índice e aquece o Elasticsearch antes da suíte, para que um container recém-iniciado não estoure o timeout de 2s dos testes unitários.
 
 Antes de abrir um PR, confirme que todos os testes passam localmente. O CI executará a suite completa e bloqueará o merge em caso de falha.
 

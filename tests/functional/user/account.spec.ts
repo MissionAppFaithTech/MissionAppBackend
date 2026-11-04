@@ -2,9 +2,12 @@ import { WELCOME_EMAIL_JOB_NAME } from '#constants/welcome_email'
 import { MISSIONARY_INDEXING_JOB_NAME } from '#constants/missionary_search'
 import { emailQueue } from '#queues/email_queue'
 import { searchIndexingQueue } from '#queues/search_indexing_queue'
+import User from '#models/user'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
+import { randomPassword } from '#tests/functional/auth/helpers'
 import { test } from '@japa/runner'
+import { randomBytes } from 'node:crypto'
 import { v7 as uuidv7 } from 'uuid'
 
 /**
@@ -36,6 +39,8 @@ async function findEnqueuedIndexingJob(email: string) {
   )
 }
 
+const SIGNUP_PASSWORD = randomPassword()
+
 test.group('Conta - criação', (group) => {
   group.each.setup(async () => {
     const rollback = await testUtils.db().wrapInGlobalTransaction()
@@ -53,8 +58,8 @@ test.group('Conta - criação', (group) => {
       phoneNumber: '+5511912345678',
       gender: 'MALE',
       email,
-      password: 'password123',
-      passwordConfirmation: 'password123',
+      password: SIGNUP_PASSWORD,
+      passwordConfirmation: SIGNUP_PASSWORD,
     })
 
     response.assertStatus(200)
@@ -72,14 +77,72 @@ test.group('Conta - criação', (group) => {
     assert.isNull(indexingJob)
   })
 
+  test('devolve o usuário com os defaults do banco e o role no JWT', async ({ client, assert }) => {
+    const email = `test_${uuidv7()}@example.com`
+    // NOTE: senha gerada por execução (CSPRNG) — nada fixo no código
+    const password = randomBytes(12).toString('base64url')
+
+    const response = await client.post(router.builder().make('v1.account.store')!).json({
+      fullName: 'Default User',
+      username: `test_${uuidv7().replaceAll('-', '').slice(0, 20)}`,
+      phoneNumber: '+5511912345678',
+      gender: 'FEMALE',
+      email,
+      password,
+      passwordConfirmation: password,
+    })
+
+    response.assertStatus(200)
+    const { user, accessToken } = (
+      response.body() as {
+        data: {
+          user: { role: string; biography: string | null; profilePictureId: string | null }
+          accessToken: string
+        }
+      }
+    ).data
+    assert.equal(user.role, 'SUPPORTER')
+    assert.isNull(user.biography)
+    assert.isNull(user.profilePictureId)
+
+    const claims = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64url').toString('utf8'))
+    assert.equal(claims.role, 'SUPPORTER')
+
+    const job = await findEnqueuedJob(email)
+    assert.equal((job?.data as { role?: string } | undefined)?.role, 'SUPPORTER')
+    await job?.remove()
+  })
+
+  test('header de cliente inválido responde 422 sem criar a conta', async ({ client, assert }) => {
+    const email = `test_${uuidv7()}@example.com`
+    const password = randomBytes(12).toString('base64url')
+
+    const response = await client
+      .post(router.builder().make('v1.account.store')!)
+      .header('x-client-type', 'geladeira')
+      .json({
+        fullName: 'Test User',
+        username: `test_${uuidv7().replaceAll('-', '').slice(0, 20)}`,
+        phoneNumber: '+5511912345678',
+        gender: 'MALE',
+        email,
+        password,
+        passwordConfirmation: password,
+      })
+
+    response.assertStatus(422)
+    assert.isNull(await User.findBy('email', email))
+    assert.isNull(await findEnqueuedJob(email))
+  })
+
   test('rejeita criação sem fullName', async ({ client }) => {
     const response = await client.post(router.builder().make('v1.account.store')!).json({
       username: `test_${uuidv7().replaceAll('-', '').slice(0, 20)}`,
       phoneNumber: '+5511912345678',
       gender: 'MALE',
       email: `test_${uuidv7()}@example.com`,
-      password: 'password123',
-      passwordConfirmation: 'password123',
+      password: SIGNUP_PASSWORD,
+      passwordConfirmation: SIGNUP_PASSWORD,
     })
 
     response.assertStatus(422)

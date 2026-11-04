@@ -1,8 +1,9 @@
 import FaithCommunity from '#models/faith_community'
 import type Missionary from '#models/missionary'
 import type User from '#models/user'
+import { fieldValidationError } from '#utils/field_validation_error'
+import { omitUndefined } from '#utils/omit_undefined'
 import db from '@adonisjs/lucid/services/db'
-import { Exception } from '@adonisjs/core/exceptions'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'
 
 type UpdateMissionaryAboutPayload = {
@@ -28,23 +29,26 @@ export class UpdateMissionaryAboutService {
     if (payload.faithCommunityId) {
       const community = await FaithCommunity.find(payload.faithCommunityId)
       if (!community) {
-        throw new Exception('Comunidade de fé informada não existe', {
-          status: 422,
-          code: 'E_VALIDATION_ERROR',
-        })
+        throw fieldValidationError(
+          'faithCommunityId',
+          'database.exists',
+          'Comunidade de fé informada não existe'
+        )
       }
     }
 
     return db.transaction(async (trx) => {
       missionary.useTransaction(trx)
-      missionary.merge({
-        aboutMe: payload.aboutMe,
-        missionStorySummary: payload.missionStorySummary,
-        originLocation: payload.originLocation,
-        faithCommunityId: payload.faithCommunityId,
-        prayerRequest: payload.prayerRequest,
-        lifeVerse: payload.lifeVerse,
-      })
+      missionary.merge(
+        omitUndefined({
+          aboutMe: payload.aboutMe,
+          missionStorySummary: payload.missionStorySummary,
+          originLocation: payload.originLocation,
+          faithCommunityId: payload.faithCommunityId,
+          prayerRequest: payload.prayerRequest,
+          lifeVerse: payload.lifeVerse,
+        })
+      )
       await missionary.save()
       return missionary
     })

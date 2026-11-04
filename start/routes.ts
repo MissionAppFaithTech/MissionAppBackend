@@ -83,6 +83,9 @@ router
       })
       .use(middleware.auth())
 
+    // NOTE: listagem e detalhe são públicos porque o cadastro de missionário
+    // escolhe agência/comunidade antes de a conta existir; o rate limit por IP
+    // compensa a ausência de auth. Escrita continua exigindo auth.
     router
       .resource('impact-projects', controllers.impactProject.ImpactProjects)
       .apiOnly()
@@ -93,12 +96,22 @@ router
     router
       .resource('missionary-agencies', controllers.missionary.MissionaryAgencies)
       .apiOnly()
-      .use('*', middleware.auth())
+      .use(['index', 'show'], middleware.publicCatalogRateLimit({ catalog: 'missionary_agencies' }))
+      .use(['store', 'update', 'destroy'], middleware.auth())
 
     router
       .resource('faith-communities', controllers.missionary.FaithCommunities)
       .apiOnly()
-      .use('*', middleware.auth())
+      .use(['index', 'show'], middleware.publicCatalogRateLimit({ catalog: 'faith_communities' }))
+      .use(['store', 'update', 'destroy'], middleware.auth())
+
+    // NOTE: perfil público de missionário — anônimo e só leitura (RF 1.4). O rate
+    // limit tem orçamento separado para o servidor do Next que renderiza a página
+    // pública com cache (ADR-0036).
+    router
+      .get('public/missionaries/:username', [controllers.missionary.PublicProfiles, 'show'])
+      .use(middleware.publicProfileRateLimit())
+      .as('public.missionaries.show')
 
     router
       .group(() => {

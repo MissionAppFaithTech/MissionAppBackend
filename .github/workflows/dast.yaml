@@ -5,6 +5,7 @@ on:
   #   - cron: '0 2 * * 1' # toda segunda às 2h contra staging, quando houver staging do projeto disponível
 
 permissions:
+  contents: read
   issues: write # necessário para o ZAP criar issues com findings no repositório
 
 jobs:
@@ -17,10 +18,17 @@ jobs:
 
       - name: Autenticar no staging e obter token JWT
         id: auth
+        # NOTE: credenciais via env e corpo montado pelo jq — interpolar ${{ }} direto no
+        # script permite injeção de shell e quebra o JSON com aspas na senha.
+        env:
+          STAGING_TEST_EMAIL: ${{ secrets.STAGING_TEST_EMAIL }}
+          STAGING_TEST_PASSWORD: ${{ secrets.STAGING_TEST_PASSWORD }}
         run: |
-          TOKEN=$(curl -sf -X POST https://staging.missionapp.com/api/v1/auth/login \
-            -H "Content-Type: application/json" \
-            -d "{\"email\":\"${{ secrets.STAGING_TEST_EMAIL }}\",\"password\":\"${{ secrets.STAGING_TEST_PASSWORD }}\"}" \
+          TOKEN=$(jq -n --arg email "$STAGING_TEST_EMAIL" --arg password "$STAGING_TEST_PASSWORD" \
+            '{email: $email, password: $password}' \
+            | curl -sf -X POST https://staging.missionapp.com/api/v1/auth/login \
+              -H "Content-Type: application/json" \
+              --data-binary @- \
             | jq -r '.token')
           echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> $GITHUB_OUTPUT

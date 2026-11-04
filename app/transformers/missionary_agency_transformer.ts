@@ -14,7 +14,6 @@ export default class MissionaryAgencyTransformer extends BaseTransformer<Mission
       'country',
       'postalCode',
       'website',
-      'userId',
       'createdAt',
     ])
   }

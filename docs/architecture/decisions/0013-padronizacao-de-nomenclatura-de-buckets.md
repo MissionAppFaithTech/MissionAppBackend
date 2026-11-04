@@ -10,7 +10,7 @@
 
 ## Contexto e Problema
 
-O MissionApp Backend utiliza o Amazon S3 como solução de armazenamento de objetos para diferentes categorias de arquivos: fotos de perfil de missionários e pastores, logos e banners de agências missionárias, imagens de posts, documentos de projetos de impacto e campanha, relatórios PDF gerados sob demanda, logs de aplicação e backups de banco de dados.
+O MissionApp Backend utiliza armazenamento de objetos compatível com a API S3 (MinIO em desenvolvimento, conforme o [ADR-0008](./0008-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md); provedor de produção ainda em aberto) para diferentes categorias de arquivos: fotos de perfil de missionários e pastores, logos e banners de agências missionárias, imagens de posts, documentos de projetos de impacto e campanha, relatórios PDF gerados sob demanda, logs de aplicação e backups de banco de dados.
 
 À medida que o projeto cresce e novos colaboradores ingressam, o time de infraestrutura enfrenta um problema crescente de **governança**: sem uma convenção de nomenclatura explícita, cada bucket criado ad hoc resulta em nomes arbitrários (`missionapp-fotos`, `imagens-prod`, `docs-temp-new`, `backup-final2`). Isso gera as seguintes dores operacionais:
 
@@ -224,6 +224,20 @@ Use quando os arquivos **têm data de validade** e devem ser apagados automatica
          <td align="left">1 dia</td>
          <td align="left">Uploads de rascunho em pipelines de testes automatizados.</td>
       </tr>
+      <tr>
+         <td align="left"><code>missionapp-dev-public-assets</code></td>
+         <td align="left">Dev</td>
+         <td align="left">Público</td>
+         <td align="left">Permanente</td>
+         <td align="left">Mídias públicas no MinIO local (<code>S3_PUBLIC_BUCKET</code> do <code>.env.example</code>).</td>
+      </tr>
+      <tr>
+         <td align="left"><code>missionapp-dev-private-docs</code></td>
+         <td align="left">Dev</td>
+         <td align="left">Privado</td>
+         <td align="left">Permanente</td>
+         <td align="left">Arquivos privados no MinIO local (<code>S3_PRIVATE_BUCKET</code> do <code>.env.example</code>).</td>
+      </tr>
    </tbody>
 </table>
 
@@ -283,6 +297,8 @@ flowchart TD
 - **Scripts Terraform e CI/CD mais simples:** Módulos de infraestrutura podem gerar nomes de buckets programaticamente a partir de variáveis (`var.env`, `var.visibility`, `var.purpose`), sem hardcode de nomes arbitrários.
 
 ### Negativas / Riscos
+
+- **Recursos de ciclo de vida dependem do provedor:** As Lifecycle Rules, a classe Glacier e os exemplos de Terraform citados neste ADR são recursos da AWS. Como o provedor de produção ainda não foi definido (ver [ADR-0008](./0008-uso-do-minio-como-emulador-de-storage-em-desenvolvimento.md#storage-em-producao-em-aberto)) e pode ser outro storage S3-compatível, o suporte a expiração automática e a classes de armazenamento frio precisa ser verificado quando o provedor for escolhido. A convenção de nomes vale para qualquer provedor.
 
 - **Nomes mais longos:** `missionapp-prod-private-docs` tem 28 caracteres. O limite da AWS é 63. Para projetos com prefixos organizacionais muito longos, o segmento de propósito pode precisar ser abreviado.
 

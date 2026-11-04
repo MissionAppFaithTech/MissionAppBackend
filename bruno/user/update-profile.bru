@@ -1,0 +1,29 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{base_url}}/api/v1/account/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "fullName": "Usuario Teste",
+    "biography": null
+  }
+}
+
+docs {
+  Atualiza o perfil do usuário autenticado. Atualização parcial: campos
+  omitidos não são alterados. Apenas `biography` aceita `null` (ou string
+  vazia) para ser limpa; `null` em `fullName`, `username` ou
+  `profilePictureId` é ignorado.
+}

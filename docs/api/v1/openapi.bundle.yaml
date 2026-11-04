@@ -16,12 +16,6 @@ tags:
     description: Conta do usuário — cadastro, leitura de perfil, troca de senha. Mesmo quando o atributo é sensível (senha), a operação é sobre o recurso User.
   - name: missionary
     description: Perfil estendido de missionários — informações públicas, identidade e endereço de atuação.
-  - name: media_asset
-    description: Upload direto ao storage via URL pré-assinada e acompanhamento do processamento (validação e compressão em background) dos arquivos.
-  - name: impact_project
-    description: Projeto de impacto do missionário — vitrine principal da causa, com capa e vídeo opcional. Um por missionário.
-  - name: post
-    description: Postagens de missionários para o feed, com galeria de imagens sujeita ao limite rotativo de 50 imagens por missionário.
 paths:
   /auth/login:
     post:
@@ -29,11 +23,13 @@ paths:
       tags:
         - auth
       summary: Login
-      description: Autentica com login (email) e senha. Emite um access token JWT (15 min) e um refresh token opaco. Ambos sempre voltam no corpo da resposta — não há entrega via cookie nesta API, já que o consumidor web é um BFF (Next.js), não um browser. Ver ADR-0023, seção "Entrega de Tokens".
+      description: Autentica com login (email) e senha. Emite um access token JWT (15 min) e um refresh token opaco. Ambos sempre voltam no corpo da resposta — não há entrega via cookie nesta API, já que o consumidor web é um BFF (Next.js), não um browser. Ver ADR-0023, seção "Entrega de Tokens". Com `x-device-id`, há uma sessão por aparelho (ADR-0038) — as sessões ativas do mesmo usuário naquele aparelho são encerradas e seus access tokens deixam de valer. Sem o header, cada login abre uma sessão nova.
       security: []
       parameters:
         - $ref: '#/components/parameters/ClientType'
         - $ref: '#/components/parameters/DeviceName'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceKind'
       requestBody:
         required: true
         content:
@@ -48,19 +44,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '400':
-          description: Credenciais inválidas.
+          description: >-
+            Credenciais inválidas. Códigos: `E_INVALID_CREDENTIALS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
         '423':
-          description: Conta temporariamente bloqueada por excesso de tentativas de login falhadas. A mensagem informa quantos segundos faltam para o desbloqueio.
+          description: >-
+            Conta temporariamente bloqueada por excesso de tentativas de login
+            falhadas. A mensagem informa quantos segundos faltam para o
+            desbloqueio. Códigos: `E_ACCOUNT_LOCKED`.
           content:
             application/json:
               schema:
@@ -87,7 +89,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -114,13 +118,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Token inexistente ou expirado.
+          description: >-
+            Token inexistente ou expirado. Códigos:
+            `E_INVALID_PASSWORD_RESET_TOKEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -131,7 +139,7 @@ paths:
       tags:
         - auth
       summary: Renovação de access token
-      description: Rotaciona o refresh token e emite um novo access token. O refresh token vai sempre no corpo — não há mais fallback via cookie. Reutilizar um refresh token já rotacionado invalida toda a família de tokens da sessão (detecção de roubo — ver ADR-0023). O TTL do novo refresh token é recalculado a partir de agora (sliding window).
+      description: Rotaciona o refresh token e emite um novo access token. O refresh token vai sempre no corpo — não há mais fallback via cookie. A rotação é serializada por token e idempotente dentro da janela de tolerância (ADR-0035, padrão 30 s) — reapresentar um refresh token já rotacionado, do mesmo dispositivo (x-client-type, x-device-name e, quando os dois lados o têm, x-device-id), devolve o refresh token atual da sessão e um novo access token. Fora da janela, de outro dispositivo ou sem o registro da rotação, o reuso é tratado como roubo e invalida toda a família (ADR-0023). Reapresentar um token de sessão já encerrada (logout, troca de senha, revogação) responde 401 sem efeito. O TTL do novo refresh token é recalculado a partir de agora (sliding window).
       security: []
       requestBody:
         required: true
@@ -147,7 +155,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
-          description: Refresh token ausente, inválido, expirado ou já revogado (reuso detectado — toda a família foi invalidada).
+          description: >-
+            Refresh token inválido, expirado, de sessão encerrada ou reusado
+            fora da janela de tolerância (`E_INVALID_REFRESH_TOKEN`; no último
+            caso, toda a família foi invalidada). Códigos:
+            `E_INVALID_REFRESH_TOKEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '503':
+          description: >-
+            Não foi possível registrar a rotação na janela de tolerância
+            (`E_REFRESH_UNAVAILABLE`). Nada foi alterado; tente de novo após
+            `Retry-After`. Códigos: `E_REFRESH_UNAVAILABLE`.
           content:
             application/json:
               schema:
@@ -179,11 +207,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '422':
-          description: Corpo da requisição inválido (refreshToken ausente).
+          description: >-
+            Corpo da requisição inválido (refreshToken ausente). Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /auth/sessions:
     get:
       operationId: authSessionsIndex
@@ -206,7 +236,9 @@ paths:
                     items:
                       $ref: '#/components/schemas/SessionSummary'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -227,7 +259,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -256,23 +290,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Sessão não encontrada, ou pertence a outro usuário.
+          description: >-
+            Sessão não encontrada, ou pertence a outro usuário. Códigos:
+            `E_SESSION_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: familyId ausente ou não é um UUID válido.
+          description: >-
+            familyId ausente ou não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /accounts:
     post:
       operationId: accountSignup
@@ -283,6 +323,9 @@ paths:
       security: []
       parameters:
         - $ref: '#/components/parameters/ClientType'
+        - $ref: '#/components/parameters/DeviceName'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceKind'
       requestBody:
         required: true
         content:
@@ -297,7 +340,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '422':
-          description: 'Erro de validação (ex: email já em uso, senhas não conferem).'
+          description: >-
+            Erro de validação (ex: email já em uso, senhas não conferem).
+            Códigos: `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -327,11 +372,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsernameAvailabilityResponse'
         '422':
-          description: Nome de usuário fora do formato esperado.
+          description: >-
+            Nome de usuário fora do formato esperado. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de requisições atingido; veja `Retry-After`. Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /account/profile:
     get:
       operationId: accountProfileShow
@@ -346,12 +401,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/UserSummary'
+                $ref: '#/components/schemas/AccountProfileResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
@@ -376,8 +430,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação dos campos de perfil.
+          description: >-
+            Erro de validação dos campos de perfil. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -405,13 +469,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Senha atual incorreta, ou nova senha/confirmação inválidas.
+          description: >-
+            Senha atual incorreta, ou nova senha/confirmação inválidas. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -437,506 +505,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MediaAssetResponse'
-  /media-assets/uploads:
-    post:
-      operationId: mediaUploadStore
-      tags:
-        - media_asset
-      summary: Solicita URL pré-assinada para upload direto ao storage
-      description: 'Reserva um media asset em `PENDING_UPLOAD` e devolve uma URL pré-assinada (validade de 15 min) para o cliente enviar o arquivo direto ao storage com `PUT`. A chave no bucket é gerada pelo servidor. Os headers `Content-Type` e `Content-Length` fazem parte da assinatura: o envio precisa usar exatamente o tipo e o tamanho declarados, senão o storage rejeita. Depois do envio, o cliente confirma em `POST /media-assets/{id}/completion`.'
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RequestMediaUploadRequest'
-      responses:
-        '200':
-          description: Asset reservado e URL de upload emitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaUploadResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação, ou mime type/tamanho não permitido para a finalidade informada (`E_MEDIA_UPLOAD_NOT_ALLOWED`).
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
-  /media-assets/{id}:
-    get:
-      operationId: mediaAssetShow
-      tags:
-        - media_asset
-      summary: Exibe um media asset enviado pelo usuário autenticado
-      description: 'Usado para acompanhar o processamento após a confirmação do upload: `PROCESSING` enquanto o worker valida/comprime, `READY` quando a `url` pública já está disponível e `FAILED` quando o conteúdo foi rejeitado.'
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/MediaAssetId'
-      responses:
-        '200':
-          description: Media asset encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaAssetDetailResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: O arquivo não foi enviado pelo usuário autenticado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Media asset não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /media-assets/{id}/completion:
-    post:
-      operationId: mediaUploadCompletionStore
-      tags:
-        - media_asset
-      summary: Confirma o upload e dispara validação e compressão
-      description: 'Move o asset de `PENDING_UPLOAD` para `PROCESSING` e enfileira o processamento no worker. Imagens são redimensionadas (capa: até 1920px; post: até 1600px no maior lado), convertidas para WebP e têm os metadados (EXIF/GPS) removidos. Vídeos são apenas validados. A partir de `PROCESSING` o asset já pode ser vinculado a um projeto ou post; a `url` fica disponível quando o status vira `READY`.'
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/MediaAssetId'
-      responses:
-        '202':
-          description: Upload confirmado; processamento enfileirado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaAssetDetailResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: O arquivo não foi enviado pelo usuário autenticado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Media asset não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: O upload deste asset já foi confirmado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /impact-projects:
-    get:
-      operationId: impactProjectIndex
-      tags:
-        - impact_project
-      summary: Lista projetos de impacto (paginado)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: search
-          in: query
-          required: false
-          description: Busca parcial (sem diferenciar maiúsculas) pelo título do projeto.
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-        - name: missionaryId
-          in: query
-          required: false
-          description: Filtra pelo missionário dono do projeto.
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/PerPage'
-      responses:
-        '200':
-          description: Página de projetos de impacto, do mais recente para o mais antigo.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImpactProjectsResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      operationId: impactProjectStore
-      tags:
-        - impact_project
-      summary: Cria o projeto de impacto do missionário
-      description: Cada missionário tem no máximo um projeto. Missionários criam o próprio projeto; ADMIN informa `missionaryId`. A capa (e o vídeo, se houver) deve ter sido enviada pelo próprio usuário autenticado via `POST /media-assets/uploads` e ter o upload confirmado.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateImpactProjectRequest'
-      responses:
-        '200':
-          description: Projeto de impacto criado com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImpactProjectResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Perfil missionário não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Missionário já possui um projeto de impacto.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: 'Erro de validação, ou arquivo inválido para vínculo (`E_MEDIA_ASSET_NOT_ATTACHABLE`: de outro usuário, com outra finalidade, upload não confirmado ou já vinculado).'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-  /impact-projects/{id}:
-    get:
-      operationId: impactProjectShow
-      tags:
-        - impact_project
-      summary: Exibe um projeto de impacto
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ImpactProjectId'
-      responses:
-        '200':
-          description: Projeto de impacto encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImpactProjectResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Projeto de impacto não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    patch:
-      operationId: impactProjectUpdate
-      tags:
-        - impact_project
-      summary: Atualiza um projeto de impacto
-      description: Ao trocar a capa ou o vídeo (ou remover o vídeo com `null`), o arquivo anterior é removido do storage de forma assíncrona.
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ImpactProjectId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateImpactProjectRequest'
-      responses:
-        '200':
-          description: Projeto de impacto atualizado com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImpactProjectResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Usuário sem permissão para alterar o projeto.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Projeto de impacto não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Erro de validação ou arquivo inválido para vínculo.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-    delete:
-      operationId: impactProjectDestroy
-      tags:
-        - impact_project
-      summary: Remove um projeto de impacto
-      description: Capa e vídeo do projeto são removidos do storage de forma assíncrona.
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ImpactProjectId'
-      responses:
-        '200':
-          description: Projeto de impacto removido com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Usuário sem permissão para remover o projeto.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Projeto de impacto não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /posts:
-    get:
-      operationId: postIndex
-      tags:
-        - post
-      summary: Lista postagens (paginado, mais recentes primeiro)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: missionaryId
-          in: query
-          required: false
-          description: Filtra pelas postagens de um missionário.
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/PerPage'
-      responses:
-        '200':
-          description: Página de postagens.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostsResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      operationId: postStore
-      tags:
-        - post
-      summary: Cria uma postagem
-      description: Apenas missionários (ou ADMIN informando `missionaryId`) publicam. As imagens devem ter finalidade `POST_IMAGE`, ter sido enviadas pelo próprio usuário e ter o upload confirmado. **Limite rotativo:** cada missionário mantém no máximo 50 imagens somando todas as postagens. Ao ultrapassar, as imagens vinculadas há mais tempo são desvinculadas dos posts (o texto permanece) e os arquivos são removidos do storage de forma assíncrona.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePostRequest'
-      responses:
-        '200':
-          description: Postagem criada com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Usuário não é missionário, ou ADMIN sem `missionaryId`.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Perfil missionário não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Erro de validação, ou imagem inválida para vínculo (`E_MEDIA_ASSET_NOT_ATTACHABLE`).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-  /posts/{id}:
-    get:
-      operationId: postShow
-      tags:
-        - post
-      summary: Exibe uma postagem
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PostId'
-      responses:
-        '200':
-          description: Postagem encontrada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Postagem não encontrada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    patch:
-      operationId: postUpdate
-      tags:
-        - post
-      summary: Atualiza uma postagem
-      description: 'O slug é imutável. Quando `imageAssetIds` é enviado, ele substitui a galeria inteira na ordem informada: imagens ausentes da lista são removidas do storage; imagens mantidas preservam a antiguidade para fins do limite rotativo de 50 imagens por missionário.'
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PostId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePostRequest'
-      responses:
-        '200':
-          description: Postagem atualizada com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Usuário sem permissão para alterar a postagem.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Postagem não encontrada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Erro de validação ou imagem inválida para vínculo.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-    delete:
-      operationId: postDestroy
-      tags:
-        - post
-      summary: Remove uma postagem
-      description: As imagens da postagem são removidas do storage de forma assíncrona.
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PostId'
-      responses:
-        '200':
-          description: Postagem removida com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Usuário sem permissão para remover a postagem.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Postagem não encontrada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /missionaries/about:
     patch:
       operationId: missionaryAboutUpdate
@@ -958,12 +541,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
-        '403':
-          description: Perfil sem permissão para editar dados missionários.
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Perfil sem permissão para editar dados missionários. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/profile:
     post:
       operationId: missionaryProfileStore
@@ -992,31 +600,41 @@ paths:
                   message:
                     type: string
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Role sem permissão para conversão.
+          description: >-
+            Role sem permissão para conversão. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária informada não encontrada.
+          description: >-
+            Agência missionária informada não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
-          description: Usuário já possui perfil missionário.
+          description: >-
+            Usuário já possui perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_ALREADY_EXISTS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1041,6 +659,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/identity:
     patch:
       operationId: missionaryIdentityUpdate
@@ -1062,6 +711,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/work-address:
     patch:
       operationId: missionaryWorkAddressUpdate
@@ -1083,6 +763,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem papel de missionário (ou administrador) para editar este
+            perfil. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário missionário ainda sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/about:
     patch:
       operationId: missionaryAdminAboutUpdate
@@ -1106,6 +817,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/profile:
     patch:
       operationId: missionaryAdminProfileUpdate
@@ -1129,6 +871,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/identity:
     patch:
       operationId: missionaryAdminIdentityUpdate
@@ -1152,6 +925,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionaries/{id}/work-address:
     patch:
       operationId: missionaryAdminWorkAddressUpdate
@@ -1175,14 +979,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryWorkAddressResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Sem permissão para editar o perfil missionário informado. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /missionary-agencies:
     get:
       operationId: missionaryAgencyIndex
       tags:
         - missionary
       summary: Lista agências missionárias
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher agências missionárias antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - name: search
           in: query
@@ -1223,8 +1061,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgenciesResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -1250,13 +1102,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1267,8 +1123,11 @@ paths:
       tags:
         - missionary
       summary: Exibe uma agência missionária
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher agências missionárias antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - $ref: '#/components/parameters/MissionaryAgencyId'
       responses:
@@ -1278,14 +1137,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '404':
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Agência missionária não encontrada.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -1313,25 +1188,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionaryAgencyResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para atualizar a agência.
+          description: >-
+            Usuário sem permissão para atualizar a agência. Códigos:
+            `E_MISSIONARY_AGENCY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1353,31 +1236,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a agência.
+          description: >-
+            Usuário sem permissão para remover a agência. Códigos:
+            `E_MISSIONARY_AGENCY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Agência missionária não encontrada.
+          description: >-
+            Agência missionária não encontrada. Códigos:
+            `E_MISSIONARY_AGENCY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            Agência com missionários vinculados; nada foi excluído. Códigos:
+            `E_MISSIONARY_AGENCY_IN_USE`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /faith-communities:
     get:
       operationId: faithCommunityIndex
       tags:
         - missionary
       summary: Lista comunidades de fé
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher comunidades de fé antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - name: search
           in: query
@@ -1418,8 +1325,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunitiesResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -1445,13 +1366,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1462,8 +1387,11 @@ paths:
       tags:
         - missionary
       summary: Exibe uma comunidade de fé
-      security:
-        - bearerAuth: []
+      description: >-
+        Consulta pública (sem autenticação) usada pelo cadastro de missionário
+        para escolher comunidades de fé antes de a conta existir. Limitada a 20
+        requisições por janela de 60 segundos por IP.
+      security: []
       parameters:
         - $ref: '#/components/parameters/FaithCommunityId'
       responses:
@@ -1473,14 +1401,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
-        '401':
-          description: Access token ausente, inválido ou revogado.
+        '404':
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Comunidade de fé não encontrada.
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas por IP excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -1508,25 +1452,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/FaithCommunityResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para atualizar a comunidade.
+          description: >-
+            Usuário sem permissão para atualizar a comunidade. Códigos:
+            `E_FAITH_COMMUNITY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Erro de validação do corpo da requisição.
+          description: >-
+            Erro de validação do corpo da requisição. Códigos:
+            `E_VALIDATION_ERROR`.
           content:
             application/json:
               schema:
@@ -1548,19 +1500,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
-          description: Access token ausente, inválido ou revogado.
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Usuário sem permissão para remover a comunidade.
+          description: >-
+            Usuário sem permissão para remover a comunidade. Códigos:
+            `E_FAITH_COMMUNITY_FORBIDDEN`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Comunidade de fé não encontrada.
+          description: >-
+            Comunidade de fé não encontrada. Códigos:
+            `E_FAITH_COMMUNITY_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação da requisição. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /public/missionaries/{username}:
+    get:
+      operationId: publicMissionaryProfileShow
+      tags:
+        - missionary
+      summary: Perfil público de missionário
+      description: >-
+        Consulta anônima, só leitura (RF 1.4, RF 10). Devolve apenas os campos
+        públicos aprovados (ADR-0036): identificação, agência, comunidade de fé,
+        aba Sobre, local de atuação (cidade/estado/país), contadores e contato
+        público. Só missionários com perfil aprovado e conta ativa são visíveis;
+        os demais respondem o mesmo 404. Rate limit de 60 consultas por minuto
+        por IP; o servidor do BFF sem IP de usuário (renderização pública com
+        cache) tem orçamento próprio de 600 por minuto.
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username do missionário (maiúsculas são aceitas e normalizadas).
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[A-Za-z0-9_]+$'
+      responses:
+        '200':
+          description: Perfil público encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicMissionaryProfileResponse'
+        '404':
+          description: >-
+            Perfil inexistente ou não público
+            (`E_MISSIONARY_PROFILE_NOT_FOUND`). Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Username com formato inválido (`E_VALIDATION_ERROR`). Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas excedido (`E_TOO_MANY_REQUESTS`). Códigos:
+            `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
           content:
             application/json:
               schema:
@@ -1573,6 +1601,27 @@ components:
       bearerFormat: JWT
       description: Access token JWT de curta duração (15 min), emitido no login/refresh.
   parameters:
+    CursorParam:
+      name: cursor
+      in: query
+      required: false
+      description: >-
+        Cursor opaco da próxima página (`meta.nextCursor` da resposta anterior).
+        Ausente = primeira página. Cursor malformado responde 422 `E_INVALID_CURSOR`
+        (ADR-0033).
+      schema:
+        type: string
+        maxLength: 512
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      description: Itens por página; padrão 20, máximo 20 (NF 2.3, ADR-0033).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 20
+        default: 20
     ClientType:
       name: x-client-type
       in: header
@@ -1590,44 +1639,28 @@ components:
       schema:
         type: string
         maxLength: 120
-    MediaAssetId:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-    Page:
-      name: page
-      in: query
+    DeviceId:
+      name: x-device-id
+      in: header
       required: false
+      description: 'Identificador aleatório e estável do aparelho (ex.: cookie de dispositivo do BFF). Só o hash SHA-256 é guardado. No login, encerra as sessões ativas do mesmo usuário naquele aparelho (ADR-0038). No refresh, quando ausente, vale o do token anterior.'
       schema:
-        type: integer
-        minimum: 1
-        default: 1
-    PerPage:
-      name: perPage
-      in: query
+        type: string
+        minLength: 16
+        maxLength: 128
+        pattern: ^[\w-]+$
+    DeviceKind:
+      name: x-device-kind
+      in: header
       required: false
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
-    ImpactProjectId:
-      name: id
-      in: path
-      required: true
+      description: Tipo do aparelho, exibido em `GET /auth/sessions` (ADR-0038). Ausente no login vira `unknown`; no refresh, vale o do token anterior.
       schema:
         type: string
-        format: uuid
-    PostId:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+        enum:
+          - desktop
+          - mobile
+          - tablet
+          - unknown
     MissionaryId:
       name: id
       in: path
@@ -1650,6 +1683,19 @@ components:
         type: string
         format: uuid
   schemas:
+    CursorPaginationMeta:
+      type: object
+      description: >-
+        Metadados de listas paginadas por cursor (ADR-0033). Sem `total`: contagens
+        exibidas vêm de contadores desnormalizados no recurso pai.
+      required: [nextCursor, hasMore]
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor da próxima página; `null` na última.
+        hasMore:
+          type: boolean
     LoginRequest:
       type: object
       required:
@@ -1672,9 +1718,23 @@ components:
           format: uuid
         fullName:
           type: string
+        username:
+          type: string
         email:
           type: string
           format: email
+        phoneNumber:
+          type: string
+          description: E.164
+        biography:
+          type: [string, 'null']
+        profilePictureId:
+          type: [string, 'null']
+          format: uuid
+        role:
+          type: string
+          enum: [ADMIN, MISSIONARY, SUPPORTER]
+          description: Cadastro público sempre cria SUPPORTER.
         createdAt:
           type: string
           format: date-time
@@ -1697,23 +1757,58 @@ components:
               description: Token opaco — sempre presente, para qualquer cliente.
     ErrorResponse:
       type: object
+      description: >-
+        Envelope único de erro (ADR-0034), igual em todos os ambientes. Clientes
+        decidem pelo `code` (estável) e pelo status; `message` é só para humanos.
+      required: [message, code]
       properties:
         message:
           type: string
-    ValidationErrorResponse:
-      type: object
-      properties:
+          description: Texto em pt-BR para exibir ao usuário.
+          example: Agência missionária não encontrada
+        code:
+          type: string
+          pattern: '^E_[A-Z0-9_]+$'
+          description: >-
+            Identificador estável do erro. Cada resposta de erro documenta os
+            códigos possíveis daquela operação ("Códigos: …"). Além deles,
+            qualquer operação pode responder 500 `E_INTERNAL_SERVER_ERROR` e,
+            com corpo, os erros do body parser (400 `E_BAD_REQUEST` para JSON
+            malformado, 413 `E_REQUEST_ENTITY_TOO_LARGE`, 415
+            `E_ENCODING_UNSUPPORTED`, 400 `E_REQUEST_ABORTED`). Rotas
+            inexistentes respondem 404 `E_ROUTE_NOT_FOUND`. Renomear um code é
+            breaking change.
+          example: E_MISSIONARY_AGENCY_NOT_FOUND
         errors:
           type: array
+          description: Só em erros de validação (422), um item por campo.
           items:
             type: object
+            required: [field, rule, message]
             properties:
-              message:
+              field:
                 type: string
               rule:
                 type: string
-              field:
+              message:
                 type: string
+        meta:
+          type: object
+          description: Dados estruturados para o cliente reagir.
+          properties:
+            retryAfterSeconds:
+              type: integer
+              minimum: 1
+              description: Segundos até poder tentar de novo (423 e 429; igual ao header Retry-After).
+    ValidationErrorResponse:
+      description: >-
+        Envelope de erro de validação (422). `errors` traz um item por campo,
+        tanto na validação de esquema (VineJS) quanto nas regras verificadas no
+        service (ex.: username já em uso, `database.unique`; comunidade de fé ou
+        foto inexistente, `database.exists`). Só um corpo que não é objeto JSON
+        responde sem `errors`.
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
     ForgotPasswordRequest:
       type: object
       required:
@@ -1766,6 +1861,14 @@ components:
           type:
             - string
             - 'null'
+        deviceKind:
+          type: string
+          enum:
+            - desktop
+            - mobile
+            - tablet
+            - unknown
+          description: Tipo do aparelho (`x-device-kind`); `unknown` quando não informado.
         ipAddress:
           type:
             - string
@@ -1778,6 +1881,11 @@ components:
         createdAt:
           type: string
           format: date-time
+          description: Emissão do refresh token atual (última rotação).
+        startedAt:
+          type: string
+          format: date-time
+          description: Início da sessão (primeiro token da família).
         current:
           type: boolean
           description: Se é a sessão do access token usado nesta requisição.
@@ -1823,9 +1931,13 @@ components:
               type: array
               items:
                 type: string
-              description: Até 3 variações livres quando available é false; caso contrário, retorna um array vazio.
+              description: Até 3 variações livres, presente só quando available é false.
     UpdateProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados. Apenas
+        `biography` aceita `null` (ou string vazia) para ser limpo; `null` em
+        `fullName`, `username` ou `profilePictureId` é ignorado.
       properties:
         fullName:
           type: string
@@ -1837,11 +1949,53 @@ components:
           maxLength: 32
           pattern: ^[a-z0-9_]+$
         biography:
-          type: string
-          maxLength: 200
+          type:
+            - string
+            - 'null'
+          maxLength: 70
         profilePictureId:
           type: string
           format: uuid
+    AccountProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserSummary'
+            missionary:
+              type: [object, 'null']
+              description: Perfil missionário do usuário; null quando ele não é missionário.
+            workAddress:
+              type: [object, 'null']
+              description: Endereço de atuação do missionário; null quando não cadastrado.
+            missionaryAgency:
+              description: >-
+                Agência missionária vinculada (id e nome), para exibir o nome sem
+                consultar o catálogo público, que tem rate limit por IP. Null
+                quando o usuário não é missionário.
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+            faithCommunity:
+              description: >-
+                Comunidade de fé vinculada (id e nome). Null quando o usuário não
+                é missionário ou não informou comunidade.
+              oneOf:
+                - $ref: '#/components/schemas/CatalogReference'
+                - type: 'null'
+
+    CatalogReference:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
     UserProfileResponse:
       type: object
       properties:
@@ -1884,369 +2038,54 @@ components:
           maxLength: 255
         fileKey:
           type: string
-          maxLength: 1024
+          maxLength: 255
         mimeType:
           type: string
           maxLength: 255
         fileSizeBytes:
           type: integer
           minimum: 1
+          maximum: 2147483647
     MediaAssetResponse:
       type: object
       properties:
         data:
           type: object
-    RequestMediaUploadRequest:
-      type: object
-      required:
-        - purpose
-        - mimeType
-        - fileSizeBytes
-      properties:
-        purpose:
-          type: string
-          enum:
-            - IMPACT_PROJECT_COVER
-            - IMPACT_PROJECT_VIDEO
-            - POST_IMAGE
-          description: Finalidade do arquivo. Imagens (`IMPACT_PROJECT_COVER`, `POST_IMAGE`) aceitam image/jpeg, image/png e image/webp até 10 MB; `IMPACT_PROJECT_VIDEO` aceita video/mp4, video/quicktime e video/webm até 200 MB.
-        mimeType:
-          type: string
-          maxLength: 255
-        fileSizeBytes:
-          type: integer
-          minimum: 1
-    MediaAsset:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        provider:
-          type: string
-          enum:
-            - S3
-            - R2
-            - GCS
-            - AZURE
-        bucket:
-          type: string
-        fileKey:
-          type: string
-        mimeType:
-          type: string
-        fileSizeBytes:
-          type: integer
-        purpose:
-          type:
-            - string
-            - 'null'
-          enum:
-            - IMPACT_PROJECT_COVER
-            - IMPACT_PROJECT_VIDEO
-            - POST_IMAGE
-            - null
-        status:
-          type: string
-          enum:
-            - PENDING_UPLOAD
-            - PROCESSING
-            - READY
-            - FAILED
-        url:
-          type:
-            - string
-            - 'null'
-          format: uri
-          description: URL pública do arquivo; `null` enquanto o status não for `READY`.
-        createdAt:
-          type: string
-          format: date-time
-    MediaUploadResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            mediaAsset:
-              $ref: '#/components/schemas/MediaAsset'
-            upload:
-              type: object
-              properties:
-                url:
-                  type: string
-                  format: uri
-                method:
-                  type: string
-                  enum:
-                    - PUT
-                headers:
-                  type: object
-                  description: Headers que devem ser enviados exatamente como estão no PUT.
-                  properties:
-                    Content-Type:
-                      type: string
-                    Content-Length:
-                      type: string
-                expiresAt:
-                  type: string
-                  format: date-time
-    MediaAssetDetailResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            mediaAsset:
-              $ref: '#/components/schemas/MediaAsset'
-    ImpactProject:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        title:
-          type: string
-        description:
-          type: string
-        missionaryId:
-          type: string
-          format: uuid
-        coverImageAssetId:
-          type: string
-          format: uuid
-        videoAssetId:
-          type:
-            - string
-            - 'null'
-          format: uuid
-        coverImage:
-          $ref: '#/components/schemas/MediaAsset'
-        video:
-          oneOf:
-            - $ref: '#/components/schemas/MediaAsset'
-            - type: 'null'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    PaginationMetadata:
-      type: object
-      description: Metadados de paginação do Lucid devolvidos junto de listagens paginadas.
-      properties:
-        total:
-          type: integer
-        perPage:
-          type: integer
-        currentPage:
-          type: integer
-        lastPage:
-          type: integer
-        firstPage:
-          type: integer
-        firstPageUrl:
-          type: string
-        lastPageUrl:
-          type: string
-        nextPageUrl:
-          type:
-            - string
-            - 'null'
-        previousPageUrl:
-          type:
-            - string
-            - 'null'
-    ImpactProjectsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ImpactProject'
-        metadata:
-          $ref: '#/components/schemas/PaginationMetadata'
-    CreateImpactProjectRequest:
-      type: object
-      required:
-        - title
-        - description
-        - coverImageAssetId
-      properties:
-        missionaryId:
-          type: string
-          format: uuid
-          description: Obrigatório apenas para ADMIN; missionários criam o próprio projeto.
-        title:
-          type: string
-          minLength: 1
-          maxLength: 255
-        description:
-          type: string
-          minLength: 1
-          maxLength: 10000
-        coverImageAssetId:
-          type: string
-          format: uuid
-          description: Asset com finalidade `IMPACT_PROJECT_COVER`.
-        videoAssetId:
-          type: string
-          format: uuid
-          description: Asset com finalidade `IMPACT_PROJECT_VIDEO`.
-    ImpactProjectResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            impactProject:
-              $ref: '#/components/schemas/ImpactProject'
-    UpdateImpactProjectRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 255
-        description:
-          type: string
-          minLength: 1
-          maxLength: 10000
-        coverImageAssetId:
-          type: string
-          format: uuid
-        videoAssetId:
-          type:
-            - string
-            - 'null'
-          format: uuid
-          description: '`null` remove o vídeo do projeto.'
-    PostImage:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        order:
-          type: integer
-          minimum: 0
-        imageAssetId:
-          type: string
-          format: uuid
-        image:
-          $ref: '#/components/schemas/MediaAsset'
-        createdAt:
-          type: string
-          format: date-time
-    Post:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        content:
-          type: string
-        highlightLink:
-          type:
-            - string
-            - 'null'
-          format: uri
-        slug:
-          type: string
-        missionaryId:
-          type: string
-          format: uuid
-        images:
-          type: array
-          items:
-            $ref: '#/components/schemas/PostImage'
-        createdAt:
-          type: string
-          format: date-time
-    PostsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Post'
-        metadata:
-          $ref: '#/components/schemas/PaginationMetadata'
-    CreatePostRequest:
-      type: object
-      required:
-        - content
-      properties:
-        missionaryId:
-          type: string
-          format: uuid
-          description: Obrigatório apenas para ADMIN; missionários publicam em nome próprio.
-        content:
-          type: string
-          minLength: 1
-          maxLength: 5000
-        highlightLink:
-          type: string
-          format: uri
-          maxLength: 255
-        imageAssetIds:
-          type: array
-          maxItems: 50
-          uniqueItems: true
-          description: Ids de assets `POST_IMAGE`, na ordem de exibição da galeria.
-          items:
-            type: string
-            format: uuid
-    PostResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            post:
-              $ref: '#/components/schemas/Post'
-    UpdatePostRequest:
-      type: object
-      properties:
-        content:
-          type: string
-          minLength: 1
-          maxLength: 5000
-        highlightLink:
-          type:
-            - string
-            - 'null'
-          format: uri
-          maxLength: 255
-        imageAssetIds:
-          type: array
-          maxItems: 50
-          uniqueItems: true
-          description: Substitui a galeria inteira, na ordem informada.
-          items:
-            type: string
-            format: uuid
     UpdateMissionaryAboutRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         aboutMe:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
         missionStorySummary:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
         originLocation:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 255
         faithCommunityId:
-          type: string
+          type:
+            - string
+            - 'null'
           format: uuid
         prayerRequest:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
         lifeVerse:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 255
     MissionaryResponse:
       type: object
@@ -2263,15 +2102,27 @@ components:
           format: uuid
     UpdateMissionaryProfileRequest:
       type: object
+      description: >-
+        Atualização parcial: campos omitidos não são alterados; `null` ou string
+        vazia limpa o campo.
       properties:
         publicEmail:
-          type: string
+          type:
+            - string
+            - 'null'
           format: email
         publicPhone:
-          type: string
+          type:
+            - string
+            - 'null'
           example: '+5511912345678'
+        publicPhoneIsWhatsapp:
+          type: boolean
+          description: Indica se o telefone público aceita WhatsApp; o perfil só oferece WhatsApp quando true.
         donationMessage:
-          type: string
+          type:
+            - string
+            - 'null'
           maxLength: 5000
     UpdateMissionaryIdentityRequest:
       type: object
@@ -2329,41 +2180,30 @@ components:
             - string
             - 'null'
         addressLine1:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         addressLine2:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         city:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         state:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         country:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         postalCode:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         website:
-          type:
-            - string
-            - 'null'
-        userId:
-          type:
-            - string
-            - 'null'
-          format: uuid
+          type: [string, 'null']
         createdAt:
           type: string
           format: date-time
+    MissionaryAgencyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            missionaryAgency:
+              $ref: '#/components/schemas/MissionaryAgency'
     MissionaryAgenciesResponse:
       type: object
       properties:
@@ -2385,7 +2225,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\\+[1-9]\\d{1,14}$
+          pattern: ^\+[1-9]\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -2414,14 +2254,6 @@ components:
           type: string
           format: uri
           maxLength: 255
-    MissionaryAgencyResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            missionaryAgency:
-              $ref: '#/components/schemas/MissionaryAgency'
     UpdateMissionaryAgencyRequest:
       type: object
       properties:
@@ -2431,7 +2263,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\\+[1-9]\\d{1,14}$
+          pattern: ^\+[1-9]\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -2469,45 +2301,32 @@ components:
         name:
           type: string
         phoneNumber:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         addressLine1:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         addressLine2:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         city:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         state:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         country:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         postalCode:
-          type:
-            - string
-            - 'null'
+          type: [string, 'null']
         website:
-          type:
-            - string
-            - 'null'
-        userId:
-          type:
-            - string
-            - 'null'
-          format: uuid
+          type: [string, 'null']
         createdAt:
           type: string
           format: date-time
+    FaithCommunityResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            faithCommunity:
+              $ref: '#/components/schemas/FaithCommunity'
     FaithCommunitiesResponse:
       type: object
       properties:
@@ -2529,7 +2348,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\\+[1-9]\\d{1,14}$
+          pattern: ^\+[1-9]\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -2558,14 +2377,6 @@ components:
           type: string
           format: uri
           maxLength: 255
-    FaithCommunityResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            faithCommunity:
-              $ref: '#/components/schemas/FaithCommunity'
     UpdateFaithCommunityRequest:
       type: object
       properties:
@@ -2575,7 +2386,7 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\\+[1-9]\\d{1,14}$
+          pattern: ^\+[1-9]\d{1,14}$
         addressLine1:
           type: string
           minLength: 1
@@ -2604,3 +2415,101 @@ components:
           type: string
           format: uri
           maxLength: 255
+    PublicMissionaryProfile:
+      type: object
+      description: Campos públicos do perfil de missionário (ADR-0036). Nunca inclui PII.
+      required:
+        [
+          username,
+          fullName,
+          biography,
+          role,
+          missionaryAgency,
+          faithCommunity,
+          about,
+          workLocation,
+          followersCount,
+          followingCount,
+          contact,
+        ]
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        biography:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [MISSIONARY]
+        missionaryAgency:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        faithCommunity:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        about:
+          type: object
+          properties:
+            aboutMe:
+              type: string
+              nullable: true
+            missionStorySummary:
+              type: string
+              nullable: true
+            originLocation:
+              type: string
+              nullable: true
+            prayerRequest:
+              type: string
+              nullable: true
+            lifeVerse:
+              type: string
+              nullable: true
+        workLocation:
+          type: object
+          nullable: true
+          properties:
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        contact:
+          type: object
+          properties:
+            publicEmail:
+              type: string
+              nullable: true
+            publicPhone:
+              type: string
+              nullable: true
+            publicPhoneIsWhatsapp:
+              type: boolean
+
+    PublicMissionaryProfileResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            missionary:
+              $ref: '#/components/schemas/PublicMissionaryProfile'

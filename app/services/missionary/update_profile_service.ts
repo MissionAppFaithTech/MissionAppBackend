@@ -1,11 +1,13 @@
 import type Missionary from '#models/missionary'
 import type User from '#models/user'
+import { omitUndefined } from '#utils/omit_undefined'
 import db from '@adonisjs/lucid/services/db'
 import { ResolveMissionaryService } from './resolve_missionary_service.ts'
 
 type UpdateMissionaryProfilePayload = {
   publicEmail?: string | null
   publicPhone?: string | null
+  publicPhoneIsWhatsapp?: boolean
   donationMessage?: string | null
 }
 
@@ -22,11 +24,14 @@ export class UpdateMissionaryProfileService {
 
     return db.transaction(async (trx) => {
       missionary.useTransaction(trx)
-      missionary.merge({
-        publicEmail: payload.publicEmail,
-        publicPhone: payload.publicPhone,
-        donationMessage: payload.donationMessage,
-      })
+      missionary.merge(
+        omitUndefined({
+          publicEmail: payload.publicEmail,
+          publicPhone: payload.publicPhone,
+          publicPhoneIsWhatsapp: payload.publicPhoneIsWhatsapp,
+          donationMessage: payload.donationMessage,
+        })
+      )
       await missionary.save()
       return missionary
     })

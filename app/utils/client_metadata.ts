@@ -6,7 +6,8 @@ import { clientMetadataValidator } from '#validators/shared/schemas/client_metad
 
 /**
  * Deriva o `DeviceMetadata` diretamente da requisição — valida os headers de
- * metadados de cliente (`x-client-type`, `x-device-name`) e o IP computado
+ * metadados de cliente (`x-client-type`, `x-device-name`, `x-device-id`,
+ * `x-device-kind`) e o IP computado
  * pelo framework, sem depender do validator do domínio (login, signup,
  * refresh) ter incluído esses campos no seu próprio schema. `ipAddress` não
  * faz parte do merge automático de `request.validateUsing()`, por isso o
@@ -24,6 +25,8 @@ export async function toDeviceMetadata(request: RequestContext): Promise<DeviceM
   return {
     deviceType: validated.headers['x-client-type'] ?? DeviceType.WEB,
     deviceName: validated.headers['x-device-name'] ?? null,
+    deviceId: validated.headers['x-device-id'],
+    deviceKind: validated.headers['x-device-kind'],
     ipAddress: validated.ipAddress,
   }
 }
