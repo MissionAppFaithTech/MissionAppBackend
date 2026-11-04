@@ -6,5 +6,7 @@ import vine from '@vinejs/vine'
 export const createFaithCommunityValidator = vine.create({
   name: text(1, 255),
   phoneNumber: phoneNumber().optional(),
+  pastorName: text(1, 255).optional().requiredIfExists('pastorPhone'),
+  pastorPhone: phoneNumber().optional(),
   ...addressFields(),
 })
