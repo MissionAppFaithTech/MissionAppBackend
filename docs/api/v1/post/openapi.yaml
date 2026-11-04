@@ -1,0 +1,8 @@
+# Arquivo de agrupamento da pasta post/ (ADR-0027). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /posts:
+    $ref: './post.openapi.yaml#/paths/~1posts'
+  /posts/{id}:
+    $ref: './post.openapi.yaml#/paths/~1posts~1{id}'

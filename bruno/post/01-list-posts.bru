@@ -1,0 +1,27 @@
+meta {
+  name: List Posts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/posts
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~missionaryId: 
+  ~cursor: 
+  ~limit: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista postagens por cursor (ADR-0033), mais recentes primeiro; limit vai ate 20.
+  Para a proxima pagina, envie em cursor o meta.nextCursor da resposta anterior
+  (meta.hasMore indica se ha mais). Cursor malformado responde 422 E_INVALID_CURSOR.
+}

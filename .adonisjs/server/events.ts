@@ -5,6 +5,8 @@
 
 import AuthLoginAttempted from '#events/auth/login_attempted'
 import AuthPasswordResetRequested from '#events/auth/password_reset_requested'
+import MediaAssetMediaAssetUploaded from '#events/media_asset/media_asset_uploaded'
+import MediaAssetMediaAssetsDiscarded from '#events/media_asset/media_assets_discarded'
 import MissionaryMissionaryProfileCreated from '#events/missionary/missionary_profile_created'
 import UserUserRegistered from '#events/user/user_registered'
 
@@ -12,6 +14,10 @@ export const events = {
   auth: {
     LoginAttempted: AuthLoginAttempted,
     PasswordResetRequested: AuthPasswordResetRequested,
+  },
+  mediaAsset: {
+    MediaAssetUploaded: MediaAssetMediaAssetUploaded,
+    MediaAssetsDiscarded: MediaAssetMediaAssetsDiscarded,
   },
   missionary: {
     MissionaryProfileCreated: MissionaryMissionaryProfileCreated,

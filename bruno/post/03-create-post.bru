@@ -1,0 +1,38 @@
+meta {
+  name: Create Post
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/v1/posts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "content": "Noticias do campo missionario",
+    "highlightLink": "https://example.com",
+    "imageAssetIds": ["{{media_asset_id}}"]
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("post_id", res.getBody().data.post.id);
+  }
+}
+
+docs {
+  Cria uma postagem: texto obrigatorio e ate 3 imagens POST_IMAGE (RF 8.1).
+  Limite de 50 imagens por missionario somando todas as postagens (RF 8.2): se a
+  postagem ultrapassar o limite, a API responde 409 E_POST_IMAGE_LIMIT_REACHED e
+  nada e gravado. Repita com "replaceOldestImages": true para confirmar: as
+  imagens mais antigas sao desvinculadas e removidas do storage (o texto do post
+  permanece).
+}

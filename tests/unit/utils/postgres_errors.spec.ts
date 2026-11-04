@@ -2,8 +2,9 @@ import { isForeignKeyViolation, isUniqueViolation } from '#utils/postgres_errors
 import { test } from '@japa/runner'
 
 test.group('postgres_errors', () => {
-  test('reconhece violação de FK pelo código 23503', ({ assert }) => {
+  test('reconhece linha ainda referenciada (23503 e 23001 de ON DELETE RESTRICT)', ({ assert }) => {
     assert.isTrue(isForeignKeyViolation({ code: '23503' }))
+    assert.isTrue(isForeignKeyViolation({ code: '23001' }))
     assert.isFalse(isForeignKeyViolation({ code: '23505' }))
     assert.isFalse(isForeignKeyViolation(new Error('qualquer')))
     assert.isFalse(isForeignKeyViolation(null))

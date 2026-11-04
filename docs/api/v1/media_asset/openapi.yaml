@@ -1,0 +1,10 @@
+# Arquivo de agrupamento da pasta media_asset/ (ADR-0027). Não contém paths nem
+# schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /media-assets/uploads:
+    $ref: './media_asset.openapi.yaml#/paths/~1media-assets~1uploads'
+  /media-assets/{id}:
+    $ref: './media_asset.openapi.yaml#/paths/~1media-assets~1{id}'
+  /media-assets/{id}/completion:
+    $ref: './media_asset.openapi.yaml#/paths/~1media-assets~1{id}~1completion'

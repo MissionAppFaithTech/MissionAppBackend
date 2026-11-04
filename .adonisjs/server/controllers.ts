@@ -12,8 +12,13 @@ export const controllers = {
     ResetPassword: () => import('#controllers/auth/reset_password_controller'),
     Sessions: () => import('#controllers/auth/sessions_controller'),
   },
+  impactProject: {
+    ImpactProjects: () => import('#controllers/impact_project/impact_projects_controller'),
+  },
   mediaAsset: {
     MediaAssets: () => import('#controllers/media_asset/media_assets_controller'),
+    MediaUploadCompletions: () => import('#controllers/media_asset/media_upload_completions_controller'),
+    MediaUploads: () => import('#controllers/media_asset/media_uploads_controller'),
   },
   missionary: {
     About: () => import('#controllers/missionary/about_controller'),
@@ -22,6 +27,9 @@ export const controllers = {
     MissionaryAgencies: () => import('#controllers/missionary/missionary_agencies_controller'),
     Profile: () => import('#controllers/missionary/profile_controller'),
     WorkAddress: () => import('#controllers/missionary/work_address_controller'),
+  },
+  post: {
+    Posts: () => import('#controllers/post/posts_controller'),
   },
   user: {
     Account: () => import('#controllers/user/account_controller'),

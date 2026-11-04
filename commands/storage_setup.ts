@@ -19,6 +19,7 @@ export default class StorageSetup extends BaseCommand {
       const created = await new EnsureBucketsService(client).execute({
         publicBucket: env.get('S3_PUBLIC_BUCKET'),
         privateBucket: env.get('S3_PRIVATE_BUCKET'),
+        uploadOrigins: [env.get('FRONTEND_URL')],
       })
 
       this.logger.success(

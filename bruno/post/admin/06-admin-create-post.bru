@@ -1,0 +1,32 @@
+meta {
+  name: Admin Create Post
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/v1/posts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "missionaryId": "{{missionary_id}}",
+    "content": "Postagem publicada pelo admin em nome do missionario"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("post_id", res.getBody().data.post.id);
+  }
+}
+
+docs {
+  Publica uma postagem em nome de um missionario especifico usando credencial admin.
+}

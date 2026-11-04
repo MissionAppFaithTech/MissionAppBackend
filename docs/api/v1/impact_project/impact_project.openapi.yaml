@@ -1,0 +1,394 @@
+paths:
+  /impact-projects:
+    get:
+      operationId: impactProjectIndex
+      tags: [impact_project]
+      summary: Lista projetos de impacto por cursor (mais recentes primeiro)
+      description: >-
+        Paginação por cursor (ADR-0033): envie o `meta.nextCursor` da resposta
+        anterior em `cursor` para buscar a próxima página. Um cursor que não
+        pode ser decodificado responde 422 `E_INVALID_CURSOR` sem o array
+        `errors`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Busca parcial (sem diferenciar maiúsculas) pelo título do projeto.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: missionaryId
+          in: query
+          required: false
+          description: Filtra pelo missionário dono do projeto.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/CursorParam'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de projetos de impacto, do mais recente para o mais antigo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Filtro inválido (`missionaryId` que não é UUID, `limit` acima de 20)
+            ou cursor malformado. Códigos: `E_VALIDATION_ERROR`,
+            `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    post:
+      operationId: impactProjectStore
+      tags: [impact_project]
+      summary: Cria o projeto de impacto do missionário
+      description: >-
+        Cada missionário tem no máximo um projeto. Missionários criam o
+        próprio projeto; ADMIN informa `missionaryId`. A capa deve ter sido
+        enviada pelo próprio usuário autenticado via
+        `POST /media-assets/uploads` e ter o upload confirmado. O vídeo não é
+        enviado ao storage: é um link externo do YouTube ou do Vimeo
+        (`videoUrl`, RF 9.2), guardado no formato de embed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário não é missionário, ADMIN sem `missionaryId` ou missionário
+            criando projeto de outro. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Perfil missionário não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            Missionário já possui um projeto de impacto. Códigos:
+            `E_IMPACT_PROJECT_ALREADY_EXISTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação (inclusive `videoUrl` que não é do YouTube nem do
+            Vimeo), ou capa inválida para vínculo (de outro usuário, com outra
+            finalidade, upload não confirmado ou já vinculada). Códigos:
+            `E_VALIDATION_ERROR`, `E_MEDIA_ASSET_NOT_ATTACHABLE`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /impact-projects/{id}:
+    get:
+      operationId: impactProjectShow
+      tags: [impact_project]
+      summary: Exibe um projeto de impacto
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Projeto de impacto não encontrado. Códigos:
+            `E_IMPACT_PROJECT_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    patch:
+      operationId: impactProjectUpdate
+      tags: [impact_project]
+      summary: Atualiza um projeto de impacto
+      description: >-
+        Ao trocar a capa, a anterior é removida do storage de forma
+        assíncrona. `videoUrl: null` remove o link de vídeo do projeto.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateImpactProjectRequest'
+      responses:
+        '200':
+          description: Projeto de impacto atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactProjectResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão para alterar o projeto. Códigos:
+            `E_IMPACT_PROJECT_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Projeto de impacto não encontrado. Códigos:
+            `E_IMPACT_PROJECT_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Erro de validação ou capa inválida para vínculo. Códigos:
+            `E_VALIDATION_ERROR`, `E_MEDIA_ASSET_NOT_ATTACHABLE`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    delete:
+      operationId: impactProjectDestroy
+      tags: [impact_project]
+      summary: Remove um projeto de impacto
+      description: A capa do projeto é removida do storage de forma assíncrona.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ImpactProjectId'
+      responses:
+        '200':
+          description: Projeto de impacto removido com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão para remover o projeto. Códigos:
+            `E_IMPACT_PROJECT_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Projeto de impacto não encontrado. Códigos:
+            `E_IMPACT_PROJECT_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+components:
+  parameters:
+    ImpactProjectId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ImpactProject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        missionaryId:
+          type: string
+          format: uuid
+        coverImageAssetId:
+          type: string
+          format: uuid
+        videoUrl:
+          type: [string, 'null']
+          format: uri
+          description: >-
+            Link de embed do vídeo (`https://www.youtube.com/embed/<id>` ou
+            `https://player.vimeo.com/video/<id>`); `null` quando o projeto não
+            tem vídeo.
+        coverImage:
+          $ref: '../media_asset/media_asset.openapi.yaml#/components/schemas/MediaAsset'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ImpactProjectResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            impactProject:
+              $ref: '#/components/schemas/ImpactProject'
+
+    ImpactProjectsResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [impactProjects]
+          properties:
+            impactProjects:
+              type: array
+              items:
+                $ref: '#/components/schemas/ImpactProject'
+        meta:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/CursorPaginationMeta'
+
+    CreateImpactProjectRequest:
+      type: object
+      required: [title, description, coverImageAssetId]
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+          description: Obrigatório apenas para ADMIN; missionários criam o próprio projeto.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+          description: Asset com finalidade `IMPACT_PROJECT_COVER`.
+        videoUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: >-
+            Link de um vídeo do YouTube (watch, youtu.be, shorts, embed, live) ou do
+            Vimeo (direto, canal, grupo, showcase ou player; em vídeo não listado, o
+            código de acesso é mantido como `?h=`) (RF 9.2), guardado no formato de
+            embed. Outros endereços respondem 422 na regra `videoUrl`.
+
+    UpdateImpactProjectRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        coverImageAssetId:
+          type: string
+          format: uuid
+          description: >-
+            Nova capa (`IMPACT_PROJECT_COVER`); a anterior é removida do storage
+            de forma assíncrona.
+        videoUrl:
+          type: [string, 'null']
+          format: uri
+          maxLength: 2048
+          description: >-
+            Link de um vídeo do YouTube ou do Vimeo (RF 9.2), guardado no formato
+            de embed; `null` remove o vídeo do projeto. Outros endereços
+            respondem 422 na regra `videoUrl`.

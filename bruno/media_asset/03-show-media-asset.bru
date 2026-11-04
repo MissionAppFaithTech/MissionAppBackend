@@ -1,0 +1,19 @@
+meta {
+  name: Show Media Asset
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/v1/media-assets/{{media_asset_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Acompanha o processamento: READY traz a url publica; FAILED indica conteudo rejeitado.
+}

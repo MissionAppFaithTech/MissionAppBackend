@@ -11,6 +11,7 @@ import searchClient from '#services/shared/search/search_client'
 import { MissionarySearchService } from '#services/search/missionary_search_service'
 import { emailQueue } from '#queues/email_queue'
 import { searchIndexingQueue } from '#queues/search_indexing_queue'
+import { mediaProcessingQueue } from '#queues/media_processing_queue'
 import type { Registry } from '../.adonisjs/client/registry/schema.d.ts'
 
 /**
@@ -62,6 +63,7 @@ export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
     () => searchClient.close(),
     () => emailQueue.close(),
     () => searchIndexingQueue.close(),
+    () => mediaProcessingQueue.close(),
   ],
 }
 

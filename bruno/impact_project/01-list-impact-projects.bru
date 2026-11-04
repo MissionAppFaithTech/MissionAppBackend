@@ -1,0 +1,29 @@
+meta {
+  name: List Impact Projects
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/impact-projects
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~search: 
+  ~missionaryId: 
+  ~cursor: 
+  ~limit: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Lista projetos de impacto por cursor (ADR-0033), do mais recente para o mais
+  antigo; limit vai ate 20. Para a proxima pagina, envie em cursor o
+  meta.nextCursor da resposta anterior (meta.hasMore indica se ha mais). Cursor
+  malformado responde 422 E_INVALID_CURSOR.
+}

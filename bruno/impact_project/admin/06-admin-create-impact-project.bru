@@ -1,0 +1,36 @@
+meta {
+  name: Admin Create Impact Project
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/v1/impact-projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "missionaryId": "{{missionary_id}}",
+    "title": "Projeto cadastrado pelo admin",
+    "description": "Descricao do projeto cadastrado em nome do missionario.",
+    "coverImageAssetId": "{{media_asset_id}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("impact_project_id", res.getBody().data.impactProject.id);
+  }
+}
+
+docs {
+  Cria o projeto de impacto de um missionario especifico usando credencial admin.
+  A capa precisa ter sido enviada pelo proprio admin (Request Media Upload com
+  auth_token_admin e purpose IMPACT_PROJECT_COVER).
+}

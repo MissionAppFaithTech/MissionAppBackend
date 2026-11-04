@@ -54,6 +54,8 @@
     "#validators/shared/schemas/*": "./app/validators/shared/schemas/*.js",
     "#validators/shared/*": "./app/validators/shared/*.js",
     "#validators/missionary/*": "./app/validators/missionary/*.js",
+    "#validators/impact_project/*": "./app/validators/impact_project/*.js",
+    "#validators/post/*": "./app/validators/post/*.js",
     "#validators/user/*": "./app/validators/user/*.js",
     "#providers/*": "./providers/*.js",
     "#policies/*": "./app/policies/*.js",
@@ -117,6 +119,7 @@
     "luxon": "3.7.2",
     "pg": "8.23.1",
     "reflect-metadata": "0.2.2",
+    "sharp": "0.35.5",
     "uuid": "14.0.3"
   },
   "hotHook": {

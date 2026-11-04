@@ -1,0 +1,27 @@
+meta {
+  name: Update Impact Project
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{base_url}}/api/v1/impact-projects/{{impact_project_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "title": "Escola Esperanca"
+  }
+}
+
+docs {
+  Atualiza o projeto. Trocar a capa remove a anterior do storage de forma
+  assincrona. videoUrl aceita um link do YouTube ou do Vimeo; enviar
+  "videoUrl": null remove o video do projeto.
+}

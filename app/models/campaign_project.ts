@@ -16,6 +16,6 @@ export default class CampaignProject extends compose(
   @belongsTo(() => Campaign)
   declare campaign: BelongsTo<typeof Campaign>
 
-  @belongsTo(() => ImpactProject, { foreignKey: 'project_id' })
+  @belongsTo(() => ImpactProject, { foreignKey: 'projectId' })
   declare project: BelongsTo<typeof ImpactProject>
 }

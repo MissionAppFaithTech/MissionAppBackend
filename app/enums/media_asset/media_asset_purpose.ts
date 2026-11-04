@@ -1,0 +1,4 @@
+export enum MediaAssetPurpose {
+  IMPACT_PROJECT_COVER = 'IMPACT_PROJECT_COVER',
+  POST_IMAGE = 'POST_IMAGE',
+}

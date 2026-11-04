@@ -1,0 +1,25 @@
+meta {
+  name: Admin Update Impact Project
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{base_url}}/api/v1/impact-projects/{{impact_project_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "title": "Titulo revisado pelo admin"
+  }
+}
+
+docs {
+  Atualiza o projeto de impacto de qualquer missionario usando credencial admin.
+}
