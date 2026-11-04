@@ -10,7 +10,7 @@
 
 ## Contexto e Problema
 
-O MissionApp requer armazenamento de arquivos binários em múltiplos fluxos: foto de perfil de missionários e apoiadores (Req. 2.3), imagens anexadas a posts (Req. 6.1), imagem de capa de projetos de impacto (Req. 7.2) e QR codes estáticos de Pix (Req. 9.1.2). A aplicação conversa com o storage exclusivamente pela API S3, com estrutura de buckets padronizada conforme o [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md); o provedor de produção ainda não está definido (ver [Storage em produção](#storage-em-producao-em-aberto)).
+O MissionApp requer armazenamento de arquivos binários em múltiplos fluxos: foto de perfil de missionários e apoiadores (Req. 2.3), imagens anexadas a posts (Req. 6.1), imagem de capa de projetos de impacto (Req. 7.2) e, originalmente, QR codes estáticos de Pix (Req. 9.1.2), removidos pelo [ADR-0039](./0039-pix-somente-com-chave.md). A aplicação conversa com o storage exclusivamente pela API S3, com estrutura de buckets padronizada conforme o [ADR-0013](./0013-padronizacao-de-nomenclatura-de-buckets.md); o provedor de produção ainda não está definido (ver [Storage em produção](#storage-em-producao-em-aberto)).
 
 O problema surge no ambiente de desenvolvimento: utilizar um storage S3 real (AWS S3 ou equivalente gerenciado) como alvo de upload durante o desenvolvimento local impõe restrições significativas:
 

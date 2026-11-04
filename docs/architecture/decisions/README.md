@@ -554,5 +554,10 @@ flowchart LR
          <td align="left">Uma Sessão por Aparelho</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0039-pix-somente-com-chave.md">ADR-0039</a></td>
+         <td align="left">PIX Somente com Chave</td>
+         <td>🟢 Aceito</td>
+      </tr>
    </tbody>
 </table>
