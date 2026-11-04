@@ -13,6 +13,23 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Banco vazio só para as migrations: os testes usam o banco de dev já migrado e
+    # não pegam uma migration que falha do zero (ex.: bind em DDL, corrigido no #178).
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.23
+        env:
+          POSTGRES_USER: root
+          POSTGRES_DB: app
+          # Banco descartável, acessível só pelo runner: sem senha.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U root -d app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -26,4 +43,21 @@ jobs:
           restore-keys: ${{ runner.os }}-pnpm-
       - run: pnpm install --frozen-lockfile --prefer-offline --verify-store-integrity=false
       - run: pnpm lint
+      # NOTE: o build também regenera os índices de `.adonisjs/`, que o Ace carrega
+      # para rodar as migrations.
       - run: pnpm build
+      - name: Prepara o ambiente das migrations
+        run: |
+          cp .env.example .env
+          # Segredos que o .env.example deixa vazios: aleatórios a cada execução.
+          for name in APP_KEY JWT_SECRET REDIS_PASSWORD RESEND_API_KEY; do
+            echo "$name=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          done
+      # NOTE: --no-schema-generate mantém database/schema.ts; o rollback o
+      # regeraria vazio e a reaplicação não carregaria os models.
+      - name: Aplica todas as migrations num banco vazio
+        run: node ace migration:run --force --no-schema-generate
+      - name: Reverte todas (testa os down)
+        run: node ace migration:rollback --batch=0 --force --no-schema-generate
+      - name: Aplica de novo depois do rollback
+        run: node ace migration:run --force --no-schema-generate
