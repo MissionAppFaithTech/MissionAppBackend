@@ -1,5 +1,6 @@
 import UserRegistered from '#events/user/user_registered'
 import User from '#models/user'
+import { AuthRevocationService } from '#services/auth/auth_revocation_service'
 import { RefreshTokenService } from '#services/auth/refresh_token_service'
 import { TokenIssuanceService } from '#services/auth/token_issuance_service'
 import { toDeviceMetadata } from '#utils/client_metadata'
@@ -32,7 +33,8 @@ export default class AccountController {
       auth,
       user,
       meta,
-      new RefreshTokenService()
+      new RefreshTokenService(),
+      new AuthRevocationService()
     )
 
     await UserRegistered.dispatch(user.id, user.fullName, user.email, user.role)

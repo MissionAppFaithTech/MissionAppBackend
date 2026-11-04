@@ -1,3 +1,4 @@
+import type { DeviceKind } from '#enums/refresh_token/device_kind'
 import type { DeviceType } from '#enums/refresh_token/device_type'
 
 /**
@@ -9,4 +10,7 @@ export type DeviceMetadata = {
   deviceType: DeviceType
   deviceName?: string | null
   ipAddress?: string | null
+  /** Identificador bruto do aparelho (`x-device-id`); só o hash é persistido (ADR-0038). */
+  deviceId?: string | null
+  deviceKind?: DeviceKind | null
 }

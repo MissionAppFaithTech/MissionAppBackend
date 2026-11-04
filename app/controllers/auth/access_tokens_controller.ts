@@ -21,7 +21,8 @@ export default class AccessTokensController {
       auth,
       user,
       meta,
-      new RefreshTokenService()
+      new RefreshTokenService(),
+      new AuthRevocationService()
     )
 
     return serialize({

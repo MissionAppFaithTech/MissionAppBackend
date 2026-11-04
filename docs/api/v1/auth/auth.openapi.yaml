@@ -9,10 +9,15 @@ paths:
         refresh token opaco. Ambos sempre voltam no corpo da resposta — não há
         entrega via cookie nesta API, já que o consumidor web é um BFF
         (Next.js), não um browser. Ver ADR-0023, seção "Entrega de Tokens".
+        Com `x-device-id`, há uma sessão por aparelho (ADR-0038) — as sessões
+        ativas do mesmo usuário naquele aparelho são encerradas e seus access
+        tokens deixam de valer. Sem o header, cada login abre uma sessão nova.
       security: []
       parameters:
         - $ref: '#/components/parameters/ClientType'
         - $ref: '#/components/parameters/DeviceName'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceKind'
       requestBody:
         required: true
         content:
@@ -136,7 +141,8 @@ paths:
         token vai sempre no corpo — não há mais fallback via cookie. A rotação
         é serializada por token e idempotente dentro da janela de tolerância
         (ADR-0035, padrão 30 s): reapresentar um refresh token já rotacionado,
-        do mesmo dispositivo (x-client-type e x-device-name), devolve o refresh
+        do mesmo dispositivo (x-client-type, x-device-name e, quando os dois
+        lados o têm, x-device-id), devolve o refresh
         token atual da sessão e um novo access token. Fora da janela, de outro
         dispositivo ou sem o registro da rotação, o reuso é tratado como roubo e
         invalida toda a família (ADR-0023). Reapresentar um token de sessão já
@@ -387,6 +393,32 @@ components:
         type: string
         maxLength: 120
 
+    DeviceId:
+      name: x-device-id
+      in: header
+      required: false
+      description: >-
+        Identificador aleatório e estável do aparelho (ex.: cookie de
+        dispositivo do BFF). Só o hash SHA-256 é guardado. No login, encerra as
+        sessões ativas do mesmo usuário naquele aparelho (ADR-0038). No refresh,
+        quando ausente, vale o do token anterior.
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 128
+        pattern: '^[\w-]+$'
+
+    DeviceKind:
+      name: x-device-kind
+      in: header
+      required: false
+      description: >-
+        Tipo do aparelho, exibido em `GET /auth/sessions` (ADR-0038). Ausente no
+        login vira `unknown`; no refresh, vale o do token anterior.
+      schema:
+        type: string
+        enum: [desktop, mobile, tablet, unknown]
+
   schemas:
     CursorPaginationMeta:
       type: object
@@ -505,6 +537,10 @@ components:
           enum: [web, mobile]
         deviceName:
           type: [string, 'null']
+        deviceKind:
+          type: string
+          enum: [desktop, mobile, tablet, unknown]
+          description: Tipo do aparelho (`x-device-kind`); `unknown` quando não informado.
         ipAddress:
           type: [string, 'null']
         lastUsedAt:
@@ -513,6 +549,11 @@ components:
         createdAt:
           type: string
           format: date-time
+          description: Emissão do refresh token atual (última rotação).
+        startedAt:
+          type: string
+          format: date-time
+          description: Início da sessão (primeiro token da família).
         current:
           type: boolean
           description: Se é a sessão do access token usado nesta requisição.
