@@ -27,12 +27,12 @@ test.group('MediaProcessingService', (group) => {
   })
 
   group.each.setup(() => {
-    drive.fake('s3')
-    return () => drive.restore('s3')
+    drive.fake('s3_public')
+    return () => drive.restore('s3_public')
   })
 
   test('redimensiona, converte para webp e substitui o original', async ({ assert }) => {
-    const disk = drive.use()
+    const disk = drive.use('s3_public')
     const original = await sharp({
       create: { width: 4000, height: 3000, channels: 3, background: '#3366cc' },
     })
@@ -59,7 +59,7 @@ test.group('MediaProcessingService', (group) => {
   })
 
   test('marca como FAILED e remove o objeto quando o conteúdo não é imagem', async ({ assert }) => {
-    const disk = drive.use()
+    const disk = drive.use('s3_public')
     const asset = await createProcessingAsset('posts/images/test/fake.jpg')
     await disk.put(asset.fileKey, new TextEncoder().encode('<?php echo "não sou imagem"; ?>'))
 
@@ -82,7 +82,7 @@ test.group('MediaProcessingService', (group) => {
   test('remove registro e objeto descartados, preservando assets ainda referenciados', async ({
     assert,
   }) => {
-    const disk = drive.use()
+    const disk = drive.use('s3_public')
     const { user, missionary } = await createMissionaryTestUser()
     const discarded = await createTestMediaAsset(user)
     const stillUsed = await createTestMediaAsset(user)

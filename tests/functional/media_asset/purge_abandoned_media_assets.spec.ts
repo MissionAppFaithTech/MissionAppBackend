@@ -16,14 +16,14 @@ test.group('purgeAbandonedMediaAssets', (group) => {
   })
 
   group.each.setup(() => {
-    drive.fake('s3')
-    return () => drive.restore('s3')
+    drive.fake('s3_public')
+    return () => drive.restore('s3_public')
   })
 
   test('remove uploads pendentes ou rejeitados antigos e preserva os demais', async ({
     assert,
   }) => {
-    const disk = drive.use()
+    const disk = drive.use('s3_public')
     const { user } = await createTestUser()
     const twoDaysAgo = DateTime.now().minus({ days: 2 })
 

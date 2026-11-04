@@ -54,6 +54,34 @@ test.group('config/drive — discos S3 contra o MinIO real', (group) => {
   })
 })
 
+test.group('config/drive — URL de upload direto (ADR-0040)', () => {
+  test('{disk} assina content-type e content-length no upload')
+    .with([{ disk: 's3_public' as const }, { disk: 'r2_public' as const }])
+    .run(async ({ assert }, { disk }) => {
+      const url = new URL(
+        await drive.use(disk).getSignedUploadUrl('tests/a.jpg', {
+          contentType: 'image/jpeg',
+          expiresIn: 60,
+          ContentLength: 1234,
+        })
+      )
+
+      assert.equal(url.searchParams.get('X-Amz-Expires'), '60')
+      assert.sameMembers(url.searchParams.get('X-Amz-SignedHeaders')!.split(';'), [
+        'content-length',
+        'content-type',
+        'host',
+      ])
+    })
+
+  test('os discos privados não ganham o upload direto', ({ assert }) => {
+    const optionsOf = (name: 's3_private' | 'r2_private') =>
+      (drive.use(name).driver as unknown as { options: Record<string, unknown> }).options
+    assert.notProperty(optionsOf('s3_private'), 'urlBuilder')
+    assert.notProperty(optionsOf('r2_private'), 'urlBuilder')
+  })
+})
+
 test.group('config/drive — opções de cada disco', () => {
   // NOTE: `DriverContract` não expõe as opções; os discos aqui são todos S3Driver
   const optionsOf = (disk: 's3_public' | 's3_private' | 'r2_public' | 'r2_private') =>

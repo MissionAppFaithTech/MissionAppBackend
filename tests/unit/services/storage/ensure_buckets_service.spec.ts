@@ -5,7 +5,9 @@ import {
   DeleteBucketCommand,
   GetBucketPolicyCommand,
   HeadBucketCommand,
+  PutBucketCorsCommand,
   S3Client,
+  S3ServiceException,
 } from '@aws-sdk/client-s3'
 import { test } from '@japa/runner'
 import { v7 as uuidv7 } from 'uuid'
@@ -87,5 +89,89 @@ test.group('EnsureBucketsService (erros)', () => {
       'AccessDenied'
     )
     assert.deepEqual(sent, ['HeadBucketCommand'])
+  })
+})
+
+test.group('EnsureBucketsService (CORS de upload, ADR-0040)', () => {
+  /** Cliente falso: os buckets existem e o CORS responde como `onCors` mandar. */
+  function fakeClient(onCors: (command: PutBucketCorsCommand) => void) {
+    const sent: object[] = []
+    const client = {
+      send: async (command: object) => {
+        sent.push(command)
+        if (command instanceof PutBucketCorsCommand) onCors(command)
+      },
+    } as unknown as S3Client
+    return { client, sent }
+  }
+
+  test('libera PUT e GET do site só no bucket público', async ({ assert }) => {
+    const { client, sent } = fakeClient(() => {})
+
+    await new EnsureBucketsService(client).execute({
+      publicBucket: 'publico',
+      privateBucket: 'privado',
+      uploadOrigins: ['https://app.missionapp.test'],
+    })
+
+    const cors = sent.filter((command) => command instanceof PutBucketCorsCommand)
+    assert.lengthOf(cors, 1)
+    const input = (cors[0] as PutBucketCorsCommand).input
+    assert.equal(input.Bucket, 'publico')
+    assert.deepEqual(input.CORSConfiguration!.CORSRules![0], {
+      AllowedOrigins: ['https://app.missionapp.test'],
+      AllowedMethods: ['PUT', 'GET'],
+      AllowedHeaders: ['Content-Type', 'Content-Length'],
+      ExposeHeaders: ['ETag'],
+      MaxAgeSeconds: 3600,
+    })
+  })
+
+  test('sem origens não mexe no CORS', async ({ assert }) => {
+    const { client, sent } = fakeClient(() => {})
+
+    await new EnsureBucketsService(client).execute({ publicBucket: 'a', privateBucket: 'b' })
+    await new EnsureBucketsService(client).execute({
+      publicBucket: 'a',
+      privateBucket: 'b',
+      uploadOrigins: [],
+    })
+
+    assert.isFalse(sent.some((command) => command instanceof PutBucketCorsCommand))
+  })
+
+  test('storage sem CORS por bucket (MinIO) não é erro', async ({ assert }) => {
+    const { client } = fakeClient(() => {
+      throw new S3ServiceException({
+        name: 'NotImplemented',
+        $fault: 'server',
+        $metadata: { httpStatusCode: 501 },
+        message: 'A header you provided implies functionality that is not implemented',
+      })
+    })
+
+    await assert.doesNotReject(() =>
+      new EnsureBucketsService(client).execute({
+        publicBucket: 'a',
+        privateBucket: 'b',
+        uploadOrigins: ['https://app.missionapp.test'],
+      })
+    )
+  })
+
+  test('propaga outras falhas ao aplicar o CORS', async ({ assert }) => {
+    const { client } = fakeClient(() => {
+      throw new Error('AccessDenied')
+    })
+
+    await assert.rejects(
+      () =>
+        new EnsureBucketsService(client).execute({
+          publicBucket: 'a',
+          privateBucket: 'b',
+          uploadOrigins: ['https://app.missionapp.test'],
+        }),
+      'AccessDenied'
+    )
   })
 })

@@ -10,6 +10,9 @@ const DOMAIN_SPECS = [
   'auth/auth.openapi.yaml',
   'missionary/missionary.openapi.yaml',
   'user/user.openapi.yaml',
+  'impact_project/impact_project.openapi.yaml',
+  'media_asset/media_asset.openapi.yaml',
+  'post/post.openapi.yaml',
 ]
 const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const
 
