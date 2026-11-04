@@ -61,3 +61,81 @@ jobs:
         run: node ace migration:rollback --batch=0 --force --no-schema-generate
       - name: Aplica de novo depois do rollback
         run: node ace migration:run --force --no-schema-generate
+
+  # Suíte completa (unitários + integração) contra serviços reais e descartáveis:
+  # Postgres, Dragonfly (BullMQ), Elasticsearch e MinIO (upload direto, ADR-0040).
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.23
+        env:
+          POSTGRES_USER: root
+          POSTGRES_DB: app
+          # Banco descartável, acessível só pelo runner: sem senha.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U root -d app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.4.2
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -s -f http://127.0.0.1:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.node-version'
+      - run: corepack enable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile --prefer-offline --verify-store-integrity=false
+      - name: Prepara o ambiente de teste
+        run: |
+          cp .env.example .env
+          # Segredos que o .env.example deixa vazios ou de exemplo: aleatórios a cada execução.
+          for name in APP_KEY JWT_SECRET REDIS_PASSWORD RESEND_API_KEY S3_SECRET_KEY; do
+            echo "$name=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          done
+      # NOTE: Dragonfly e MinIO via `docker run` porque precisam de argumentos de
+      # linha de comando (`services` não aceita). `allow-undeclared-keys` é exigido
+      # pelos scripts Lua do BullMQ.
+      - name: Sobe Dragonfly e MinIO
+        run: |
+          docker run -d --name dragonfly -p 6379:6379 \
+            docker.dragonflydb.io/dragonflydb/dragonfly:v1.39.0 \
+            --requirepass="$REDIS_PASSWORD" --proactor_threads=2 \
+            --default_lua_flags=allow-undeclared-keys
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=superadmin -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" \
+            pgsty/minio:RELEASE.2026-04-17T00-00-00Z server /data
+          for i in $(seq 1 30); do
+            docker exec dragonfly redis-cli -a "$REDIS_PASSWORD" ping 2>/dev/null | grep -q PONG \
+              && curl -sf http://127.0.0.1:9000/minio/health/live > /dev/null && exit 0
+            sleep 2
+          done
+          echo "Dragonfly ou MinIO não responderam a tempo" >&2; exit 1
+      # NOTE: o build regenera os índices de `.adonisjs/` que o Ace carrega.
+      - run: pnpm build
+      - run: node ace storage:setup
+      - run: node ace migration:run --force --no-schema-generate
+      - name: Testes unitários e de integração
+        run: |
+          set -a && . ./.env.test && set +a
+          node ace test
