@@ -149,7 +149,6 @@ export class FinancialConfigSchema extends BaseModel {
     'id',
     'missionaryId',
     'pixKey',
-    'qrCodeAssetId',
     'updatedAt',
   ] as const
   $columns = FinancialConfigSchema.$columns
@@ -175,8 +174,6 @@ export class FinancialConfigSchema extends BaseModel {
   declare missionaryId: string
   @column()
   declare pixKey: string | null
-  @column()
-  declare qrCodeAssetId: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }

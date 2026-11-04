@@ -62,7 +62,9 @@ table.uuid('missionary_id').notNullable().comment('...')
 
 ### 3. Referências a arquivos via `media_assets`
 
-Colunas que armazenam referências a arquivos (imagens, vídeos, documentos, QR Codes) devem usar `uuid` FK para `media_assets` — nunca `string` com URL ou caminho. O padrão `uuid('field_asset_id')` sinaliza a intenção ao leitor e garante rastreabilidade via a tabela centralizada.
+Colunas que armazenam referências a arquivos (imagens, vídeos, documentos) devem usar `uuid` FK para `media_assets` — nunca `string` com URL ou caminho. O padrão `uuid('field_asset_id')` sinaliza a intenção ao leitor e garante rastreabilidade via a tabela centralizada.
+
+> **Nota (2026-11-03):** o exemplo de QR Code estático do Pix (`financial_configs.qr_code_asset_id`) foi removido pelo [ADR-0039](./0039-pix-somente-com-chave.md); o PIX usa só a chave.
 
 ```typescript
 // correto
