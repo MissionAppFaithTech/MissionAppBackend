@@ -3044,6 +3044,13 @@ components:
         createdAt:
           type: string
           format: date-time
+        pastorName:
+          type: [string, 'null']
+          description: Nome do pastor responsável (um por comunidade).
+        pastorPhone:
+          type: [string, 'null']
+          description: Telefone do pastor em E.164.
+
     FaithCommunityResponse:
       type: object
       properties:
@@ -3064,8 +3071,7 @@ components:
                 $ref: '#/components/schemas/FaithCommunity'
     CreateFaithCommunityRequest:
       type: object
-      required:
-        - name
+      required: [name]
       properties:
         name:
           type: string
@@ -3073,7 +3079,15 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\+[1-9]\d{1,14}$
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        pastorName:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Obrigatório quando `pastorPhone` é enviado.
+        pastorPhone:
+          type: string
+          pattern: '^\\+[1-9]\\d{1,14}$'
         addressLine1:
           type: string
           minLength: 1
@@ -3102,6 +3116,7 @@ components:
           type: string
           format: uri
           maxLength: 255
+
     UpdateFaithCommunityRequest:
       type: object
       properties:
@@ -3111,7 +3126,18 @@ components:
           maxLength: 255
         phoneNumber:
           type: string
-          pattern: ^\+[1-9]\d{1,14}$
+          pattern: '^\\+[1-9]\\d{1,14}$'
+        pastorName:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 255
+          description: >-
+            `null` remove o pastor. Sem pastor cadastrado, é obrigatório junto
+            com `pastorPhone` (422 em `pastorName`).
+        pastorPhone:
+          type: [string, 'null']
+          pattern: '^\\+[1-9]\\d{1,14}$'
+          description: '`null` limpa só o telefone.'
         addressLine1:
           type: string
           minLength: 1
@@ -3140,6 +3166,7 @@ components:
           type: string
           format: uri
           maxLength: 255
+
     PublicMissionaryProfile:
       type: object
       description: Campos públicos do perfil de missionário (ADR-0036). Nunca inclui PII.
