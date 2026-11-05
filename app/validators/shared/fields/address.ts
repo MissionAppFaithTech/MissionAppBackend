@@ -1,3 +1,5 @@
+import { CATALOG_SEARCH_MIN_LENGTH } from '#constants/catalog'
+import { limit } from '#validators/shared/fields/limit'
 import { text } from '#validators/shared/fields/text'
 import vine from '@vinejs/vine'
 
@@ -16,10 +18,13 @@ export const addressFields = () => ({
 })
 
 /**
- * Filtros de busca aceitos nas listagens: termo livre no nome e localidade.
+ * Filtros de busca aceitos nas listagens: termo no nome (a partir de
+ * {@link CATALOG_SEARCH_MIN_LENGTH} caracteres), localidade e `limit` (até 20,
+ * NF 2.3; padrão 10). ADR-0041.
  */
 export const searchFilterFields = () => ({
-  search: text(1, 255).optional(),
+  search: text(CATALOG_SEARCH_MIN_LENGTH, 255).optional(),
+  limit: limit(),
   city: text(1, 255).optional(),
   state: text(1, 255).optional(),
   country: text(1, 255).optional(),

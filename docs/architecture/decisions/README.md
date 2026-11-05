@@ -564,5 +564,10 @@ flowchart LR
          <td align="left">Upload Direto via URL Pré-Assinada e Compressão de Imagens com sharp em Worker</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0041-busca-e-deduplicacao-de-catalogos-com-coluna-normalizada-unaccent-e-pg-trgm.md">ADR-0041</a></td>
+         <td align="left">Busca e Deduplicação de Catálogos com Coluna Normalizada, unaccent e pg_trgm</td>
+         <td>🟢 Aceito</td>
+      </tr>
    </tbody>
 </table>

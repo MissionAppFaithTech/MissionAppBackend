@@ -334,7 +334,10 @@ components:
           type: string
           minLength: 1
           maxLength: 50
-          description: Obrigatório junto com `identityType`.
+          description: >-
+            Obrigatório junto com `identityType`. Salvo normalizado: CPF só com dígitos
+            (11), passaporte em maiúsculas só com letras e números. Único por tipo:
+            repetido responde 422 neste campo ("Este CPF já está cadastrado.").
         aboutMe:
           type: string
           maxLength: 5000

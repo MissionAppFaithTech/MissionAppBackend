@@ -1778,11 +1778,22 @@ paths:
         - name: search
           in: query
           required: false
-          description: Busca parcial (sem diferenciar maiúsculas) pelo nome da agência.
+          description: >-
+            Busca pelo nome da agência sem diferenciar maiúsculas nem acentos (ADR-0041).
+            Com 2 caracteres, nomes que começam com o termo; com 3 ou mais, nomes que o
+            contêm, os que começam com ele primeiro.
           schema:
             type: string
-            minLength: 1
+            minLength: 2
             maxLength: 255
+        - name: limit
+          in: query
+          required: false
+          description: Quantidade máxima de itens (padrão 10, máximo 20, NF 2.3). `meta.hasMore` diz se há mais; refine o termo em vez de paginar.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
         - name: city
           in: query
           required: false
@@ -2042,11 +2053,22 @@ paths:
         - name: search
           in: query
           required: false
-          description: Busca parcial (sem diferenciar maiúsculas) pelo nome da comunidade de fé.
+          description: >-
+            Busca pelo nome da comunidade de fé sem diferenciar maiúsculas nem acentos (ADR-0041).
+            Com 2 caracteres, nomes que começam com o termo; com 3 ou mais, nomes que o
+            contêm, os que começam com ele primeiro.
           schema:
             type: string
-            minLength: 1
+            minLength: 2
             maxLength: 255
+        - name: limit
+          in: query
+          required: false
+          description: Quantidade máxima de itens (padrão 10, máximo 20, NF 2.3). `meta.hasMore` diz se há mais; refine o termo em vez de paginar.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
         - name: city
           in: query
           required: false
@@ -2793,7 +2815,10 @@ components:
           type: string
           minLength: 1
           maxLength: 50
-          description: Obrigatório junto com `identityType`.
+          description: >-
+            Obrigatório junto com `identityType`. Salvo normalizado: CPF só com dígitos
+            (11), passaporte em maiúsculas só com letras e números. Único por tipo:
+            repetido responde 422 neste campo ("Este CPF já está cadastrado.").
         aboutMe:
           type: string
           maxLength: 5000
@@ -3023,6 +3048,10 @@ components:
         identityDocument:
           type: string
           maxLength: 50
+          description: >-
+            Salvo normalizado: CPF só com dígitos (11), passaporte em maiúsculas só com
+            letras e números. Não pode ser o documento de outro missionário: responde 422
+            neste campo ("Este CPF já está cadastrado.").
     UpdateMissionaryWorkAddressRequest:
       type: object
       required:
@@ -3119,6 +3148,13 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/MissionaryAgency'
+        meta:
+          type: object
+          required: [hasMore]
+          properties:
+            hasMore:
+              type: boolean
+              description: Há mais itens além do `limit` para este termo.
     CreateMissionaryAgencyRequest:
       type: object
       required:
@@ -3249,6 +3285,13 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/FaithCommunity'
+        meta:
+          type: object
+          required: [hasMore]
+          properties:
+            hasMore:
+              type: boolean
+              description: Há mais itens além do `limit` para este termo.
     CreateFaithCommunityRequest:
       type: object
       required: [name]

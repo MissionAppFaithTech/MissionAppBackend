@@ -99,10 +99,12 @@ export class FaithCommunitySchema extends BaseModel {
     'addressLine1',
     'addressLine2',
     'city',
+    'cityNormalized',
     'country',
     'createdAt',
     'id',
     'name',
+    'nameNormalized',
     'phoneNumber',
     'postalCode',
     'state',
@@ -117,6 +119,8 @@ export class FaithCommunitySchema extends BaseModel {
   @column()
   declare city: string | null
   @column()
+  declare cityNormalized: string | null
+  @column()
   declare country: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -124,6 +128,8 @@ export class FaithCommunitySchema extends BaseModel {
   declare id: string
   @column()
   declare name: string
+  @column()
+  declare nameNormalized: string | null
   @column()
   declare phoneNumber: string | null
   @column()
@@ -332,10 +338,12 @@ export class MissionaryAgencySchema extends BaseModel {
     'addressLine1',
     'addressLine2',
     'city',
+    'cityNormalized',
     'country',
     'createdAt',
     'id',
     'name',
+    'nameNormalized',
     'phoneNumber',
     'postalCode',
     'state',
@@ -350,6 +358,8 @@ export class MissionaryAgencySchema extends BaseModel {
   @column()
   declare city: string | null
   @column()
+  declare cityNormalized: string | null
+  @column()
   declare country: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -357,6 +367,8 @@ export class MissionaryAgencySchema extends BaseModel {
   declare id: string
   @column()
   declare name: string
+  @column()
+  declare nameNormalized: string | null
   @column()
   declare phoneNumber: string | null
   @column()

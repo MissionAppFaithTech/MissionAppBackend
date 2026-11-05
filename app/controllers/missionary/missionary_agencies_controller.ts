@@ -4,16 +4,20 @@ import { createMissionaryAgencyValidator } from '#validators/missionary/create_m
 import { listMissionaryAgenciesValidator } from '#validators/missionary/list_missionary_agencies'
 import { missionaryAgencyIdValidator } from '#validators/missionary/missionary_agency_id'
 import { updateMissionaryAgencyValidator } from '#validators/missionary/update_missionary_agency'
+import { serializeCatalogPage } from '#utils/catalog_page'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class MissionaryAgenciesController {
   async index({ request, serialize }: HttpContext) {
     const filters = await request.validateUsing(listMissionaryAgenciesValidator)
-    const agencies = await new MissionaryAgenciesService().list(filters)
+    const page = await new MissionaryAgenciesService().list(filters)
 
-    return serialize({
-      missionaryAgencies: MissionaryAgencyTransformer.transform(agencies),
-    })
+    return serializeCatalogPage(
+      serialize,
+      'missionaryAgencies',
+      MissionaryAgencyTransformer.transform(page.items),
+      page
+    )
   }
 
   async show({ request, serialize }: HttpContext) {

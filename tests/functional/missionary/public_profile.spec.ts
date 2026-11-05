@@ -9,7 +9,11 @@ import MissionaryWorkAddress from '#models/missionary_work_address'
 import cache from '#services/shared/cache/cache'
 import env from '#start/env'
 import { createTestMediaAsset } from '#tests/functional/media_asset/helpers'
-import { createMissionaryTestUser, uniqueClientIp } from '#tests/functional/missionary/helpers'
+import {
+  createMissionaryTestUser,
+  uniqueClientIp,
+  uniqueCpf,
+} from '#tests/functional/missionary/helpers'
 import { BFF_SECRET_HEADER, CLIENT_IP_HEADER } from '#utils/client_ip'
 import testUtils from '@adonisjs/core/services/test_utils'
 import router from '@adonisjs/core/services/router'
@@ -31,13 +35,15 @@ const profileUrl = (username: string) =>
 /** Missionário aprovado, ativo, com username curto e os dados públicos preenchidos. */
 async function createPublicMissionary() {
   const { user, missionary, agency } = await createMissionaryTestUser()
+  const cpf = uniqueCpf()
   user.username = shortUsername()
   user.biography = 'Missionário no sertão'
   user.membershipStatus = MembershipStatus.ACTIVE
   await user.save()
 
+  // NOTE: nome único — o catálogo não aceita dois nomes iguais na mesma cidade
   const community = await FaithCommunity.create({
-    name: 'Igreja Teste',
+    name: `Igreja Teste ${uuidv7()}`,
     phoneNumber: '+5511988887777',
     userId: user.id,
   })
@@ -49,7 +55,7 @@ async function createPublicMissionary() {
     prayerRequest: 'Pela equipe.',
     lifeVerse: 'Filipenses 4:13',
     identityType: IdentityType.CPF,
-    identityDocument: '12345678909',
+    identityDocument: cpf,
     publicEmail: 'contato@missao.test',
     publicPhone: '+5521912345678',
     publicPhoneIsWhatsapp: true,
@@ -64,7 +70,7 @@ async function createPublicMissionary() {
     country: 'Brasil',
   })
 
-  return { user, missionary, agency, community }
+  return { user, missionary, agency, community, cpf }
 }
 
 test.group('Perfil público de missionário (ADR-0036)', (group) => {
@@ -97,7 +103,7 @@ test.group('Perfil público de missionário (ADR-0036)', (group) => {
   })
 
   test('devolve só os campos públicos aprovados', async ({ client, assert }) => {
-    const { user, agency, community } = await createPublicMissionary()
+    const { user, agency, community, cpf } = await createPublicMissionary()
 
     const response = await client
       .get(profileUrl(user.username))
@@ -112,7 +118,7 @@ test.group('Perfil público de missionário (ADR-0036)', (group) => {
       profilePictureUrl: null,
       role: 'MISSIONARY',
       missionaryAgency: { id: agency.id, name: agency.name },
-      faithCommunity: { id: community.id, name: 'Igreja Teste' },
+      faithCommunity: { id: community.id, name: community.name },
       about: {
         aboutMe: 'Sirvo comunidades rurais.',
         missionStorySummary: 'Comecei em 2015.',
@@ -132,7 +138,7 @@ test.group('Perfil público de missionário (ADR-0036)', (group) => {
 
     // NOTE: nenhuma PII nem dado interno, em qualquer nível
     const serialized = JSON.stringify(profile)
-    for (const secret of [user.email, user.phoneNumber, '12345678909', '48900-000', 'Centro']) {
+    for (const secret of [user.email, user.phoneNumber, cpf, '48900-000', 'Centro']) {
       assert.notInclude(serialized, secret)
     }
   })
