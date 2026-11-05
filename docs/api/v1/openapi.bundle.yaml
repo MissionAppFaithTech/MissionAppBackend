@@ -1772,7 +1772,8 @@ paths:
       description: >-
         Consulta pública (sem autenticação) usada pelo cadastro de missionário
         para escolher agências missionárias antes de a conta existir. Limitada a 20
-        requisições por janela de 60 segundos por IP.
+        requisições por janela de 60 segundos por IP; pedidos do servidor do BFF sem IP de
+        usuário (busca cacheada no Next, ADR-0041) têm cota própria de 600/min.
       security: []
       parameters:
         - name: search
@@ -2047,7 +2048,8 @@ paths:
       description: >-
         Consulta pública (sem autenticação) usada pelo cadastro de missionário
         para escolher comunidades de fé antes de a conta existir. Limitada a 20
-        requisições por janela de 60 segundos por IP.
+        requisições por janela de 60 segundos por IP; pedidos do servidor do BFF sem IP de
+        usuário (busca cacheada no Next, ADR-0041) têm cota própria de 600/min.
       security: []
       parameters:
         - name: search

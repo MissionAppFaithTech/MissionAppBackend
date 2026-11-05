@@ -33,7 +33,8 @@ O frontend passa a usar um autocomplete com busca no servidor. A questão é: **
    - `limit` padrão 10, máximo 20 (NF 2.3), lendo `limit + 1` para responder `meta.hasMore`; sem `search`, só a primeira página;
    - resposta `{ data: { missionaryAgencies | faithCommunities }, meta: { hasMore } }` — compatível com a lista anterior.
 5. **Deduplicação** compara `name_normalized = catalog_normalize(?)` e a cidade, usando o índice único. O advisory lock continua: serializa cadastros do mesmo nome para que o segundo **reaproveite** o registro em vez de receber um `23505`, que abortaria a transação do cadastro de missionário.
-6. **Sem cache** de resposta no backend: com os índices, a consulta é barata, e os catálogos mudam pouco e são lidos pelo autocomplete com termos variados. O frontend cacheia por termo (TanStack Query e cache do Next).
+6. **Sem cache de resposta no backend:** com os índices, a consulta é barata. O cache fica no frontend: `use cache` no BFF do Next, chaveado pelo termo normalizado e invalidado (`updateTag`) quando um item é criado, mais TanStack Query no navegador.
+7. **Cota própria para a busca cacheada no Next.** A função com `use cache` não lê o IP do usuário, então chama a API como servidor do BFF autenticado, sem `x-missionapp-client-ip`. Como no perfil público ([ADR-0036](./0036-perfil-publico-anonimo-e-orcamento-de-rate-limit-do-servidor-do-bff.md)), esse tráfego usa a chave `rate_limit:public_catalog:<catálogo>:bff_server`, com 600 requisições por minuto, sem consumir os 20/min por IP de nenhum visitante. O BFF limita cada IP antes de buscar um termo novo; os pedidos com IP repassado continuam nos 20/min por IP.
 
 ## Justificativa
 
@@ -66,7 +67,7 @@ O frontend passa a usar um autocomplete com busca no servidor. A questão é: **
 
 - Duas extensões novas no PostgreSQL (`unaccent`, `pg_trgm`); presentes no contrib da imagem oficial e nos provedores gerenciados mais comuns, mas exigem permissão de `CREATE EXTENSION` na migration.
 - Sem cursor: o autocomplete refina o termo em vez de paginar; uma tela que precise percorrer todo o catálogo precisará de cursor (ADR-0033).
-- O rate limit público de 20 requisições por 60 s por IP e por catálogo passa a ser consumido pelo autocomplete. Com debounce de 300 ms e mínimo de 2 caracteres no frontend, o consumo esperado fica abaixo do limite, mas deve ser acompanhado.
+- A cota de 600/min do servidor do BFF é compartilhada: termos inéditos (cache miss) de muitos usuários somam nela. O limite por IP feito no BFF e o debounce de 300 ms com mínimo de 2 caracteres no frontend reduzem o risco, mas o consumo deve ser acompanhado.
 - A chave do advisory lock ainda usa a normalização em JS (`normalizeCatalogKey`); se ela divergir de `catalog_normalize` em algum caractere raro, a concorrência cai no índice único (`23505`) em vez de reaproveitar o registro.
 
 ## Referências
