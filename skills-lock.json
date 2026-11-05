@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "elasticsearch-cluster-health": {
+      "source": "elastic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elasticsearch/elasticsearch-cluster-health/SKILL.md",
+      "computedHash": "cccc18834accc442c896cce1603256f679819571c87db625a704b46e3bacf41a"
+    },
+    "elasticsearch-index-design": {
+      "source": "elastic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elasticsearch/elasticsearch-index-design/SKILL.md",
+      "computedHash": "cd8600bea92fec7d32a3ca9b8b424038c41f2a8567bef2aff1569b36b3405e8a"
+    },
+    "elasticsearch-query-optimization": {
+      "source": "elastic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elasticsearch/elasticsearch-query-optimization/SKILL.md",
+      "computedHash": "273bb4cce45edb95dce93844a3165157d91547d45b0dd2913b41c4785fd83966"
+    },
+    "elasticsearch-reindex": {
+      "source": "elastic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elasticsearch/elasticsearch-reindex/SKILL.md",
+      "computedHash": "c054b0c902cc7f47eb09a69cf008fdb2daa4a55fbec60e0da8cab2b03ed76633"
+    },
+    "elasticsearch-search-relevance": {
+      "source": "elastic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elasticsearch/elasticsearch-search-relevance/SKILL.md",
+      "computedHash": "e2882aebc40ccc7b7a897c1da11b83c861b9ff4b9306c43e9feff8bbc5f9d201"
+    }
+  }
+}
