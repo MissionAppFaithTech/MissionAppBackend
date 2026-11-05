@@ -1,9 +1,11 @@
 import { PASSWORD_RESET_EMAIL_JOB_NAME } from '#constants/password_reset'
 import { EMAIL_QUEUE_NAME } from '#constants/mail'
+import { CATALOG_INDEXING_JOB_NAME } from '#constants/catalog_search'
 import { MISSIONARY_INDEXING_JOB_NAME } from '#constants/missionary_search'
 import { SEARCH_INDEXING_QUEUE_NAME } from '#constants/search'
 import { WELCOME_EMAIL_JOB_NAME } from '#constants/welcome_email'
 import { sendPasswordResetEmail } from '#jobs/auth/send_password_reset_email_job'
+import { indexCatalogItem } from '#jobs/catalog/index_catalog_item_job'
 import { indexMissionary } from '#jobs/user/index_missionary_job'
 import { sendWelcomeEmail } from '#jobs/user/send_welcome_email_job'
 import {
@@ -54,6 +56,11 @@ export const workerRegistry: WorkerRegistryEntry[] = [
     queueName: SEARCH_INDEXING_QUEUE_NAME,
     jobName: MISSIONARY_INDEXING_JOB_NAME,
     handle: indexMissionary,
+  },
+  {
+    queueName: SEARCH_INDEXING_QUEUE_NAME,
+    jobName: CATALOG_INDEXING_JOB_NAME,
+    handle: indexCatalogItem,
   },
   {
     queueName: MEDIA_PROCESSING_QUEUE_NAME,

@@ -168,6 +168,11 @@ check-env:
 storage-setup:
     node ace storage:setup
 
+# Recria os índices de busca dos catálogos no Elasticsearch (ADR-0042) — idempotente
+[group('dev')]
+search-reindex:
+    node ace search:reindex-catalogs
+
 # Instala dependências
 [group('dev')]
 install:
@@ -175,7 +180,7 @@ install:
 
 # Sobe a infraestrutura, aguarda, migra e inicia o servidor de desenvolvimento
 [group('dev')]
-start: check-env up _wait-infra storage-setup migrate
+start: check-env up _wait-infra storage-setup migrate search-reindex
     pnpm dev
 
 # Inicia servidor de desenvolvimento com HMR

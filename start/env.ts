@@ -67,6 +67,9 @@ export default await Env.create(new URL('../', import.meta.url), {
   R2_PUBLIC_URL: Env.schema.string.optional({ format: 'url', tld: false }),
 
   ELASTIC_NODE: Env.schema.string(),
+  // NOTE: prefixo dos índices de catálogo (ADR-0042), para isolar testes e E2E
+  // num mesmo cluster (ex.: `test_`, `e2e_`); vazio em desenvolvimento e produção
+  ELASTIC_INDEX_PREFIX: Env.schema.string.optional(),
 
   JWT_SECRET: Env.schema.string(),
 

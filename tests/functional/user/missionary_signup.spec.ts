@@ -86,7 +86,10 @@ test.group('Conta - cadastro de missionário', (group) => {
 
     const jobs = await searchIndexingQueue.getJobs(['waiting', 'active', 'completed'])
     const indexing = jobs.filter(
-      (job) => job.name === MISSIONARY_INDEXING_JOB_NAME && job.data.email === payload.email
+      (job) =>
+        job.name === MISSIONARY_INDEXING_JOB_NAME &&
+        'email' in job.data &&
+        job.data.email === payload.email
     )
     assert.lengthOf(indexing, 1)
   })

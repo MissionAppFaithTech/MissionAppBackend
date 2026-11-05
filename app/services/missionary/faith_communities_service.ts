@@ -3,7 +3,6 @@ import FaithCommunityNotFoundException from '#exceptions/missionary/faith_commun
 import FaithCommunity from '#models/faith_community'
 import Pastor from '#models/pastor'
 import type User from '#models/user'
-import { applySearchFilters, paginateCatalog } from '#services/shared/apply_search_filters'
 import {
   canManageCatalog,
   catalogAddressOf,
@@ -11,6 +10,8 @@ import {
 } from '#services/shared/catalog_entry'
 import type { CatalogAddress } from '#services/shared/catalog_entry'
 import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
+import { searchCatalog } from '#services/shared/search_catalog'
+import { syncCatalogSearchAfterCommit } from '#services/shared/sync_catalog_search'
 import type { CatalogPage, SearchFilters } from '#services/shared/apply_search_filters'
 import { fieldValidationError } from '#utils/field_validation_error'
 import { omitUndefined } from '#utils/omit_undefined'
@@ -43,14 +44,13 @@ const pastorsInCreationOrder = (query: HasManyQueryBuilderContract<typeof Pastor
  * de autorização por dono do registro e permissões de administrador.
  */
 export class FaithCommunitiesService {
-  /** Busca paginada por limite (ADR-0041); nunca carrega a tabela inteira. */
+  /**
+   * Busca paginada por limite (ADR-0041), tolerante a erros no Elasticsearch
+   * com reserva no PostgreSQL (ADR-0042); nunca carrega a tabela inteira.
+   */
   async list(filters: SearchFilters = {}): Promise<CatalogPage<FaithCommunity>> {
-    return paginateCatalog(
-      applySearchFilters(FaithCommunity.query(), filters).preload(
-        'pastors',
-        pastorsInCreationOrder
-      ),
-      filters.limit
+    return searchCatalog('faith_communities', FaithCommunity, filters, (query) =>
+      query.preload('pastors', pastorsInCreationOrder)
     )
   }
 
@@ -100,6 +100,7 @@ export class FaithCommunitiesService {
       { client: trx }
     )
     await this.syncPastor(community, payload, trx)
+    syncCatalogSearchAfterCommit(trx, 'faith_communities', community)
     return community
   }
 
@@ -123,6 +124,7 @@ export class FaithCommunitiesService {
       )
       await community.save()
       await this.syncPastor(community, payload, trx)
+      syncCatalogSearchAfterCommit(trx, 'faith_communities', community)
       return community
     })
   }
@@ -135,6 +137,7 @@ export class FaithCommunitiesService {
     await db.transaction(async (trx) => {
       community.useTransaction(trx)
       await community.delete()
+      syncCatalogSearchAfterCommit(trx, 'faith_communities', { removedId: community.id })
     })
   }
 

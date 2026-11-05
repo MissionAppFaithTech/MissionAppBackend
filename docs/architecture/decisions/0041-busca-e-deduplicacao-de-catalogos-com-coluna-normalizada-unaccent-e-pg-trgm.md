@@ -5,6 +5,7 @@
 - **Status:** 🟢 Aceito
 - **Data:** 2026-11-05
 - **Proponentes:** [Pedro Amaro](https://github.com/Amaro-peter)
+- **Complementado por:** [ADR-0042](./0042-busca-de-catalogos-tolerante-a-erros-no-elasticsearch.md) (busca tolerante a erros)
 
 ---
 

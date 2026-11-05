@@ -9,6 +9,8 @@ import { authApiClient } from '@adonisjs/auth/plugins/api_client'
 import { sessionApiClient } from '@adonisjs/session/plugins/api_client'
 import searchClient from '#services/shared/search/search_client'
 import { MissionarySearchService } from '#services/search/missionary_search_service'
+import { CATALOG_SEARCH_KINDS } from '#constants/catalog_search'
+import { CatalogSearchService } from '#services/search/catalog_search_service'
 import { emailQueue } from '#queues/email_queue'
 import { searchIndexingQueue } from '#queues/search_indexing_queue'
 import { mediaProcessingQueue } from '#queues/media_processing_queue'
@@ -53,6 +55,12 @@ export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
   setup: [
     async () => {
       await new MissionarySearchService().searchByName('aquecimento')
+    },
+    // NOTE: recria os índices de catálogo dos testes (prefixo `test_`, ver
+    // .env.test) a partir do banco: documentos de rodadas anteriores (itens
+    // criados em transações desfeitas) não sobram.
+    async () => {
+      for (const kind of CATALOG_SEARCH_KINDS) await new CatalogSearchService(kind).rebuild()
     },
   ],
   // NOTE: fecha as conexões compartilhadas — sem isso o processo nunca encerra
