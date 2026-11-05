@@ -4,16 +4,20 @@ import { createFaithCommunityValidator } from '#validators/missionary/create_fai
 import { faithCommunityIdValidator } from '#validators/missionary/faith_community_id'
 import { listFaithCommunitiesValidator } from '#validators/missionary/list_faith_communities'
 import { updateFaithCommunityValidator } from '#validators/missionary/update_faith_community'
+import { serializeCatalogPage } from '#utils/catalog_page'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class FaithCommunitiesController {
   async index({ request, serialize }: HttpContext) {
     const filters = await request.validateUsing(listFaithCommunitiesValidator)
-    const communities = await new FaithCommunitiesService().list(filters)
+    const page = await new FaithCommunitiesService().list(filters)
 
-    return serialize({
-      faithCommunities: FaithCommunityTransformer.transform(communities),
-    })
+    return serializeCatalogPage(
+      serialize,
+      'faithCommunities',
+      FaithCommunityTransformer.transform(page.items),
+      page
+    )
   }
 
   async show({ request, serialize }: HttpContext) {

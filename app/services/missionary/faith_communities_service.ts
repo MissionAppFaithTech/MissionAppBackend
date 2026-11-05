@@ -1,40 +1,35 @@
-import { UserRole } from '#enums/user/user_role'
 import FaithCommunityForbiddenException from '#exceptions/missionary/faith_community_forbidden_exception'
 import FaithCommunityNotFoundException from '#exceptions/missionary/faith_community_not_found_exception'
 import FaithCommunity from '#models/faith_community'
 import Pastor from '#models/pastor'
 import type User from '#models/user'
-import { applySearchFilters } from '#services/shared/apply_search_filters'
+import { applySearchFilters, paginateCatalog } from '#services/shared/apply_search_filters'
+import {
+  canManageCatalog,
+  catalogAddressOf,
+  withCatalogTransaction,
+} from '#services/shared/catalog_entry'
+import type { CatalogAddress } from '#services/shared/catalog_entry'
 import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
-import type { SearchFilters } from '#services/shared/apply_search_filters'
+import type { CatalogPage, SearchFilters } from '#services/shared/apply_search_filters'
 import { fieldValidationError } from '#utils/field_validation_error'
 import { omitUndefined } from '#utils/omit_undefined'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import type { HasManyQueryBuilderContract } from '@adonisjs/lucid/types/relations'
 
-type Address = {
-  addressLine1?: string
-  addressLine2?: string
-  city?: string
-  state?: string
-  country?: string
-  postalCode?: string
-  website?: string
-}
-
 type PastorFields = {
   pastorName?: string | null
   pastorPhone?: string | null
 }
 
-type CreateFaithCommunityPayload = Address &
+type CreateFaithCommunityPayload = CatalogAddress &
   PastorFields & {
     name: string
     phoneNumber?: string
   }
 
-type UpdateFaithCommunityPayload = Address &
+type UpdateFaithCommunityPayload = CatalogAddress &
   PastorFields & {
     name?: string
     phoneNumber?: string
@@ -48,10 +43,15 @@ const pastorsInCreationOrder = (query: HasManyQueryBuilderContract<typeof Pastor
  * de autorização por dono do registro e permissões de administrador.
  */
 export class FaithCommunitiesService {
-  async list(filters: SearchFilters = {}): Promise<FaithCommunity[]> {
-    return applySearchFilters(FaithCommunity.query(), filters)
-      .preload('pastors', pastorsInCreationOrder)
-      .orderBy('name', 'asc')
+  /** Busca paginada por limite (ADR-0041); nunca carrega a tabela inteira. */
+  async list(filters: SearchFilters = {}): Promise<CatalogPage<FaithCommunity>> {
+    return paginateCatalog(
+      applySearchFilters(FaithCommunity.query(), filters).preload(
+        'pastors',
+        pastorsInCreationOrder
+      ),
+      filters.limit
+    )
   }
 
   async show(id: string): Promise<FaithCommunity> {
@@ -75,9 +75,7 @@ export class FaithCommunitiesService {
     payload: CreateFaithCommunityPayload,
     trx?: TransactionClientContract
   ): Promise<FaithCommunity> {
-    return trx
-      ? this.createWithin(actor, payload, trx)
-      : db.transaction((own) => this.createWithin(actor, payload, own))
+    return withCatalogTransaction(trx, (client) => this.createWithin(actor, payload, client))
   }
 
   private async createWithin(
@@ -96,7 +94,7 @@ export class FaithCommunitiesService {
       {
         name: payload.name,
         phoneNumber: payload.phoneNumber,
-        ...this.addressOf(payload),
+        ...catalogAddressOf(payload),
         userId: actor.id,
       },
       { client: trx }
@@ -120,7 +118,7 @@ export class FaithCommunitiesService {
         omitUndefined({
           name: payload.name,
           phoneNumber: payload.phoneNumber,
-          ...this.addressOf(payload),
+          ...catalogAddressOf(payload),
         })
       )
       await community.save()
@@ -184,24 +182,8 @@ export class FaithCommunitiesService {
     await community.load('pastors', pastorsInCreationOrder)
   }
 
-  private addressOf(payload: Address): Address {
-    return {
-      addressLine1: payload.addressLine1,
-      addressLine2: payload.addressLine2,
-      city: payload.city,
-      state: payload.state,
-      country: payload.country,
-      postalCode: payload.postalCode,
-      website: payload.website,
-    }
-  }
-
   private assertCanManage(actor: User, ownerId: string | null): void {
-    if (actor.role === UserRole.ADMIN) {
-      return
-    }
-
-    if (!ownerId || ownerId !== actor.id) {
+    if (!canManageCatalog(actor, ownerId)) {
       throw new FaithCommunityForbiddenException(
         'Você não tem permissão para alterar esta comunidade de fé'
       )

@@ -1,17 +1,11 @@
 import type { LucidModel } from '@adonisjs/lucid/types/model'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
-// NOTE: o banco não tem a extensão `unaccent`; `translate` cobre os acentos do
-// português e do espanhol, os mesmos que `normalizeCatalogKey` remove em JS.
-const ACCENTED = 'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ'
-const PLAIN = 'aaaaaaeeeeiiiiooooouuuucnyy'
-
-const normalizedColumn = (column: string) =>
-  `translate(lower(regexp_replace(trim(coalesce(${column}, '')), '\\s+', ' ', 'g')), '${ACCENTED}', '${PLAIN}')`
-
 /**
- * Normaliza nome/cidade para comparar registros de catálogo: sem acentos,
- * minúsculo, sem espaços nas pontas e com espaços internos únicos.
+ * Normaliza nome/cidade em JS como `catalog_normalize` faz no banco: sem
+ * acentos, minúsculo, sem espaços nas pontas e com espaços internos únicos.
+ * Serve à chave do advisory lock e à escolha prefixo/trecho da busca; a
+ * comparação em si é feita pelo banco (ADR-0041).
  *
  * @example
  * normalizeCatalogKey('  Igreja  Abençoada ') // 'igreja abencoada'
@@ -28,7 +22,7 @@ export function normalizeCatalogKey(value: string | null | undefined): string {
 /**
  * Busca, dentro da transação, um registro de catálogo (agência ou comunidade de
  * fé) com o mesmo nome e a mesma cidade, ignorando maiúsculas, acentos e
- * espaços. Antes da busca, trava a chave normalizada com um advisory lock da
+ * espaços (`name_normalized`/`city_normalized`). Antes da busca, trava a chave normalizada com um advisory lock da
  * transação para que dois cadastros simultâneos do mesmo nome não criem duas
  * linhas.
  *
@@ -46,10 +40,11 @@ export async function findCatalogDuplicate<Model extends LucidModel>(
     `${model.table}:${name}:${city}`,
   ])
 
+  // NOTE: mesma normalização das colunas geradas e do índice único
+  // `uq_<tabela>_name_normalized_city_normalized`, que garante a regra no banco
   return model
     .query({ client: trx })
-    .whereRaw(`${normalizedColumn('name')} = ?`, [name])
-    .whereRaw(`${normalizedColumn('city')} = ?`, [city])
-    .orderBy('created_at', 'asc')
+    .whereRaw('name_normalized = catalog_normalize(?)', [payload.name])
+    .whereRaw("city_normalized = coalesce(catalog_normalize(?), '')", [payload.city ?? ''])
     .first() as Promise<InstanceType<Model> | null>
 }

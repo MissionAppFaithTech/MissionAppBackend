@@ -49,7 +49,7 @@ test.group('User - profile show', (group) => {
 
     response.assertStatus(200)
     const body = response.body() as ProfileBody
-    assert.deepEqual(body.data.missionaryAgency, { id: agency.id, name: 'Agência Teste' })
+    assert.deepEqual(body.data.missionaryAgency, { id: agency.id, name: agency.name })
     assert.deepEqual(body.data.faithCommunity, { id: community.id, name: 'Comunidade Teste' })
   })
 
@@ -63,7 +63,7 @@ test.group('User - profile show', (group) => {
 
     response.assertStatus(200)
     const body = response.body() as ProfileBody
-    assert.deepEqual(body.data.missionaryAgency, { id: agency.id, name: 'Agência Teste' })
+    assert.deepEqual(body.data.missionaryAgency, { id: agency.id, name: agency.name })
     assert.isNull(body.data.faithCommunity)
   })
 

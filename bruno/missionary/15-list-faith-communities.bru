@@ -10,7 +10,8 @@ get {
 }
 
 params:query {
-  ~search: 
+  search: igreja
+  ~limit: 10
   ~city: 
   ~state: 
   ~country: 
@@ -23,4 +24,9 @@ docs {
   antes de a conta existir. Limitada a 20 requisições por 60 segundos
   por IP (429 + Retry-After ao exceder; corpo no envelope de erro do
   ADR-0034 com `code: E_TOO_MANY_REQUESTS` e `meta.retryAfterSeconds`).
+
+  Busca sem diferenciar maiúsculas nem acentos (ADR-0041): `search` com
+  2 caracteres procura pelo começo do nome; com 3 ou mais, por qualquer
+  trecho. `limit` padrão 10, máximo 20; a resposta traz `meta.hasMore`.
+  Sem `search`, devolve só a primeira página em ordem alfabética.
 }

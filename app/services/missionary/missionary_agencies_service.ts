@@ -1,33 +1,28 @@
-import { UserRole } from '#enums/user/user_role'
 import MissionaryAgencyForbiddenException from '#exceptions/missionary/missionary_agency_forbidden_exception'
 import MissionaryAgencyInUseException from '#exceptions/missionary/missionary_agency_in_use_exception'
 import MissionaryAgencyNotFoundException from '#exceptions/missionary/missionary_agency_not_found_exception'
 import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
 import type User from '#models/user'
-import { applySearchFilters } from '#services/shared/apply_search_filters'
+import { applySearchFilters, paginateCatalog } from '#services/shared/apply_search_filters'
+import {
+  canManageCatalog,
+  catalogAddressOf,
+  withCatalogTransaction,
+} from '#services/shared/catalog_entry'
+import type { CatalogAddress } from '#services/shared/catalog_entry'
 import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
 import { isForeignKeyViolation } from '#utils/postgres_errors'
-import type { SearchFilters } from '#services/shared/apply_search_filters'
+import type { CatalogPage, SearchFilters } from '#services/shared/apply_search_filters'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
-type Address = {
-  addressLine1?: string
-  addressLine2?: string
-  city?: string
-  state?: string
-  country?: string
-  postalCode?: string
-  website?: string
-}
-
-type CreateMissionaryAgencyPayload = Address & {
+type CreateMissionaryAgencyPayload = CatalogAddress & {
   name: string
   phoneNumber?: string
 }
 
-type UpdateMissionaryAgencyPayload = Address & {
+type UpdateMissionaryAgencyPayload = CatalogAddress & {
   name?: string
   phoneNumber?: string
 }
@@ -37,8 +32,9 @@ type UpdateMissionaryAgencyPayload = Address & {
  * de autorização por dono do registro e permissões de administrador.
  */
 export class MissionaryAgenciesService {
-  async list(filters: SearchFilters = {}): Promise<MissionaryAgency[]> {
-    return applySearchFilters(MissionaryAgency.query(), filters).orderBy('name', 'asc')
+  /** Busca paginada por limite (ADR-0041); nunca carrega a tabela inteira. */
+  async list(filters: SearchFilters = {}): Promise<CatalogPage<MissionaryAgency>> {
+    return paginateCatalog(applySearchFilters(MissionaryAgency.query(), filters), filters.limit)
   }
 
   async show(id: string): Promise<MissionaryAgency> {
@@ -59,9 +55,7 @@ export class MissionaryAgenciesService {
     payload: CreateMissionaryAgencyPayload,
     trx?: TransactionClientContract
   ): Promise<MissionaryAgency> {
-    return trx
-      ? this.createWithin(actor, payload, trx)
-      : db.transaction((own) => this.createWithin(actor, payload, own))
+    return withCatalogTransaction(trx, (client) => this.createWithin(actor, payload, client))
   }
 
   private async createWithin(
@@ -77,7 +71,7 @@ export class MissionaryAgenciesService {
       {
         name: payload.name,
         phoneNumber: payload.phoneNumber,
-        ...this.addressOf(payload),
+        ...catalogAddressOf(payload),
         userId: actor.id,
       },
       { client: trx }
@@ -98,7 +92,7 @@ export class MissionaryAgenciesService {
       agency.merge({
         name: payload.name,
         phoneNumber: payload.phoneNumber,
-        ...this.addressOf(payload),
+        ...catalogAddressOf(payload),
       })
       await agency.save()
       return agency
@@ -139,24 +133,8 @@ export class MissionaryAgenciesService {
     )
   }
 
-  private addressOf(payload: Address): Address {
-    return {
-      addressLine1: payload.addressLine1,
-      addressLine2: payload.addressLine2,
-      city: payload.city,
-      state: payload.state,
-      country: payload.country,
-      postalCode: payload.postalCode,
-      website: payload.website,
-    }
-  }
-
   private assertCanManage(actor: User, ownerId: string | null): void {
-    if (actor.role === UserRole.ADMIN) {
-      return
-    }
-
-    if (!ownerId || ownerId !== actor.id) {
+    if (!canManageCatalog(actor, ownerId)) {
       throw new MissionaryAgencyForbiddenException(
         'Você não tem permissão para alterar esta agência missionária'
       )

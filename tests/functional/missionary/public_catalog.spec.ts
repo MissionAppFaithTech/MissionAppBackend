@@ -1,5 +1,6 @@
 import { createTestUser } from '#tests/functional/auth/helpers'
 import env from '#start/env'
+import cache from '#services/shared/cache/cache'
 import { BFF_SECRET_HEADER, CLIENT_IP_HEADER } from '#utils/client_ip'
 import { uniqueClientIp } from '#tests/functional/missionary/helpers'
 import FaithCommunity from '#models/faith_community'
@@ -184,5 +185,67 @@ test.group('Catálogo público - agências missionárias e comunidades de fé', 
       .header('X-Forwarded-For', clientIp)
 
     communities.assertStatus(200)
+  })
+
+  test('a busca cacheada no servidor do BFF usa cota própria, fora do limite por IP (ADR-0041)', async ({
+    client,
+  }) => {
+    const url = router.builder().make('v1.missionary_agencies.index')!
+    const connectionIp = uniqueClientIp()
+    const secret = randomBytes(32).toString('hex')
+    const previous = env.get('BFF_SHARED_SECRET')
+    env.set('BFF_SHARED_SECRET', secret)
+
+    try {
+      for (let attempt = 1; attempt <= RATE_LIMIT_MAX_REQUESTS; attempt++) {
+        await client.get(url).header('X-Forwarded-For', connectionIp)
+      }
+      const exhausted = await client.get(url).header('X-Forwarded-For', connectionIp)
+      exhausted.assertStatus(429)
+
+      // NOTE: mesmo IP de conexão, mas autenticado como BFF e sem IP de usuário
+      // (busca cacheada com `use cache`) — não conta no limite por IP
+      const fromBffServer = await client
+        .get(url)
+        .header('X-Forwarded-For', connectionIp)
+        .header(BFF_SECRET_HEADER, secret)
+      fromBffServer.assertStatus(200)
+
+      // NOTE: com segredo falso, volta a contar pelo IP da conexão (já esgotado)
+      const forged = await client
+        .get(url)
+        .header('X-Forwarded-For', connectionIp)
+        .header(BFF_SECRET_HEADER, randomBytes(32).toString('hex'))
+      forged.assertStatus(429)
+    } finally {
+      env.set('BFF_SHARED_SECRET', previous ?? '')
+    }
+  })
+
+  test('a cota do servidor do BFF para em 600 por minuto em cada catálogo', async ({ client }) => {
+    const bucket = 'rate_limit:public_catalog:faith_communities:bff_server'
+    const secret = randomBytes(32).toString('hex')
+    const previous = env.get('BFF_SHARED_SECRET')
+    env.set('BFF_SHARED_SECRET', secret)
+
+    // NOTE: pré-carrega o contador em vez de disparar 600 requisições e o devolve
+    // a 0 no fim, para não afetar outras execuções
+    await cache.set(bucket, '600', 60)
+    try {
+      const limited = await client
+        .get(router.builder().make('v1.faith_communities.index')!)
+        .header('X-Forwarded-For', uniqueClientIp())
+        .header(BFF_SECRET_HEADER, secret)
+      limited.assertStatus(429)
+
+      const otherCatalog = await client
+        .get(router.builder().make('v1.missionary_agencies.index')!)
+        .header('X-Forwarded-For', uniqueClientIp())
+        .header(BFF_SECRET_HEADER, secret)
+      otherCatalog.assertStatus(200)
+    } finally {
+      await cache.set(bucket, '0', 1)
+      env.set('BFF_SHARED_SECRET', previous ?? '')
+    }
   })
 })

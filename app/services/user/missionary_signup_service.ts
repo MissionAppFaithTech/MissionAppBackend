@@ -7,8 +7,10 @@ import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
 import User from '#models/user'
 import { FaithCommunitiesService } from '#services/missionary/faith_communities_service'
+import { IdentityDocumentService } from '#services/missionary/identity_document_service'
 import { MissionaryAgenciesService } from '#services/missionary/missionary_agencies_service'
 import { fieldValidationError } from '#utils/field_validation_error'
+import { uniqueViolationFieldError } from '#utils/unique_violation_field_error'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import type { DateTime } from 'luxon'
@@ -54,8 +56,39 @@ type MissionarySignupPayload = {
 export class MissionarySignupService {
   async execute(payload: MissionarySignupPayload): Promise<{ user: User; missionary: Missionary }> {
     this.assertSingleChoice(payload)
+    if (payload.identityType && payload.identityDocument) {
+      await new IdentityDocumentService().assertAvailable(
+        payload.identityType,
+        payload.identityDocument
+      )
+    }
 
-    const result = await db.transaction(async (trx) => {
+    const result = await this.createAccount(payload).catch((error: unknown) => {
+      // NOTE: dois cadastros simultâneos passam pela pré-checagem; o índice
+      // único decide e a perdedora recebe o erro no campo, não um 500
+      throw uniqueViolationFieldError(error, payload.identityType) ?? error
+    })
+
+    await result.missionary.refresh()
+    await result.missionary.load((loader) => {
+      loader.load('agency').load('faithCommunity').load('workAddresses')
+    })
+
+    // NOTE: só UserRegistered — com role MISSIONARY ele já envia o e-mail de
+    // boas-vindas e indexa o missionário; MissionaryProfileCreated indexaria de novo
+    await UserRegistered.dispatch(
+      result.user.id,
+      result.user.fullName,
+      result.user.email,
+      result.user.role
+    )
+
+    return result
+  }
+
+  /** Conta, perfil e catálogos novos na mesma transação. */
+  private createAccount(payload: MissionarySignupPayload) {
+    return db.transaction(async (trx) => {
       // NOTE: passwordHash recebe o valor em texto plano — o hook beforeSave do
       // AuthFinder faz o hash automaticamente antes de persistir.
       const user = await User.create(
@@ -92,22 +125,6 @@ export class MissionarySignupService {
 
       return { user, missionary }
     })
-
-    await result.missionary.refresh()
-    await result.missionary.load((loader) => {
-      loader.load('agency').load('faithCommunity').load('workAddresses')
-    })
-
-    // NOTE: só UserRegistered — com role MISSIONARY ele já envia o e-mail de
-    // boas-vindas e indexa o missionário; MissionaryProfileCreated indexaria de novo
-    await UserRegistered.dispatch(
-      result.user.id,
-      result.user.fullName,
-      result.user.email,
-      result.user.role
-    )
-
-    return result
   }
 
   private assertSingleChoice(payload: MissionarySignupPayload): void {
