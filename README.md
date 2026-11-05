@@ -309,12 +309,15 @@ cp .env.example .env
 docker compose up -d
 ```
 
-6. Execute as migrations e crie os buckets de storage no MinIO:
+6. Execute as migrations, crie os buckets de storage no MinIO e os índices de busca dos catálogos no Elasticsearch ([ADR-0042](./docs/architecture/decisions/0042-busca-de-catalogos-tolerante-a-erros-no-elasticsearch.md)):
 
 ```bash
 node ace migration:run
 node ace storage:setup
+node ace search:reindex-catalogs
 ```
+
+O `search:reindex-catalogs` também deve rodar no deploy. Enquanto os índices não existem, a busca de catálogos usa o PostgreSQL.
 
 7. Rode o servidor em modo de desenvolvimento com HMR:
 

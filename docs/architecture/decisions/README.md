@@ -570,8 +570,8 @@ flowchart LR
          <td>🟢 Aceito</td>
       </tr>
       <tr>
-         <td><a href="./0042-busca-de-catalogos-tolerante-a-erros-com-pg-trgm-e-fuzzystrmatch.md">ADR-0042</a></td>
-         <td align="left">Busca de Catálogos Tolerante a Erros com pg_trgm e fuzzystrmatch</td>
+         <td><a href="./0042-busca-de-catalogos-tolerante-a-erros-no-elasticsearch.md">ADR-0042</a></td>
+         <td align="left">Busca de Catálogos Tolerante a Erros no Elasticsearch</td>
          <td>🟢 Aceito</td>
       </tr>
    </tbody>

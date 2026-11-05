@@ -34,7 +34,9 @@ async function findEnqueuedIndexingJob(email: string) {
   return (
     jobs.find(
       (candidate) =>
-        candidate.name === MISSIONARY_INDEXING_JOB_NAME && candidate.data.email === email
+        candidate.name === MISSIONARY_INDEXING_JOB_NAME &&
+        'email' in candidate.data &&
+        candidate.data.email === email
     ) ?? null
   )
 }

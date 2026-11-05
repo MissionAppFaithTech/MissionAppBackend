@@ -4,7 +4,6 @@ import MissionaryAgencyNotFoundException from '#exceptions/missionary/missionary
 import Missionary from '#models/missionary'
 import MissionaryAgency from '#models/missionary_agency'
 import type User from '#models/user'
-import { applySearchFilters, paginateCatalog } from '#services/shared/apply_search_filters'
 import {
   canManageCatalog,
   catalogAddressOf,
@@ -12,6 +11,8 @@ import {
 } from '#services/shared/catalog_entry'
 import type { CatalogAddress } from '#services/shared/catalog_entry'
 import { findCatalogDuplicate } from '#services/shared/find_catalog_duplicate'
+import { searchCatalog } from '#services/shared/search_catalog'
+import { syncCatalogSearchAfterCommit } from '#services/shared/sync_catalog_search'
 import { isForeignKeyViolation } from '#utils/postgres_errors'
 import type { CatalogPage, SearchFilters } from '#services/shared/apply_search_filters'
 import db from '@adonisjs/lucid/services/db'
@@ -32,9 +33,12 @@ type UpdateMissionaryAgencyPayload = CatalogAddress & {
  * de autorização por dono do registro e permissões de administrador.
  */
 export class MissionaryAgenciesService {
-  /** Busca paginada por limite (ADR-0041); nunca carrega a tabela inteira. */
+  /**
+   * Busca paginada por limite (ADR-0041), tolerante a erros no Elasticsearch
+   * com reserva no PostgreSQL (ADR-0042); nunca carrega a tabela inteira.
+   */
   async list(filters: SearchFilters = {}): Promise<CatalogPage<MissionaryAgency>> {
-    return paginateCatalog(applySearchFilters(MissionaryAgency.query(), filters), filters.limit)
+    return searchCatalog('missionary_agencies', MissionaryAgency, filters)
   }
 
   async show(id: string): Promise<MissionaryAgency> {
@@ -67,7 +71,7 @@ export class MissionaryAgenciesService {
     const existing = await findCatalogDuplicate(MissionaryAgency, trx, payload)
     if (existing) return existing
 
-    return MissionaryAgency.create(
+    const agency = await MissionaryAgency.create(
       {
         name: payload.name,
         phoneNumber: payload.phoneNumber,
@@ -76,6 +80,8 @@ export class MissionaryAgenciesService {
       },
       { client: trx }
     )
+    syncCatalogSearchAfterCommit(trx, 'missionary_agencies', agency)
+    return agency
   }
 
   async update(
@@ -95,6 +101,7 @@ export class MissionaryAgenciesService {
         ...catalogAddressOf(payload),
       })
       await agency.save()
+      syncCatalogSearchAfterCommit(trx, 'missionary_agencies', agency)
       return agency
     })
   }
@@ -119,6 +126,7 @@ export class MissionaryAgenciesService {
 
         agency.useTransaction(trx)
         await agency.delete()
+        syncCatalogSearchAfterCommit(trx, 'missionary_agencies', { removedId: agency.id })
       })
     } catch (error) {
       // NOTE: um missionário vinculado entre a checagem e o delete cai aqui.

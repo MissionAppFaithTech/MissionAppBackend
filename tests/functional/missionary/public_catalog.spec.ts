@@ -3,6 +3,8 @@ import env from '#start/env'
 import cache from '#services/shared/cache/cache'
 import { BFF_SECRET_HEADER, CLIENT_IP_HEADER } from '#utils/client_ip'
 import { uniqueClientIp } from '#tests/functional/missionary/helpers'
+import type { CatalogSearchKind } from '#constants/catalog_search'
+import { CatalogSearchService } from '#services/search/catalog_search_service'
 import FaithCommunity from '#models/faith_community'
 import MissionaryAgency from '#models/missionary_agency'
 import testUtils from '@adonisjs/core/services/test_utils'
@@ -17,6 +19,7 @@ type CatalogEntryAttributes = { name: string; phoneNumber: string; userId: strin
 
 type Catalog = {
   label: string
+  kind: CatalogSearchKind
   routes: 'v1.missionary_agencies' | 'v1.faith_communities'
   listKey: string
   itemKey: string
@@ -26,6 +29,7 @@ type Catalog = {
 const catalogs: Catalog[] = [
   {
     label: 'agências missionárias',
+    kind: 'missionary_agencies',
     routes: 'v1.missionary_agencies',
     listKey: 'missionaryAgencies',
     itemKey: 'missionaryAgency',
@@ -33,6 +37,7 @@ const catalogs: Catalog[] = [
   },
   {
     label: 'comunidades de fé',
+    kind: 'faith_communities',
     routes: 'v1.faith_communities',
     listKey: 'faithCommunities',
     itemKey: 'faithCommunity',
@@ -42,9 +47,12 @@ const catalogs: Catalog[] = [
 
 const RATE_LIMIT_MAX_REQUESTS = 20
 
+/** Cria o item direto no banco e no índice de busca dos testes (ADR-0042). */
 async function createCatalogEntry(catalog: Catalog, name: string) {
   const { user } = await createTestUser()
-  return catalog.create({ name, phoneNumber: '+5511912345678', userId: user.id })
+  const entry = await catalog.create({ name, phoneNumber: '+5511912345678', userId: user.id })
+  await new CatalogSearchService(catalog.kind).upsert(entry)
+  return entry
 }
 
 test.group('Catálogo público - agências missionárias e comunidades de fé', (group) => {

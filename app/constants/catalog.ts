@@ -5,6 +5,13 @@
 /** Menor termo aceito: com 1 caractere a busca traria quase tudo. */
 export const CATALOG_SEARCH_MIN_LENGTH = 2
 
+/**
+ * A partir deste tamanho (termo normalizado) a busca é tolerante a erros
+ * (ADR-0042); termos menores buscam pelo começo do nome. Com menos de 3
+ * caracteres trigramas e edições não ajudam.
+ */
+export const CATALOG_FUZZY_MIN_LENGTH = 3
+
 /** Itens por resposta quando o cliente não informa `limit` (autocomplete). */
 export const CATALOG_SEARCH_DEFAULT_LIMIT = 10
 

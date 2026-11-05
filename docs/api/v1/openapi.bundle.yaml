@@ -1782,10 +1782,11 @@ paths:
           description: >-
             Busca pelo nome da agência sem diferenciar maiúsculas nem acentos (ADR-0041).
             Com 2 caracteres, nomes que começam com o termo. Com 3 ou mais, tolerante a
-            erros (ADR-0042): cada palavra (até 5) precisa casar com o nome, em qualquer
-            ordem, por trecho, semelhança (pg_trgm, nota ≥ 0,45) ou até 1–2 letras
-            erradas; primeiro os que começam com o termo, depois os que o contêm, depois
-            os mais parecidos.
+            erros no Elasticsearch (ADR-0042): cada palavra (até 5) precisa casar com o
+            nome, em qualquer ordem, com até 1–2 letras erradas ou como começo de uma
+            palavra; primeiro os que começam com o termo, depois os que têm a frase,
+            depois os mais parecidos. Sem o Elasticsearch, a mesma busca roda no
+            PostgreSQL.
           schema:
             type: string
             minLength: 2
@@ -2061,10 +2062,11 @@ paths:
           description: >-
             Busca pelo nome da comunidade de fé sem diferenciar maiúsculas nem acentos (ADR-0041).
             Com 2 caracteres, nomes que começam com o termo. Com 3 ou mais, tolerante a
-            erros (ADR-0042): cada palavra (até 5) precisa casar com o nome, em qualquer
-            ordem, por trecho, semelhança (pg_trgm, nota ≥ 0,45) ou até 1–2 letras
-            erradas; primeiro os que começam com o termo, depois os que o contêm, depois
-            os mais parecidos.
+            erros no Elasticsearch (ADR-0042): cada palavra (até 5) precisa casar com o
+            nome, em qualquer ordem, com até 1–2 letras erradas ou como começo de uma
+            palavra; primeiro os que começam com o termo, depois os que têm a frase,
+            depois os mais parecidos. Sem o Elasticsearch, a mesma busca roda no
+            PostgreSQL.
           schema:
             type: string
             minLength: 2

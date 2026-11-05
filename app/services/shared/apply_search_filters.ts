@@ -1,4 +1,5 @@
 import {
+  CATALOG_FUZZY_MIN_LENGTH,
   CATALOG_FUZZY_MIN_SIMILARITY,
   CATALOG_SEARCH_DEFAULT_LIMIT,
   CATALOG_SEARCH_MAX_WORDS,
@@ -19,11 +20,10 @@ export type SearchFilters = {
 /** Página de uma busca de catálogo: os itens e se há mais além do limite. */
 export type CatalogPage<Item> = { items: Item[]; hasMore: boolean }
 
-// NOTE: com menos de 3 caracteres o pg_trgm não gera trigramas; nesses termos a
-// busca é por prefixo, servida pelo B-tree text_pattern_ops
-const CONTAINS_MIN_LENGTH = 3
-
 /**
+ * Busca no PostgreSQL — usada para termos curtos, listagem sem termo e como
+ * reserva quando o Elasticsearch não responde (ver `search_catalog.ts`).
+ *
  * Aplica a busca normalizada (sem acento, sem distinção de maiúsculas) por nome
  * e os filtros de localidade a uma query de catálogo com as colunas
  * `name_normalized`/`city_normalized` (ADR-0041). O termo é normalizado no
@@ -88,7 +88,7 @@ function applyNameSearch<Model extends LucidModel>(
 ): void {
   const term = escapeLike(search)
   const normalized = normalizeCatalogKey(search)
-  if (normalized.length < CONTAINS_MIN_LENGTH) {
+  if (normalized.length < CATALOG_FUZZY_MIN_LENGTH) {
     query.whereRaw(`name_normalized LIKE catalog_normalize(?) || '%'`, [term])
     return
   }

@@ -164,8 +164,9 @@ test.group('Faith communities - CRUD', (group) => {
     assert.deepEqual(await names({ country: 'Brasil' }), ['Alfa Central', 'Beta Norte'])
     assert.deepEqual(await names({ country: 'brasil', search: 'norte' }), ['Beta Norte'])
     assert.deepEqual(await names({ search: '100%' }), ['Gamma 100%'])
-    // NOTE: '%' é buscado literalmente (o termo tem 3 caracteres: busca por trecho)
-    assert.deepEqual(await names({ search: '00%' }), ['Gamma 100%'])
+    // NOTE: '%' não é curinga; o trecho no meio de uma palavra ('00%' em '100%')
+    // só é achado pela reserva no PostgreSQL (ADR-0042), coberta em
+    // tests/unit/services/shared/apply_search_filters.spec.ts
   })
 
   test('reaproveita a comunidade com mesmo nome e cidade, ignorando acentos e maiúsculas', async ({

@@ -1,15 +1,17 @@
 import { bullMQConnection } from '#config/redis'
+import type { CATALOG_INDEXING_JOB_NAME } from '#constants/catalog_search'
 import type { MISSIONARY_INDEXING_JOB_NAME } from '#constants/missionary_search'
 import { SEARCH_INDEXING_QUEUE_NAME } from '#constants/search'
 import type { MissionaryProfileCreatedPayload } from '#types/events/missionary/missionary_profile_created'
 import type { UserRegisteredPayload } from '#types/events/user/user_registered'
+import type { CatalogIndexingPayload } from '#types/services/catalog_indexing'
 import { Queue } from 'bullmq'
 
 /**
  * Fila de produção única, compartilhada por toda indexação no Elasticsearch
  * — ver `app/constants/search.ts` pro motivo de ser uma fila só em vez de
- * uma por tipo de modelo indexado. Cada listener de indexação (hoje só
- * `IndexMissionaryListener`) usa esta mesma instância, só variando o
+ * uma por tipo de modelo indexado. Os listeners de missionário e a reserva da
+ * indexação de catálogos (`syncCatalogSearchAfterCommit`) usam esta mesma instância, só variando o
  * `job.name` no `.add()`.
  *
  * O tipo do payload é a união dos payloads de todo evento que hoje dispara
@@ -20,9 +22,9 @@ import { Queue } from 'bullmq'
  * default de `job.name` quando `DataTypeOrJob` é uma união.
  */
 export const searchIndexingQueue = new Queue<
-  UserRegisteredPayload | MissionaryProfileCreatedPayload,
+  UserRegisteredPayload | MissionaryProfileCreatedPayload | CatalogIndexingPayload,
   void,
-  typeof MISSIONARY_INDEXING_JOB_NAME
+  typeof MISSIONARY_INDEXING_JOB_NAME | typeof CATALOG_INDEXING_JOB_NAME
 >(SEARCH_INDEXING_QUEUE_NAME, {
   connection: bullMQConnection,
 })
