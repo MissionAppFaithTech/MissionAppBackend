@@ -145,6 +145,100 @@ test.group('Busca de catálogos (ADR-0041)', (group) => {
       assert.isTrue((response.body() as ListBody).meta.hasMore)
     })
 
+  const names = (response: { body(): unknown }, catalog: Catalog) =>
+    (response.body() as ListBody).data[catalog.listKey].map((item) => item.name)
+
+  test('acha {label} com palavras faltando e fora de ordem (ADR-0042)')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [`JOCUM Brasil (Jovens Com Uma Missão) ${m}`])
+
+      for (const term of [`jovens missao ${m}`, `${m} missão jovens`, `jocum ${m}`]) {
+        const response = await search(client, catalog, { search: term })
+        response.assertStatus(200)
+        assert.deepEqual(names(response, catalog), [`JOCUM Brasil (Jovens Com Uma Missão) ${m}`])
+      }
+    })
+
+  test('acha {label} com letras faltando, trocadas ou invertidas (ADR-0042)')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [`Igreja Batista da Lagoinha ${m}`])
+
+      for (const term of [`jocun ${m}`, `igrja ${m}`, `batsita ${m}`, `lagoina ${m}`]) {
+        const response = await search(client, catalog, { search: term })
+        response.assertStatus(200)
+        const expected = term.startsWith('jocun') ? [] : [`Igreja Batista da Lagoinha ${m}`]
+        assert.deepEqual(names(response, catalog), expected, term)
+      }
+    })
+
+  test('não traz {label} só parecido por acaso (ruído abaixo de 0,45)')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [`Junta de Missões Nacionais ${m}`])
+
+      const response = await search(client, catalog, { search: `jocun ${m}` })
+      response.assertStatus(200)
+      assert.deepEqual(names(response, catalog), [])
+    })
+
+  test('mostra {label} exato antes do aproximado')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [`Missão Batsita ${m}`, `Missão Batista ${m}`, `Batista ${m}`])
+
+      const response = await search(client, catalog, { search: `batista ${m}` })
+      assert.deepEqual(names(response, catalog), [
+        `Batista ${m}`,
+        `Missão Batista ${m}`,
+        `Missão Batsita ${m}`,
+      ])
+    })
+
+  test('limita {label} aproximados e informa se há mais (hasMore)')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [
+        `Igreja Batista ${m} um`,
+        `Igreja Batista ${m} dois`,
+        `Igreja Batista ${m} tres`,
+      ])
+
+      const page = await search(client, catalog, { search: `batsita ${m}`, limit: 2 })
+      page.assertStatus(200)
+      assert.lengthOf(names(page, catalog), 2)
+      assert.isTrue((page.body() as ListBody).meta.hasMore)
+    })
+
+  test('considera só as 5 primeiras palavras do termo em {label}')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [`${m} dois tres quatro cinco`])
+
+      const response = await search(client, catalog, {
+        search: `${m} dois tres quatro cinco ${marker()}`,
+      })
+      assert.deepEqual(names(response, catalog), [`${m} dois tres quatro cinco`])
+    })
+
+  test('combina a busca aproximada de {label} com o filtro de cidade')
+    .with(catalogs)
+    .run(async ({ client, assert }, catalog) => {
+      const m = marker()
+      await seed(catalog, [`Igreja Batista ${m}`], 'Niterói')
+      await seed(catalog, [`Igreja Batista ${m} Centro`], 'Recife')
+
+      const response = await search(client, catalog, { search: `batsita ${m}`, city: 'niteroi' })
+      assert.deepEqual(names(response, catalog), [`Igreja Batista ${m}`])
+    })
+
   test('recusa termo de 1 caractere e limite acima de 20 em {label}')
     .with(catalogs)
     .run(async ({ client, assert }, catalog) => {

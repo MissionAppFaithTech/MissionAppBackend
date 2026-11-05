@@ -1,4 +1,9 @@
-import { CATALOG_SEARCH_DEFAULT_LIMIT } from '#constants/catalog'
+import {
+  CATALOG_FUZZY_MIN_SIMILARITY,
+  CATALOG_SEARCH_DEFAULT_LIMIT,
+  CATALOG_SEARCH_MAX_WORDS,
+  catalogMaxEdits,
+} from '#constants/catalog'
 import { escapeLike } from '#utils/escape_like'
 import { normalizeCatalogKey } from '#services/shared/find_catalog_duplicate'
 import type { LucidModel, ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
@@ -14,8 +19,8 @@ export type SearchFilters = {
 /** Página de uma busca de catálogo: os itens e se há mais além do limite. */
 export type CatalogPage<Item> = { items: Item[]; hasMore: boolean }
 
-// NOTE: com menos de 3 caracteres o pg_trgm não gera trigramas e o GIN não
-// ajuda; nesses termos a busca é por prefixo, servida pelo B-tree text_pattern_ops
+// NOTE: com menos de 3 caracteres o pg_trgm não gera trigramas; nesses termos a
+// busca é por prefixo, servida pelo B-tree text_pattern_ops
 const CONTAINS_MIN_LENGTH = 3
 
 /**
@@ -25,9 +30,12 @@ const CONTAINS_MIN_LENGTH = 3
  * banco por `catalog_normalize`, a mesma função da deduplicação.
  *
  * - 2 caracteres: começa com o termo (B-tree `text_pattern_ops`);
- * - 3+: contém o termo (GIN `gin_trgm_ops`), com quem começa com ele primeiro.
+ * - 3+: tolerante a erros (ADR-0042) — cada palavra digitada precisa casar
+ *   com o nome, em qualquer ordem (ver {@link wordMatchSql}). Vêm primeiro
+ *   quem começa com o termo, depois quem o contém inteiro, depois os mais
+ *   parecidos.
  *
- * Ordena por nome; o limite fica com {@link paginateCatalog}.
+ * Ordena por nome no desempate; o limite fica com {@link paginateCatalog}.
  */
 export function applySearchFilters<Model extends LucidModel>(
   query: ModelQueryBuilderContract<Model>,
@@ -38,18 +46,72 @@ export function applySearchFilters<Model extends LucidModel>(
   return query.orderBy('name_normalized', 'asc').orderBy('id', 'asc')
 }
 
+/**
+ * Palavras do termo já normalizado, sem pontuação e sem repetição, até
+ * {@link CATALOG_SEARCH_MAX_WORDS}.
+ *
+ * @example
+ * searchWords('jocum (jovens) jocum') // ['jocum', 'jovens']
+ */
+export function searchWords(normalized: string): string[] {
+  const words = normalized.split(/[^\p{L}\p{N}]+/u).filter(Boolean)
+  return [...new Set(words)].slice(0, CATALOG_SEARCH_MAX_WORDS)
+}
+
+// NOTE: palavras do nome para o Levenshtein; separa também a pontuação, para
+// que "(jovens" conte como "jovens"
+const NAME_WORDS_SQL = `regexp_split_to_table(name_normalized, '[^[:alnum:]]+')`
+
+/**
+ * Condição de uma palavra digitada casar com o nome:
+ * - 1–2 letras: o nome a contém (trigrama e Levenshtein não ajudam);
+ * - 3+: o nome a contém, OU lembra uma palavra do nome (`word_similarity` ≥
+ *   {@link CATALOG_FUZZY_MIN_SIMILARITY}: letras faltando ou trocadas), OU uma
+ *   palavra do nome está a até {@link catalogMaxEdits} edições (inversões).
+ */
+function wordMatchSql(word: string): { sql: string; bindings: (string | number)[] } {
+  const contains = `name_normalized LIKE '%' || catalog_normalize(?) || '%'`
+  const edits = catalogMaxEdits(word.length)
+  if (edits === 0) return { sql: contains, bindings: [escapeLike(word)] }
+  return {
+    sql: `(${contains}
+      OR word_similarity(catalog_normalize(?), name_normalized) >= ?
+      OR EXISTS (SELECT 1 FROM ${NAME_WORDS_SQL} AS name_word(value)
+        WHERE levenshtein_less_equal(catalog_normalize(?), name_word.value, ?) <= ?))`,
+    bindings: [escapeLike(word), word, CATALOG_FUZZY_MIN_SIMILARITY, word, edits, edits],
+  }
+}
+
 function applyNameSearch<Model extends LucidModel>(
   query: ModelQueryBuilderContract<Model>,
   search: string
 ): void {
   const term = escapeLike(search)
-  if (normalizeCatalogKey(search).length < CONTAINS_MIN_LENGTH) {
+  const normalized = normalizeCatalogKey(search)
+  if (normalized.length < CONTAINS_MIN_LENGTH) {
     query.whereRaw(`name_normalized LIKE catalog_normalize(?) || '%'`, [term])
     return
   }
+
+  const words = searchWords(normalized)
+  // NOTE: termo só de pontuação ("!!!") não tem palavras: busca o trecho literal
+  if (words.length === 0) {
+    query.whereRaw(`name_normalized LIKE '%' || catalog_normalize(?) || '%'`, [term])
+  }
+  for (const word of words) {
+    const match = wordMatchSql(word)
+    query.whereRaw(match.sql, match.bindings)
+  }
+
   query
-    .whereRaw(`name_normalized LIKE '%' || catalog_normalize(?) || '%'`, [term])
     .orderByRaw(`(name_normalized LIKE catalog_normalize(?) || '%') DESC`, [term])
+    .orderByRaw(`(name_normalized LIKE '%' || catalog_normalize(?) || '%') DESC`, [term])
+  if (words.length > 0) {
+    query.orderByRaw(
+      `(${words.map(() => 'word_similarity(catalog_normalize(?), name_normalized)').join(' + ')}) DESC`,
+      words
+    )
+  }
 }
 
 function applyLocationFilters<Model extends LucidModel>(
