@@ -22,15 +22,27 @@ function catalogReference(item: MissionaryAgency | FaithCommunity | null | undef
  * carregados.
  *
  * @param missionary Perfil missionário, ou `null` para quem ainda não tem um.
+ * @param userFaithCommunity Comunidade de fé vinculada à conta do usuário, usada quando `missionary` é nulo ou não tem vínculo próprio.
+ * @returns Objeto com `missionary`, `workAddress`, `missionaryAgency` e `faithCommunity` serializados.
+ * @example
+ * missionaryProfilePayload(missionary, user.faithCommunity)
  */
-export function missionaryProfilePayload(missionary: Missionary | null) {
-  if (!missionary) return EMPTY_MISSIONARY_PROFILE
+export function missionaryProfilePayload(
+  missionary: Missionary | null,
+  userFaithCommunity?: FaithCommunity | null
+) {
+  if (!missionary) {
+    return {
+      ...EMPTY_MISSIONARY_PROFILE,
+      faithCommunity: catalogReference(userFaithCommunity),
+    }
+  }
 
   const { workAddresses } = missionary
   return {
     missionary: MissionaryTransformer.transform(missionary),
     workAddress: workAddresses ? MissionaryWorkAddressTransformer.transform(workAddresses) : null,
     missionaryAgency: catalogReference(missionary.agency),
-    faithCommunity: catalogReference(missionary.faithCommunity),
+    faithCommunity: catalogReference(missionary.faithCommunity ?? userFaithCommunity),
   }
 }

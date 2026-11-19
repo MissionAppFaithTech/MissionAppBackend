@@ -1,0 +1,27 @@
+meta {
+  name: Change Email
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{base_url}}/api/v1/account/email
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "email": "novo.email@example.com",
+    "currentPassword": "senha12345"
+  }
+}
+
+docs {
+  Valida a senha atual, verifica unicidade e diferença em relação ao e-mail
+  atual e atualiza o e-mail de login do usuário autenticado (RF 15.1).
+}

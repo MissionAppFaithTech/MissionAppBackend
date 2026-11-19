@@ -222,6 +222,46 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
+  /account/email:
+    patch:
+      operationId: accountEmailUpdate
+      tags: [user]
+      summary: Troca de e-mail de login
+      description: >-
+        Valida a senha atual e atualiza o e-mail de acesso do usuário autenticado,
+        garantindo que o novo endereço seja diferente do atual e único na plataforma.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+      responses:
+        '200':
+          description: E-mail atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Senha atual incorreta, novo e-mail igual ao atual ou já em uso. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
   /account/password:
     patch:
       operationId: accountPasswordUpdate
@@ -377,6 +417,17 @@ components:
             refreshToken:
               type: string
 
+    ChangeEmailRequest:
+      type: object
+      required: [email, currentPassword]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        currentPassword:
+          type: string
+
     ChangePasswordRequest:
       type: object
       required: [currentPassword, newPassword, newPasswordConfirmation]
@@ -420,6 +471,11 @@ components:
             `POST /media-assets/{id}/completion`); caso contrário, 422 em
             `profilePictureId`. A foto anterior é removida do storage depois da
             troca ou da remoção.
+        faithCommunityId:
+          type: [string, 'null']
+          format: uuid
+          description: >-
+            Comunidade de fé vinculada à conta; `null` desvincula.
 
     UsernameAvailabilityResponse:
       type: object

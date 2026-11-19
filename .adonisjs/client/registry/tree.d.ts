@@ -6,6 +6,9 @@ export interface ApiDefinition {
     account: {
       store: typeof routes['v1.account.store']
     }
+    missionaryAccounts: {
+      store: typeof routes['v1.missionary_accounts.store']
+    }
     usernameAvailability: {
       show: typeof routes['v1.username_availability.show']
     }
@@ -47,19 +50,10 @@ export interface ApiDefinition {
       update: typeof routes['v1.faith_communities.update']
       destroy: typeof routes['v1.faith_communities.destroy']
     }
-    missionaryAgencies: {
-      index: typeof routes['v1.missionary_agencies.index']
-      store: typeof routes['v1.missionary_agencies.store']
-      show: typeof routes['v1.missionary_agencies.show']
-      update: typeof routes['v1.missionary_agencies.update']
-      destroy: typeof routes['v1.missionary_agencies.destroy']
-    }
-    faithCommunities: {
-      index: typeof routes['v1.faith_communities.index']
-      store: typeof routes['v1.faith_communities.store']
-      show: typeof routes['v1.faith_communities.show']
-      update: typeof routes['v1.faith_communities.update']
-      destroy: typeof routes['v1.faith_communities.destroy']
+    public: {
+      missionaries: {
+        show: typeof routes['v1.public.missionaries.show']
+      }
     }
     auth: {
       accessTokens: {

@@ -13,6 +13,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { Filterable } from '@dirupt/adonis-lucid-filter'
 import type { DateTime } from 'luxon'
 import AuthenticationAudit from './authentication_audit.ts'
+import FaithCommunity from './faith_community.ts'
 import UserFilter from './filters/user_filter.ts'
 import MediaAsset from './media_asset.ts'
 import { AuthFinder } from './mixins/auth_finder.ts'
@@ -55,6 +56,9 @@ export default class User extends compose(
 
   @belongsTo(() => MediaAsset, { foreignKey: 'profilePictureId' })
   declare profilePicture: BelongsTo<typeof MediaAsset>
+
+  @belongsTo(() => FaithCommunity, { foreignKey: 'faithCommunityId' })
+  declare faithCommunity: BelongsTo<typeof FaithCommunity>
 
   @hasMany(() => AuthenticationAudit)
   declare authenticationAudits: HasMany<typeof AuthenticationAudit>

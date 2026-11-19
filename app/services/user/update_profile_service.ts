@@ -1,6 +1,8 @@
 import { MediaAssetPurpose } from '#enums/media_asset/media_asset_purpose'
 import MediaAssetsDiscarded from '#events/media_asset/media_assets_discarded'
 import MediaAssetNotAttachableException from '#exceptions/media_asset/media_asset_not_attachable_exception'
+import FaithCommunity from '#models/faith_community'
+import Missionary from '#models/missionary'
 import User from '#models/user'
 import { MediaAttachmentService } from '#services/media_asset/media_attachment_service'
 import { fieldValidationError } from '#utils/field_validation_error'
@@ -13,15 +15,24 @@ type UpdateAccountProfilePayload = {
   username?: string
   biography?: string | null
   profilePictureId?: string | null
+  faithCommunityId?: string | null
 }
 
 /**
  * Atualiza os dados de perfil da conta autenticada, incluindo a troca ou a
- * remoção da foto de perfil.
- *
- * @returns O usuário com a relação `profilePicture` carregada.
+ * remoção da foto de perfil e o vínculo de comunidade de fé.
  */
 export class UpdateProfileService {
+  /**
+   * Aplica as alterações de perfil na conta autenticada e descarta a foto anterior se substituída.
+   *
+   * @param actor Usuário autenticado dono do perfil.
+   * @param payload Campos parciais de perfil a atualizar.
+   * @returns O usuário com as relações `profilePicture` e `faithCommunity` carregadas.
+   * @throws {errors.E_VALIDATION_ERROR} Nome de usuário em uso, foto não anexável ou comunidade de fé inexistente.
+   * @example
+   * const updated = await new UpdateProfileService().execute(user, { fullName: 'Ana' })
+   */
   async execute(actor: User, payload: UpdateAccountProfilePayload): Promise<User> {
     if (payload.username && payload.username !== actor.username) {
       const userWithSameUsername = await User.query()
@@ -32,6 +43,14 @@ export class UpdateProfileService {
       if (userWithSameUsername) {
         throw fieldValidationError('username', 'database.unique', 'Nome de usuário já está em uso')
       }
+    }
+
+    if (payload.faithCommunityId && !(await FaithCommunity.find(payload.faithCommunityId))) {
+      throw fieldValidationError(
+        'faithCommunityId',
+        'database.exists',
+        'Comunidade de fé informada não existe'
+      )
     }
 
     const discarded = await db.transaction(async (trx) => {
@@ -56,9 +75,16 @@ export class UpdateProfileService {
           username: payload.username,
           biography: payload.biography,
           profilePictureId: payload.profilePictureId,
+          faithCommunityId: payload.faithCommunityId,
         })
       )
       await actor.save()
+
+      if (payload.faithCommunityId !== undefined) {
+        await Missionary.query({ client: trx })
+          .where('userId', actor.id)
+          .update({ faithCommunityId: payload.faithCommunityId })
+      }
 
       // NOTE: a foto anterior só é descartada depois do commit — o FK é SET NULL,
       // então apagá-la antes anularia a coluna em silêncio
@@ -69,7 +95,9 @@ export class UpdateProfileService {
       await MediaAssetsDiscarded.dispatch(discarded)
     }
 
-    await actor.load('profilePicture')
+    await actor.load((loader) => {
+      loader.load('profilePicture').load('faithCommunity')
+    })
     return actor
   }
 

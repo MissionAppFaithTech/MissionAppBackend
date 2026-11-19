@@ -66,6 +66,12 @@ export class UpdateMissionaryAboutService {
       )
       await missionary.save()
 
+      if (payload.faithCommunityId !== undefined && !targetMissionaryId) {
+        actor.useTransaction(trx)
+        actor.faithCommunityId = payload.faithCommunityId
+        await actor.save()
+      }
+
       if (payload.workAddress) {
         await new UpsertMissionaryWorkAddressService().upsert(
           missionary.id,
