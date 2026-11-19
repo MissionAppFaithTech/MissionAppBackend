@@ -102,6 +102,45 @@ test.group('Faith communities - CRUD', (group) => {
     destroy.assertStatus(403)
   })
 
+  test('permite atualizar comunidade de fé vinculada ao usuário e bloqueia terceiro não vinculado', async ({
+    client,
+    assert,
+  }) => {
+    const { user: owner, password: ownerPassword } = await createTestUser()
+    const ownerToken = await loginAndGetAccessToken(owner.email, ownerPassword, client)
+
+    const store = await client
+      .post(router.builder().make('v1.faith_communities.store')!)
+      .header('Authorization', `Bearer ${ownerToken}`)
+      .json({ name: 'Igreja Compartilhada', phoneNumber: '+5511911112233' })
+
+    const communityId = (store.body() as ApiBody).data.faithCommunity.id as string
+
+    const { user: unlinkedUser, password: unlinkedPassword } = await createTestUser()
+    const unlinkedToken = await loginAndGetAccessToken(unlinkedUser.email, unlinkedPassword, client)
+
+    const forbiddenUpdate = await client
+      .patch(router.builder().params({ id: communityId }).make('v1.faith_communities.update')!)
+      .header('Authorization', `Bearer ${unlinkedToken}`)
+      .json({ name: 'Tentativa Indevida' })
+
+    forbiddenUpdate.assertStatus(403)
+
+    unlinkedUser.faithCommunityId = communityId
+    await unlinkedUser.save()
+
+    const allowedUpdate = await client
+      .patch(router.builder().params({ id: communityId }).make('v1.faith_communities.update')!)
+      .header('Authorization', `Bearer ${unlinkedToken}`)
+      .json({ name: 'Igreja Atualizada Pelo Membro' })
+
+    allowedUpdate.assertStatus(200)
+    assert.equal(
+      (allowedUpdate.body() as ApiBody).data.faithCommunity.name,
+      'Igreja Atualizada Pelo Membro'
+    )
+  })
+
   test('permite remoção por ADMIN mesmo sem ser dono', async ({ client }) => {
     const { user: owner, password: ownerPassword } = await createTestUser()
     const ownerToken = await loginAndGetAccessToken(owner.email, ownerPassword, client)

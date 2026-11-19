@@ -139,6 +139,7 @@ router
 
     router.get('account/profile', [controllers.user.Profile, 'show']).use(middleware.auth())
     router.patch('account/profile', [controllers.user.Profile, 'update']).use(middleware.auth())
+    router.patch('account/email', [controllers.user.AccountEmail, 'update']).use(middleware.auth())
     router
       .patch('account/password', [controllers.user.AccountPassword, 'update'])
       .use(middleware.auth())

@@ -34,6 +34,7 @@ export const controllers = {
   },
   user: {
     Account: () => import('#controllers/user/account_controller'),
+    AccountEmail: () => import('#controllers/user/account_email_controller'),
     AccountPassword: () => import('#controllers/user/account_password_controller'),
     MissionaryAccounts: () => import('#controllers/user/missionary_accounts_controller'),
     Profile: () => import('#controllers/user/profile_controller'),

@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /// <reference path="../manifest.d.ts" />
 
-import type { ExtractBody, ExtractErrorResponse, ExtractQuery, ExtractQueryForGet, ExtractResponse } from '@tuyau/core/types'
+import type { ExtractBody, ExtractErrorResponse, ExtractQuery, ExtractQueryForGet, ExtractRawResponse, ExtractResponse } from '@tuyau/core/types'
 import type { InferInput, SimpleError } from '@vinejs/vine/types'
 
 export type ParamValue = string | number | bigint | boolean
@@ -17,6 +17,20 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/signup').signupValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/user/account_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/user/account_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/user/account_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.missionary_accounts.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/accounts/missionaries'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/user/missionary_signup').missionarySignupValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/user/missionary_signup').missionarySignupValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/user/missionary_accounts_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/user/missionary_accounts_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/user/missionary_accounts_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.username_availability.show': {
@@ -29,6 +43,7 @@ export interface Registry {
       query: ExtractQueryForGet<InferInput<(typeof import('#validators/user/username_availability').usernameAvailabilityValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/user/username_availability_controller').default['show']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/user/username_availability_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/user/username_availability_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.media_assets.store': {
@@ -41,6 +56,176 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/media_asset/register_media_asset').registerMediaAssetValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/media_asset/media_assets_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/media_asset/media_assets_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/media_asset/media_assets_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.media_assets.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/media-assets/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/media_asset/media_asset_id').mediaAssetIdValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/media_asset/media_assets_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/media_asset/media_assets_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/media_asset/media_assets_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.media_uploads.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/media-assets/uploads'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/media_asset/request_media_upload').requestMediaUploadValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/media_asset/request_media_upload').requestMediaUploadValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/media_asset/media_uploads_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/media_asset/media_uploads_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/media_asset/media_uploads_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.media_upload_completions.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/media-assets/:id/completion'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/media_asset/media_asset_id').mediaAssetIdValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/media_asset/media_asset_id').mediaAssetIdValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/media_asset/media_upload_completions_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/media_asset/media_upload_completions_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/media_asset/media_upload_completions_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.impact_projects.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/impact-projects'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/impact_project/list_impact_projects').listImpactProjectsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.impact_projects.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/impact-projects'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/impact_project/create_impact_project').createImpactProjectValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/impact_project/create_impact_project').createImpactProjectValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.impact_projects.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/impact-projects/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/impact_project/impact_project_id').impactProjectIdValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.impact_projects.update': {
+    methods: ["PUT","PATCH"]
+    pattern: '/api/v1/impact-projects/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/impact_project/update_impact_project').updateImpactProjectValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/impact_project/update_impact_project').updateImpactProjectValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.impact_projects.destroy': {
+    methods: ["DELETE"]
+    pattern: '/api/v1/impact-projects/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/impact_project/impact_project_id').impactProjectIdValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/impact_project/impact_project_id').impactProjectIdValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['destroy']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/impact_project/impact_projects_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.posts.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/posts'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/post/list_posts').listPostsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.posts.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/posts'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/post/create_post').createPostValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/post/create_post').createPostValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.posts.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/posts/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/post/post_id').postIdValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.posts.update': {
+    methods: ["PUT","PATCH"]
+    pattern: '/api/v1/posts/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/post/update_post').updatePostValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/post/update_post').updatePostValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.posts.destroy': {
+    methods: ["DELETE"]
+    pattern: '/api/v1/posts/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/post/post_id').postIdValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/post/post_id').postIdValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['destroy']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/post/posts_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary_agencies.index': {
@@ -53,6 +238,7 @@ export interface Registry {
       query: ExtractQueryForGet<InferInput<(typeof import('#validators/missionary/list_missionary_agencies').listMissionaryAgenciesValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['index']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary_agencies.store': {
@@ -65,6 +251,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/create_missionary_agency').createMissionaryAgencyValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary_agencies.show': {
@@ -77,6 +264,7 @@ export interface Registry {
       query: ExtractQueryForGet<InferInput<(typeof import('#validators/missionary/missionary_agency_id').missionaryAgencyIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['show']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary_agencies.update': {
@@ -89,6 +277,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_missionary_agency').updateMissionaryAgencyValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary_agencies.destroy': {
@@ -101,6 +290,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/missionary_agency_id').missionaryAgencyIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['destroy']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/missionary_agencies_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.faith_communities.index': {
@@ -113,6 +303,7 @@ export interface Registry {
       query: ExtractQueryForGet<InferInput<(typeof import('#validators/missionary/list_faith_communities').listFaithCommunitiesValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['index']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.faith_communities.store': {
@@ -125,6 +316,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/create_faith_community').createFaithCommunityValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.faith_communities.show': {
@@ -137,6 +329,7 @@ export interface Registry {
       query: ExtractQueryForGet<InferInput<(typeof import('#validators/missionary/faith_community_id').faithCommunityIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['show']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.faith_communities.update': {
@@ -149,6 +342,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_faith_community').updateFaithCommunityValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.faith_communities.destroy': {
@@ -161,6 +355,20 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/faith_community_id').faithCommunityIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['destroy']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/faith_communities_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'v1.public.missionaries.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/public/missionaries/:username'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { username: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/missionary/public_missionary_profile').publicMissionaryProfileValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/public_profiles_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/public_profiles_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/public_profiles_controller').default['show']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.auth.access_tokens.store': {
@@ -173,6 +381,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/login').loginValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/access_tokens_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/access_tokens_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/access_tokens_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.auth.access_tokens.destroy': {
@@ -185,6 +394,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/refresh').refreshValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/access_tokens_controller').default['destroy']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/access_tokens_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/access_tokens_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.auth.refresh_tokens.store': {
@@ -197,6 +407,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/refresh').refreshValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/refresh_tokens_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/refresh_tokens_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/refresh_tokens_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.auth.forgot_password.store': {
@@ -209,6 +420,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/forgot_password').forgotPasswordValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/forgot_password_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/forgot_password_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/forgot_password_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.auth.reset_password.update': {
@@ -221,6 +433,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/reset_password').resetPasswordValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/reset_password_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/reset_password_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/reset_password_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.auth.sessions.index': {
@@ -233,6 +446,7 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/sessions_controller').default['index']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/sessions_controller').default['index']>>>
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/sessions_controller').default['index']>>>
     }
   }
   'v1.auth.all_sessions.destroy': {
@@ -245,6 +459,7 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/all_sessions_controller').default['destroy']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/all_sessions_controller').default['destroy']>>>
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/all_sessions_controller').default['destroy']>>>
     }
   }
   'v1.auth.sessions.destroy': {
@@ -257,6 +472,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/session').sessionValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/auth/sessions_controller').default['destroy']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/auth/sessions_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/auth/sessions_controller').default['destroy']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.profile.show': {
@@ -269,6 +485,7 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/user/profile_controller').default['show']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/user/profile_controller').default['show']>>>
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/user/profile_controller').default['show']>>>
     }
   }
   'v1.profile.update': {
@@ -281,6 +498,7 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/update_profile').updateProfileValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/user/profile_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/user/profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/user/profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.account_password.update': {
@@ -293,18 +511,20 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/user/change_password').changePasswordValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/user/account_password_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/user/account_password_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/user/account_password_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.about.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/about'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: []
       params: {}
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/about_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/about_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/about_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.profile.store': {
@@ -317,90 +537,98 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/missionary/create_profile').createMissionaryProfileValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.profile.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/profile'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: []
       params: {}
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.identity.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/identity'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: []
       params: {}
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/identity_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/identity_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/identity_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.work_address.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/work-address'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: []
       params: {}
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/work_address_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/work_address_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/work_address_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.admin.about.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/:id/about'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: [ParamValue]
       params: { id: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_about').updateAboutValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/about_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/about_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/about_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.admin.profile.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/:id/profile'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: [ParamValue]
       params: { id: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_profile').updateProfileValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.admin.identity.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/:id/identity'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: [ParamValue]
       params: { id: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_identity').updateIdentityValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/identity_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/identity_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/identity_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'v1.missionary.admin.work_address.update': {
     methods: ["PATCH"]
     pattern: '/api/v1/missionaries/:id/work-address'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       paramsTuple: [ParamValue]
       params: { id: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/missionary/update_work_address').updateWorkAddressValidator)>|InferInput<(typeof import('#validators/missionary/missionary_id').missionaryIdValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/missionary/work_address_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/missionary/work_address_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+      rawResponse: ExtractRawResponse<Awaited<ReturnType<import('#controllers/missionary/work_address_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
 }

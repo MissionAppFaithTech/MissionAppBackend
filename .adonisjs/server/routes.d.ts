@@ -5,8 +5,22 @@ type ParamValue = string | number | bigint | boolean
 export type ScannedRoutes = {
   ALL: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
+    'v1.missionary_accounts.store': { paramsTuple?: []; params?: {} }
     'v1.username_availability.show': { paramsTuple?: []; params?: {} }
     'v1.media_assets.store': { paramsTuple?: []; params?: {} }
+    'v1.media_assets.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.media_uploads.store': { paramsTuple?: []; params?: {} }
+    'v1.media_upload_completions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.impact_projects.index': { paramsTuple?: []; params?: {} }
+    'v1.impact_projects.store': { paramsTuple?: []; params?: {} }
+    'v1.impact_projects.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.impact_projects.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.impact_projects.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.index': { paramsTuple?: []; params?: {} }
+    'v1.posts.store': { paramsTuple?: []; params?: {} }
+    'v1.posts.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.store': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -17,6 +31,7 @@ export type ScannedRoutes = {
     'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.public.missionaries.show': { paramsTuple: [ParamValue]; params: {'username': ParamValue} }
     'v1.auth.access_tokens.store': { paramsTuple?: []; params?: {} }
     'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'v1.auth.refresh_tokens.store': { paramsTuple?: []; params?: {} }
@@ -40,25 +55,42 @@ export type ScannedRoutes = {
   }
   GET: {
     'v1.username_availability.show': { paramsTuple?: []; params?: {} }
+    'v1.media_assets.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.impact_projects.index': { paramsTuple?: []; params?: {} }
+    'v1.impact_projects.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.index': { paramsTuple?: []; params?: {} }
+    'v1.posts.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
     'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.public.missionaries.show': { paramsTuple: [ParamValue]; params: {'username': ParamValue} }
     'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'v1.username_availability.show': { paramsTuple?: []; params?: {} }
+    'v1.media_assets.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.impact_projects.index': { paramsTuple?: []; params?: {} }
+    'v1.impact_projects.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.index': { paramsTuple?: []; params?: {} }
+    'v1.posts.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary_agencies.index': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.index': { paramsTuple?: []; params?: {} }
     'v1.faith_communities.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.public.missionaries.show': { paramsTuple: [ParamValue]; params: {'username': ParamValue} }
     'v1.auth.sessions.index': { paramsTuple?: []; params?: {} }
     'v1.profile.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'v1.account.store': { paramsTuple?: []; params?: {} }
+    'v1.missionary_accounts.store': { paramsTuple?: []; params?: {} }
     'v1.media_assets.store': { paramsTuple?: []; params?: {} }
+    'v1.media_uploads.store': { paramsTuple?: []; params?: {} }
+    'v1.media_upload_completions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.impact_projects.store': { paramsTuple?: []; params?: {} }
+    'v1.posts.store': { paramsTuple?: []; params?: {} }
     'v1.missionary_agencies.store': { paramsTuple?: []; params?: {} }
     'v1.faith_communities.store': { paramsTuple?: []; params?: {} }
     'v1.auth.access_tokens.store': { paramsTuple?: []; params?: {} }
@@ -67,10 +99,14 @@ export type ScannedRoutes = {
     'v1.missionary.profile.store': { paramsTuple?: []; params?: {} }
   }
   PUT: {
+    'v1.impact_projects.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   PATCH: {
+    'v1.impact_projects.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary_agencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.auth.reset_password.update': { paramsTuple?: []; params?: {} }
@@ -86,6 +122,8 @@ export type ScannedRoutes = {
     'v1.missionary.admin.work_address.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   DELETE: {
+    'v1.impact_projects.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'v1.posts.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.missionary_agencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.faith_communities.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'v1.auth.access_tokens.destroy': { paramsTuple?: []; params?: {} }

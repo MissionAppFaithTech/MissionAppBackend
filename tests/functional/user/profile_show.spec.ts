@@ -81,4 +81,25 @@ test.group('User - profile show', (group) => {
     assert.isNull(body.data.missionaryAgency)
     assert.isNull(body.data.faithCommunity)
   })
+
+  test('retorna faithCommunity vinculada à conta de apoiador sem perfil missionário', async ({
+    client,
+    assert,
+  }) => {
+    const { user, password } = await createTestUser()
+    const community = await FaithCommunity.create({
+      name: 'Igreja do Apoiador',
+      phoneNumber: '+5511944445555',
+      userId: user.id,
+    })
+    user.faithCommunityId = community.id
+    await user.save()
+
+    const response = await showProfile(client, user.email, password)
+
+    response.assertStatus(200)
+    const body = response.body() as ProfileBody
+    assert.isNull(body.data.missionary)
+    assert.deepEqual(body.data.faithCommunity, { id: community.id, name: 'Igreja do Apoiador' })
+  })
 })

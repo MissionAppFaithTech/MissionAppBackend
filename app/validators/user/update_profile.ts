@@ -13,4 +13,5 @@ export const updateProfileValidator = vine.create({
   // NOTE: o asset precisa ser `PROFILE_PICTURE`, do próprio usuário e com upload
   // confirmado; `null` remove a foto
   profilePictureId: id().nullable().optional(),
+  faithCommunityId: id().nullable().optional(),
 })

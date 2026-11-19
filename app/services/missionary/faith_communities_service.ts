@@ -1,6 +1,7 @@
 import FaithCommunityForbiddenException from '#exceptions/missionary/faith_community_forbidden_exception'
 import FaithCommunityNotFoundException from '#exceptions/missionary/faith_community_not_found_exception'
 import FaithCommunity from '#models/faith_community'
+import Missionary from '#models/missionary'
 import Pastor from '#models/pastor'
 import type User from '#models/user'
 import {
@@ -111,7 +112,7 @@ export class FaithCommunitiesService {
   ): Promise<FaithCommunity> {
     const community = await this.show(id)
 
-    this.assertCanManage(actor, community.userId)
+    await this.assertCanUpdate(actor, community)
 
     return db.transaction(async (trx) => {
       community.useTransaction(trx)
@@ -183,6 +184,22 @@ export class FaithCommunitiesService {
     }
 
     await community.load('pastors', pastorsInCreationOrder)
+  }
+
+  private async assertCanUpdate(actor: User, community: FaithCommunity): Promise<void> {
+    if (canManageCatalog(actor, community.userId) || actor.faithCommunityId === community.id) {
+      return
+    }
+
+    const linkedMissionary = await Missionary.query()
+      .where('userId', actor.id)
+      .where('faithCommunityId', community.id)
+      .first()
+    if (linkedMissionary) return
+
+    throw new FaithCommunityForbiddenException(
+      'Você não tem permissão para alterar esta comunidade de fé'
+    )
   }
 
   private assertCanManage(actor: User, ownerId: string | null): void {
