@@ -100,10 +100,12 @@ test.group('Follows - seguir e deixar de seguir', (group) => {
     const { user, password } = await createFollowableMissionary()
     const token = await loginAs(client, user, password)
 
-    const response = await client.post(followUrl.store(user.id)).bearerToken(token)
+    for (const id of [user.id, user.id.toUpperCase()]) {
+      const response = await client.post(followUrl.store(id)).bearerToken(token)
 
-    response.assertStatus(422)
-    response.assertBodyContains({ code: 'E_CANNOT_FOLLOW_SELF' })
+      response.assertStatus(422)
+      response.assertBodyContains({ code: 'E_CANNOT_FOLLOW_SELF' })
+    }
   })
 
   test('só missionário público pode ser seguido; o resto é 404', async ({ client }) => {

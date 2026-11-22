@@ -41,11 +41,13 @@ export class FollowsService {
    * const state = await new FollowsService().follow(user, missionaryUserId)
    */
   async follow(actor: User, targetId: string): Promise<FollowState> {
-    if (actor.id === targetId) {
+    const target = await this.findFollowable(targetId)
+
+    // NOTE: compara o id vindo do banco — o da URL pode vir em maiúsculas e
+    // ainda assim apontar para o próprio usuário
+    if (target.id === actor.id) {
       throw new CannotFollowSelfException()
     }
-
-    const target = await this.findFollowable(targetId)
 
     await db.transaction(async (trx) => {
       const inserted = await trx
