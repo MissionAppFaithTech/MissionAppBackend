@@ -98,6 +98,25 @@ router
 
     router.resource('posts', controllers.post.Posts).apiOnly().use('*', middleware.auth())
 
+    // NOTE: seguir e curtir são sub-recursos singleton de quem está logado
+    // (ADR-0025); contadores são atualizados via buffer no Dragonfly (ADR-0033)
+    router
+      .group(() => {
+        router.get('users/:id/follow', [controllers.user.UserFollows, 'show'])
+        router.get('users/:id/followers', [controllers.user.Followers, 'index'])
+        router.get('users/:id/following', [controllers.user.Following, 'index'])
+
+        router
+          .group(() => {
+            router.post('users/:id/follow', [controllers.user.UserFollows, 'store'])
+            router.delete('users/:id/follow', [controllers.user.UserFollows, 'destroy'])
+            router.post('posts/:id/like', [controllers.post.PostLikes, 'store'])
+            router.delete('posts/:id/like', [controllers.post.PostLikes, 'destroy'])
+          })
+          .use(middleware.engagementRateLimit())
+      })
+      .use(middleware.auth())
+
     router
       .resource('missionary-agencies', controllers.missionary.MissionaryAgencies)
       .apiOnly()

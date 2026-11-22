@@ -1,0 +1,24 @@
+meta {
+  name: List Followers
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{base_url}}/api/v1/users/{{user_id}}/followers?limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  limit: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Seguidores por cursor, quem seguiu mais recentemente primeiro. Envie o
+  `meta.nextCursor` da resposta em `cursor` para a próxima página.
+}

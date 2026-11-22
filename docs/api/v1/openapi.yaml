@@ -70,6 +70,12 @@ paths:
     $ref: './user/openapi.yaml#/paths/~1account~1password'
   /media-assets:
     $ref: './user/openapi.yaml#/paths/~1media-assets'
+  /users/{id}/follow:
+    $ref: './user/openapi.yaml#/paths/~1users~1{id}~1follow'
+  /users/{id}/followers:
+    $ref: './user/openapi.yaml#/paths/~1users~1{id}~1followers'
+  /users/{id}/following:
+    $ref: './user/openapi.yaml#/paths/~1users~1{id}~1following'
   /media-assets/uploads:
     $ref: './media_asset/openapi.yaml#/paths/~1media-assets~1uploads'
   /media-assets/{id}:
@@ -84,6 +90,8 @@ paths:
     $ref: './post/openapi.yaml#/paths/~1posts'
   /posts/{id}:
     $ref: './post/openapi.yaml#/paths/~1posts~1{id}'
+  /posts/{id}/like:
+    $ref: './post/openapi.yaml#/paths/~1posts~1{id}~1like'
   /missionaries/about:
     $ref: './missionary/openapi.yaml#/paths/~1missionaries~1about'
   /missionaries/profile:

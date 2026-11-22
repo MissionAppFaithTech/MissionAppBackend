@@ -1,0 +1,19 @@
+meta {
+  name: Show Follow
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/users/{{user_id}}/follow
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Informa se o usuário logado segue o perfil e o total de seguidores.
+}

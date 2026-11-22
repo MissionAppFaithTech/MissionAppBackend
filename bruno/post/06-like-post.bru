@@ -1,0 +1,19 @@
+meta {
+  name: Like Post
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/v1/posts/{{post_id}}/like
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Curte a postagem (idempotente). `likesCount` já soma o delta pendente.
+}

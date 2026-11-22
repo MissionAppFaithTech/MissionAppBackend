@@ -112,6 +112,7 @@ test.group('Perfil público de missionário (ADR-0036)', (group) => {
     response.assertStatus(200)
     const profile = (response.body() as PublicProfileBody).data.missionary
     assert.deepEqual(profile, {
+      id: user.id,
       username: user.username,
       fullName: user.fullName,
       biography: 'Missionário no sertão',

@@ -6,3 +6,5 @@ paths:
     $ref: './post.openapi.yaml#/paths/~1posts'
   /posts/{id}:
     $ref: './post.openapi.yaml#/paths/~1posts~1{id}'
+  /posts/{id}/like:
+    $ref: './post.openapi.yaml#/paths/~1posts~1{id}~1like'

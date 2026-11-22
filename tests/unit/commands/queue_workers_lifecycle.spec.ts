@@ -1,3 +1,4 @@
+import QueueCountersSync from '../../../commands/queue_counters_sync.ts'
 import QueueRefreshTokensCleanup from '../../../commands/queue_refresh_tokens_cleanup.ts'
 import QueueWorkers from '../../../commands/queue_workers.ts'
 import { test } from '@japa/runner'
@@ -45,13 +46,14 @@ test.group('workers BullMQ — ciclo de vida', () => {
     .with([
       { title: 'queue:workers', command: QueueWorkers },
       { title: 'queue:refresh-tokens-cleanup', command: QueueRefreshTokensCleanup },
+      { title: 'queue:counters-sync', command: QueueCountersSync },
     ])
     .run(({ assert }, { command }) => {
       assert.isTrue(command.options.startApp)
     })
 
   test('{$self} encerra com sucesso ao receber SIGTERM')
-    .with(['queue:workers', 'queue:refresh-tokens-cleanup'])
+    .with(['queue:workers', 'queue:refresh-tokens-cleanup', 'queue:counters-sync'])
     .run(async ({ assert }, commandName) => {
       assert.equal(await exitCodeAfterSigterm(commandName), 0)
     })

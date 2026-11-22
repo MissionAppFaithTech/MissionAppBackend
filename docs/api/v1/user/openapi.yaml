@@ -14,3 +14,9 @@ paths:
     $ref: './user.openapi.yaml#/paths/~1account~1password'
   /media-assets:
     $ref: './user.openapi.yaml#/paths/~1media-assets'
+  /users/{id}/follow:
+    $ref: './user.openapi.yaml#/paths/~1users~1{id}~1follow'
+  /users/{id}/followers:
+    $ref: './user.openapi.yaml#/paths/~1users~1{id}~1followers'
+  /users/{id}/following:
+    $ref: './user.openapi.yaml#/paths/~1users~1{id}~1following'

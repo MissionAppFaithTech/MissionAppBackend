@@ -613,6 +613,234 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
+  /users/{id}/follow:
+    get:
+      operationId: userFollowShow
+      tags: [user]
+      summary: Informa se o usuário logado segue o perfil
+      description: >-
+        Estado do follow para quem está logado. Fica fora do perfil público,
+        que é cacheado e compartilhado entre visitantes (ADR-0036). Só
+        missionários públicos podem ser seguidos.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Estado do follow.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário inexistente ou que não é missionário público. Códigos: `E_USER_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+    post:
+      operationId: userFollowStore
+      tags: [user]
+      summary: Segue um missionário
+      description: >-
+        Idempotente: seguir de novo não duplica a relação nem o contador.
+        Qualquer usuário autenticado pode seguir; só missionários públicos
+        (aprovados, ativos) podem ser seguidos, o que impede apoiador de
+        seguir apoiador. Os contadores são eventualmente consistentes (ADR-0033): a relação é
+        gravada na hora e o contador recebe um delta no cache, aplicado no
+        banco em lote; a resposta já soma os deltas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Perfil seguido (ou já era seguido).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário inexistente ou que não é missionário público. Códigos: `E_USER_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` não é um UUID válido ou é o próprio usuário. Códigos: `E_VALIDATION_ERROR`, `E_CANNOT_FOLLOW_SELF`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Mais de 120 ações de seguir/curtir por minuto para o mesmo usuário. Códigos: `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      operationId: userFollowDestroy
+      tags: [user]
+      summary: Deixa de seguir um usuário
+      description: >-
+        Idempotente. Não exige que o perfil ainda seja público, para permitir
+        deixar de seguir um perfil desativado. Os contadores são eventualmente consistentes (ADR-0033): a relação é
+        gravada na hora e o contador recebe um delta no cache, aplicado no
+        banco em lote; a resposta já soma os deltas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Perfil deixou de ser seguido (ou já não era).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário inexistente. Códigos: `E_USER_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Mais de 120 ações de seguir/curtir por minuto para o mesmo usuário. Códigos: `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}/followers:
+    get:
+      operationId: userFollowersIndex
+      tags: [user]
+      summary: Lista os seguidores de um usuário por cursor
+      description: >-
+        Quem seguiu mais recentemente primeiro (ADR-0033). Contas removidas ou
+        inativas ficam fora da lista. O total vem de `followersCount` no
+        perfil, não da lista.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de seguidores.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowersResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário inexistente, removido ou inativo. Códigos: `E_USER_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Parâmetro inválido ou cursor malformado. Códigos: `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /users/{id}/following:
+    get:
+      operationId: userFollowingIndex
+      tags: [user]
+      summary: Lista quem um usuário segue por cursor
+      description: >-
+        Seguido mais recentemente primeiro (ADR-0033). Contas removidas ou
+        inativas ficam fora da lista.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de perfis seguidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowingResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Usuário inexistente, removido ou inativo. Códigos: `E_USER_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Parâmetro inválido ou cursor malformado. Códigos: `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
   /media-assets/uploads:
     post:
       operationId: mediaUploadStore
@@ -1311,6 +1539,103 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
+  /posts/{id}/like:
+    post:
+      operationId: postLikeStore
+      tags: [post]
+      summary: Curte uma postagem
+      description: >-
+        Idempotente: curtir de novo não duplica a curtida nem o contador.
+        Os contadores são eventualmente consistentes (ADR-0033): a relação é
+        gravada na hora e o contador recebe um delta no cache, aplicado no
+        banco em lote; a resposta já soma os deltas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem curtida (ou já era).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Mais de 120 ações de seguir/curtir por minuto para o mesmo usuário. Códigos: `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      operationId: postLikeDestroy
+      tags: [post]
+      summary: Remove a curtida de uma postagem
+      description: >-
+        Idempotente. Os contadores são eventualmente consistentes (ADR-0033): a relação é
+        gravada na hora e o contador recebe um delta no cache, aplicado no
+        banco em lote; a resposta já soma os deltas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Curtida removida (ou não existia).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Mais de 120 ações de seguir/curtir por minuto para o mesmo usuário. Códigos: `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /missionaries/about:
     patch:
       operationId: missionaryAboutUpdate
@@ -2526,6 +2851,14 @@ components:
       schema:
         type: string
         format: uuid
+    UserId:
+      name: id
+      in: path
+      required: true
+      description: Id do usuário (o `id` do perfil público de missionário).
+      schema:
+        type: string
+        format: uuid
   schemas:
     CursorPaginationMeta:
       type: object
@@ -3459,6 +3792,7 @@ components:
       description: Campos públicos do perfil de missionário (ADR-0036). Nunca inclui PII.
       required:
         [
+          id,
           username,
           fullName,
           biography,
@@ -3473,6 +3807,10 @@ components:
           contact,
         ]
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Id do usuário, alvo de `/users/{id}/follow`.
         username:
           type: string
         fullName:
@@ -3536,6 +3874,9 @@ components:
               type: string
         followersCount:
           type: integer
+          description: >-
+            Eventualmente consistente (ADR-0033); o site ainda pode segurar o
+            valor pelo tempo do cache do perfil (ADR-0037).
         followingCount:
           type: integer
         contact:
@@ -3799,6 +4140,15 @@ components:
         createdAt:
           type: string
           format: date-time
+        likesCount:
+          type: integer
+          minimum: 0
+          description: >-
+            Curtidas da postagem. Em listagem/detalhe/edição já soma os deltas
+            ainda não aplicados no banco; logo após criar é 0.
+        isLiked:
+          type: boolean
+          description: Se o usuário logado curtiu a postagem (sempre `false` na criação).
     PostResponse:
       type: object
       properties:
@@ -3876,3 +4226,91 @@ components:
             Confirma substituir as imagens mais antigas do missionário quando as
             novas imagens ultrapassam o limite de 50 (RF 8.2). Sem ela, a API
             responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.
+    FollowState:
+      type: object
+      required: [following, followersCount]
+      properties:
+        following:
+          type: boolean
+          description: Se o usuário logado segue o perfil.
+        followersCount:
+          type: integer
+          minimum: 0
+          description: Seguidores do perfil, já somando deltas ainda não aplicados no banco.
+    FollowStateResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            follow:
+              $ref: '#/components/schemas/FollowState'
+    FollowListItem:
+      type: object
+      required: [id, username, fullName, profilePictureUrl, role, followedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        fullName:
+          type: string
+        profilePictureUrl:
+          type: [string, 'null']
+          format: uri
+        role:
+          type: string
+          enum: [ADMIN, MISSIONARY, SUPPORTER]
+        followedAt:
+          type: string
+          format: date-time
+          description: Quando o follow aconteceu (ordem da lista).
+    FollowersResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [followers]
+          properties:
+            followers:
+              type: array
+              description: Quem segue o usuário.
+              items:
+                $ref: '#/components/schemas/FollowListItem'
+        meta:
+          $ref: '#/components/schemas/CursorPaginationMeta'
+    FollowingResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [following]
+          properties:
+            following:
+              type: array
+              description: Quem o usuário segue.
+              items:
+                $ref: '#/components/schemas/FollowListItem'
+        meta:
+          $ref: '#/components/schemas/CursorPaginationMeta'
+    LikeState:
+      type: object
+      required: [liked, likesCount]
+      properties:
+        liked:
+          type: boolean
+        likesCount:
+          type: integer
+          minimum: 0
+          description: Curtidas da postagem, já somando deltas ainda não aplicados no banco.
+    LikeStateResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            like:
+              $ref: '#/components/schemas/LikeState'
