@@ -3,6 +3,13 @@ import { MembershipStatus } from '#enums/user/membership_status'
 import { UserRole } from '#enums/user/user_role'
 import MissionaryProfileNotFoundException from '#exceptions/missionary/missionary_profile_not_found_exception'
 import Missionary from '#models/missionary'
+import {
+  CounterBufferService,
+  withPendingDelta,
+} from '#services/shared/counter/counter_buffer_service'
+
+/** Contadores do perfil já somados aos deltas ainda não aplicados no banco. */
+type ProfileCounters = { followersCount: number; followingCount: number }
 
 /**
  * Leitura anônima do perfil público de missionário (RF 1.4, RF 10, ADR-0036).
@@ -42,5 +49,28 @@ export class PublicMissionaryProfileService {
     }
 
     return missionary
+  }
+
+  /**
+   * Contadores de seguidores e seguindo do perfil, com os deltas pendentes no
+   * Dragonfly (ADR-0033) — o banco pode estar até um ciclo de flush atrás.
+   *
+   * @param missionary Missionário com `user` carregado.
+   * @returns Contadores a exibir.
+   * @example
+   * const counters = await new PublicMissionaryProfileService().countersOf(missionary)
+   */
+  async countersOf(missionary: Missionary): Promise<ProfileCounters> {
+    const { user } = missionary
+    const buffer = new CounterBufferService()
+    const [followers, following] = await Promise.all([
+      buffer.pending('userFollowers', [user.id]),
+      buffer.pending('userFollowing', [user.id]),
+    ])
+
+    return {
+      followersCount: withPendingDelta(user.followersCount ?? 0, followers, user.id),
+      followingCount: withPendingDelta(user.followingCount ?? 0, following, user.id),
+    }
   }
 }

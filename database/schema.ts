@@ -442,7 +442,15 @@ export class PostImageSchema extends BaseModel {
 }
 
 export class PostSchema extends BaseModel {
-  static $columns = ['content', 'createdAt', 'highlightLink', 'id', 'missionaryId', 'slug'] as const
+  static $columns = [
+    'content',
+    'createdAt',
+    'highlightLink',
+    'id',
+    'likesCount',
+    'missionaryId',
+    'slug',
+  ] as const
   $columns = PostSchema.$columns
   @column()
   declare content: string
@@ -452,6 +460,8 @@ export class PostSchema extends BaseModel {
   declare highlightLink: string | null
   @column({ isPrimary: true })
   declare id: string
+  @column()
+  declare likesCount: number
   @column()
   declare missionaryId: string
   @column()

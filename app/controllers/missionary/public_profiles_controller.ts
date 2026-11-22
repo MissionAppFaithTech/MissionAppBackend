@@ -9,10 +9,12 @@ export default class PublicProfilesController {
       params: { username },
     } = await request.validateUsing(publicMissionaryProfileValidator)
 
-    const missionary = await new PublicMissionaryProfileService().findByUsername(username)
+    const service = new PublicMissionaryProfileService()
+    const missionary = await service.findByUsername(username)
+    const counters = await service.countersOf(missionary)
 
     return serialize({
-      missionary: PublicMissionaryProfileTransformer.transform(missionary),
+      missionary: PublicMissionaryProfileTransformer.transform(missionary, counters),
     })
   }
 }

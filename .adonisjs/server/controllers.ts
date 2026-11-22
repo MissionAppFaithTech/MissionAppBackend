@@ -30,14 +30,18 @@ export const controllers = {
     WorkAddress: () => import('#controllers/missionary/work_address_controller'),
   },
   post: {
+    PostLikes: () => import('#controllers/post/post_likes_controller'),
     Posts: () => import('#controllers/post/posts_controller'),
   },
   user: {
     Account: () => import('#controllers/user/account_controller'),
     AccountEmail: () => import('#controllers/user/account_email_controller'),
     AccountPassword: () => import('#controllers/user/account_password_controller'),
+    Followers: () => import('#controllers/user/followers_controller'),
+    Following: () => import('#controllers/user/following_controller'),
     MissionaryAccounts: () => import('#controllers/user/missionary_accounts_controller'),
     Profile: () => import('#controllers/user/profile_controller'),
+    UserFollows: () => import('#controllers/user/user_follows_controller'),
     UsernameAvailability: () => import('#controllers/user/username_availability_controller'),
   },
 }

@@ -40,8 +40,8 @@ type WorkerRegistryEntry = {
  * adicionar um job novo é adicionar uma linha aqui, não criar um arquivo de
  * command novo.
  *
- * Não inclui `queue:refresh-tokens-cleanup` — aquele command também
- * *produz* seu próprio job repetível (cron) na inicialização, um papel
+ * Não inclui `queue:refresh-tokens-cleanup` nem `queue:counters-sync` — esses
+ * commands também *produzem* seu próprio job repetível (cron) na inicialização, um papel
  * diferente de "só consumir uma fila que outra parte da aplicação alimenta",
  * que é o que as entradas aqui têm em comum.
  */

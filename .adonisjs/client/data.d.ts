@@ -7,6 +7,7 @@
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
 import type CatalogReferenceTransformer from '#transformers/catalog_reference_transformer'
 import type FaithCommunityTransformer from '#transformers/faith_community_transformer'
+import type FollowTransformer from '#transformers/follow_transformer'
 import type ImpactProjectTransformer from '#transformers/impact_project_transformer'
 import type MediaAssetTransformer from '#transformers/media_asset_transformer'
 import type MissionaryAgencyTransformer from '#transformers/missionary_agency_transformer'
@@ -26,6 +27,10 @@ export namespace Data {
   export type FaithCommunity = InferData<FaithCommunityTransformer>
   export namespace FaithCommunity {
     export type Variants = InferVariants<FaithCommunityTransformer>
+  }
+  export type Follow = InferData<FollowTransformer>
+  export namespace Follow {
+    export type Variants = InferVariants<FollowTransformer>
   }
   export type ImpactProject = InferData<ImpactProjectTransformer>
   export namespace ImpactProject {
