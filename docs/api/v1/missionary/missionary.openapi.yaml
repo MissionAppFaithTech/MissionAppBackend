@@ -1560,6 +1560,7 @@ components:
       description: Campos públicos do perfil de missionário (ADR-0036). Nunca inclui PII.
       required:
         [
+          id,
           username,
           fullName,
           biography,
@@ -1574,6 +1575,10 @@ components:
           contact,
         ]
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Id do usuário, alvo de `/users/{id}/follow`.
         username:
           type: string
         fullName:
@@ -1637,6 +1642,9 @@ components:
               type: string
         followersCount:
           type: integer
+          description: >-
+            Eventualmente consistente (ADR-0033); o site ainda pode segurar o
+            valor pelo tempo do cache do perfil (ADR-0037).
         followingCount:
           type: integer
         contact:

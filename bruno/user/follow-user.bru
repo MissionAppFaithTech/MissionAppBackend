@@ -1,0 +1,20 @@
+meta {
+  name: Follow User
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{base_url}}/api/v1/users/{{user_id}}/follow
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Segue um missionário público (idempotente). `user_id` é o `id` do perfil
+  público. O contador já vem com o delta pendente (ADR-0033).
+}

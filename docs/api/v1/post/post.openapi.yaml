@@ -279,6 +279,104 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
+  /posts/{id}/like:
+    post:
+      operationId: postLikeStore
+      tags: [post]
+      summary: Curte uma postagem
+      description: >-
+        Idempotente: curtir de novo não duplica a curtida nem o contador.
+        Os contadores são eventualmente consistentes (ADR-0033): a relação é
+        gravada na hora e o contador recebe um delta no cache, aplicado no
+        banco em lote; a resposta já soma os deltas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Postagem curtida (ou já era).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Mais de 120 ações de seguir/curtir por minuto para o mesmo usuário. Códigos: `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      operationId: postLikeDestroy
+      tags: [post]
+      summary: Remove a curtida de uma postagem
+      description: >-
+        Idempotente. Os contadores são eventualmente consistentes (ADR-0033): a relação é
+        gravada na hora e o contador recebe um delta no cache, aplicado no
+        banco em lote; a resposta já soma os deltas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Curtida removida (ou não existia).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStateResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Postagem não encontrada. Códigos: `E_POST_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            O `id` informado não é um UUID válido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Mais de 120 ações de seguir/curtir por minuto para o mesmo usuário. Códigos: `E_TOO_MANY_REQUESTS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
 components:
   parameters:
     PostId:
@@ -332,6 +430,15 @@ components:
         createdAt:
           type: string
           format: date-time
+        likesCount:
+          type: integer
+          minimum: 0
+          description: >-
+            Curtidas da postagem. Em listagem/detalhe/edição já soma os deltas
+            ainda não aplicados no banco; logo após criar é 0.
+        isLiked:
+          type: boolean
+          description: Se o usuário logado curtiu a postagem (sempre `false` na criação).
 
     PostResponse:
       type: object
@@ -413,3 +520,22 @@ components:
             Confirma substituir as imagens mais antigas do missionário quando as
             novas imagens ultrapassam o limite de 50 (RF 8.2). Sem ela, a API
             responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.
+
+    LikeState:
+      type: object
+      required: [liked, likesCount]
+      properties:
+        liked:
+          type: boolean
+        likesCount:
+          type: integer
+          minimum: 0
+          description: Curtidas da postagem, já somando deltas ainda não aplicados no banco.
+    LikeStateResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            like:
+              $ref: '#/components/schemas/LikeState'

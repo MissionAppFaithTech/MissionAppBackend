@@ -92,7 +92,7 @@ O DragonflyDB foi escolhido sobre o Redis canônico e demais alternativas pelos 
 
 - **Volatilidade dos dados em memória:** Por padrão, DragonflyDB é in-memory. Sem configuração de persistência (`snapshot` ou `AOF`), dados podem ser perdidos em reinicialização inesperada — relevante especialmente para jobs enfileirados que ainda não foram processados.
 
-- **Consistência eventual nos contadores:** Contadores de likes e seguidores mantidos no DragonflyDB e sincronizados periodicamente com o PostgreSQL podem divergir temporariamente em caso de falha na sincronização. A estratégia de reconciliação deve ser documentada na implementação.
+- **Consistência eventual nos contadores:** Contadores de likes e seguidores mantidos no DragonflyDB e sincronizados periodicamente com o PostgreSQL podem divergir temporariamente em caso de falha na sincronização. A estratégia de reconciliação deve ser documentada na implementação; ela está no [ADR-0033](./0033-paginacao-por-cursor-para-feeds-e-listas-incrementais.md#contadores-desnormalizados-buffer-no-dragonfly).
 
 ## Referências
 

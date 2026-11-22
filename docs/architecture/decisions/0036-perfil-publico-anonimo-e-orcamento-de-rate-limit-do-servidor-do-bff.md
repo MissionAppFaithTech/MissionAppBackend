@@ -33,6 +33,7 @@ Criar `GET /api/v1/public/missionaries/:username`, anônimo, com as regras abaix
   - "Sobre": `aboutMe`, `missionStorySummary`, `originLocation`, `prayerRequest`, `lifeVerse`;
   - local de atuação, só `city`, `state` e `country`;
   - `followersCount` e `followingCount`;
+  - `id` do usuário (2026-11-22), identificador opaco usado como alvo de `/users/{id}/follow`; não é PII. O estado "eu sigo" do visitante nunca entra nesta resposta, que é cacheada e compartilhada (ver ADR-0033).
   - contato público: `publicEmail`, `publicPhone`, `publicPhoneIsWhatsapp`.
 - **Nunca expostos:** documento de identidade, e-mail e telefone da conta, status, dados financeiros e de doação, CEP e bairro.
 
