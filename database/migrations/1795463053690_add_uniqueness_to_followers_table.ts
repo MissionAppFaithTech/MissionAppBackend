@@ -14,7 +14,8 @@ export default class extends BaseSchema {
         indexName: 'uq_followers_follower_id_following_id',
       })
 
-      table.check('?? <> ??', ['follower_id', 'following_id'], 'chk_followers_not_self')
+      // NOTE: predicado literal — o knex gera SQL inválido com dois `??` no check
+      table.check('follower_id <> following_id', [], 'chk_followers_not_self')
 
       // NOTE: o índice simples de follower_id fica coberto pelo índice da unique
       // (follower_id é a coluna da esquerda); o de following_id continua necessário
