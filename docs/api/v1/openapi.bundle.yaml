@@ -21,7 +21,11 @@ tags:
   - name: impact_project
     description: Projeto de impacto do missionário — vitrine principal da causa, com capa e link de vídeo opcional (YouTube ou Vimeo). Um por missionário.
   - name: post
-    description: Postagens de missionários para o feed, com até 3 imagens por postagem e limite de 50 imagens por missionário (substituir as mais antigas exige confirmação).
+    description: Postagens de missionários para o feed, com até 3 imagens por postagem e limite de 50 imagens por missionário (substituir as mais antigas exige confirmação), e o feed cronológico de quem o usuário segue.
+  - name: follower
+    description: Rede de conexões — apoiadores e missionários seguem missionários; listas de "seguindo" e de seguidores.
+  - name: financial_config
+    description: Área de doação do missionário — mensagem aos apoiadores, Pix (só chave) e transferência bancária, gravados com AES-256-GCM. O pagamento acontece fora do app.
 paths:
   /auth/login:
     post:
@@ -2416,6 +2420,431 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /feed:
+    get:
+      operationId: feedIndex
+      tags:
+        - post
+      summary: Feed cronológico do usuário (mais recentes primeiro)
+      description: Postagens de quem o usuário segue e, para o missionário, as próprias (RF 4.4.2, RF 5.3). Cada postagem traz `author`. Missionários seguidos que foram suspensos, excluídos ou não estão aprovados saem do feed. Paginação por cursor (ADR-0033).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          description: "`all` (padrão): próprias e de quem segue. `following`: só de quem segue. `own`: só as próprias, vazio para quem não é missionário."
+          schema:
+            type: string
+            enum:
+              - all
+              - following
+              - own
+            default: all
+        - $ref: "#/components/parameters/CursorParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Página do feed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostsResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "`scope` desconhecido, `limit` acima de 20 ou cursor malformado. Códigos: `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+  /account/following:
+    get:
+      operationId: followingIndex
+      tags:
+        - follower
+      summary: Lista os missionários que o usuário segue (mais recentes primeiro)
+      description: 'Aba "Seguindo" (RF 11.6). Paginação por cursor (ADR-0033): envie o `meta.nextCursor` da resposta anterior em `cursor`. Perfis suspensos ou excluídos somem da lista, mas o vínculo continua gravado.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CursorParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Página de perfis seguidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowingResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "`limit` acima de 20 ou cursor malformado. Códigos: `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+    post:
+      operationId: followingStore
+      tags:
+        - follower
+      summary: Segue um missionário
+      description: "Apoiadores e missionários seguem missionários (RF 4.4.1, RF 5.2); ninguém segue apoiadores nem a si mesmo. Idempotente: seguir de novo responde 200 sem duplicar o vínculo nem os contadores `followersCount`/`followingCount`. Só missionários aprovados e com conta ativa podem ser seguidos; os demais respondem o mesmo 404."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FollowRequest"
+      responses:
+        "200":
+          description: O usuário passa a seguir o missionário.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowStatusResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Administradores não seguem perfis. Códigos: `E_FOLLOW_FORBIDDEN`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Username inexistente, de apoiador ou de missionário não visível. Códigos: `E_FOLLOWED_USER_NOT_FOUND`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "Username com formato inválido ou o próprio usuário. Códigos: `E_VALIDATION_ERROR`, `E_FOLLOW_SELF`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+  /account/following/{username}:
+    get:
+      operationId: followingShow
+      tags:
+        - follower
+      summary: Diz se o usuário segue o missionário
+      description: Estado do botão "Seguir"/"Seguindo" no perfil do missionário.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FollowedUsername"
+      responses:
+        "200":
+          description: Estado atual do vínculo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowStatusResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "Username com formato inválido. Códigos: `E_VALIDATION_ERROR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+    delete:
+      operationId: followingDestroy
+      tags:
+        - follower
+      summary: Deixa de seguir um missionário
+      description: "Idempotente: deixar de seguir quem não se segue (ou um username inexistente) responde 200 sem alterar os contadores. Funciona mesmo que o missionário esteja suspenso."
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FollowedUsername"
+      responses:
+        "200":
+          description: O usuário não segue mais o missionário.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowStatusResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "Username com formato inválido. Códigos: `E_VALIDATION_ERROR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+  /account/followers:
+    get:
+      operationId: followersIndex
+      tags:
+        - follower
+      summary: Lista quem segue o usuário (mais recentes primeiro)
+      description: Seguidores do próprio usuário (RF 10.6), por cursor (ADR-0033). Contas suspensas ou excluídas não aparecem.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CursorParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Página de seguidores.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowersResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "`limit` acima de 20 ou cursor malformado. Códigos: `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+  /missionaries/donation-settings:
+    get:
+      operationId: donationSettingsShow
+      tags:
+        - financial_config
+      summary: Área de doação do próprio missionário
+      description: "Mensagem aos apoiadores e métodos de recebimento em claro, com o status de cada um (RF 12.1.4): `ACTIVE` quando configurado, `PENDING` quando não. Os dados bancários ficam cifrados com AES-256-GCM no banco e só são descriptografados nesta resposta."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Área de doação do missionário.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationSettingsResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Usuário que não é missionário, ou ADMIN sem informar o missionário. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Missionário sem perfil missionário. Códigos: `E_MISSIONARY_PROFILE_NOT_FOUND`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: donationSettingsUpdate
+      tags:
+        - financial_config
+      summary: Configura a área de doação do próprio missionário
+      description: "Atualização parcial (RF 12.1): campo omitido fica como está, `null` limpa o método (volta a `PENDING`) e objeto substitui o método inteiro. Pix só com a chave, sem QR Code (ADR-0039), validada conforme o `keyType`. Os pagamentos acontecem fora do app (RF 12.3)."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDonationSettingsRequest"
+      responses:
+        "200":
+          description: Área de doação atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationSettingsResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Usuário que não é missionário, ou ADMIN sem informar o missionário. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Missionário sem perfil missionário. Códigos: `E_MISSIONARY_PROFILE_NOT_FOUND`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "Chave Pix fora do formato do `keyType`, transferência incompleta ou documento do titular que não é CPF/CNPJ. Códigos: `E_VALIDATION_ERROR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+  /missionaries/{id}/donation-settings:
+    get:
+      operationId: donationSettingsAdminShow
+      tags:
+        - financial_config
+      summary: Área de doação de um missionário (ADMIN)
+      description: Mesma resposta de `GET /missionaries/donation-settings`, para o missionário do `id`. Um missionário só pode informar o próprio id.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MissionaryId"
+      responses:
+        "200":
+          description: Área de doação do missionário.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationSettingsResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Usuário sem permissão sobre o missionário do `id`. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Missionário do `id` não encontrado. Códigos: `E_MISSIONARY_PROFILE_NOT_FOUND`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "`id` que não é UUID. Códigos: `E_VALIDATION_ERROR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+    patch:
+      operationId: donationSettingsAdminUpdate
+      tags:
+        - financial_config
+      summary: Configura a área de doação de um missionário (ADMIN)
+      description: Mesmas regras de `PATCH /missionaries/donation-settings`, para o missionário do `id`. A mensagem aos apoiadores também é gravada no perfil desse missionário.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MissionaryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDonationSettingsRequest"
+      responses:
+        "200":
+          description: Área de doação atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationSettingsResponse"
+        "401":
+          description: "Access token ausente, inválido ou revogado. Códigos: `E_UNAUTHORIZED_ACCESS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Usuário sem permissão sobre o missionário do `id`. Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Missionário do `id` não encontrado. Códigos: `E_MISSIONARY_PROFILE_NOT_FOUND`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "`id` que não é UUID ou corpo inválido. Códigos: `E_VALIDATION_ERROR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+  /public/missionaries/{username}/donation:
+    get:
+      operationId: publicDonationShow
+      tags:
+        - financial_config
+      summary: Área de doação pública de um missionário
+      description: "Consulta anônima, só leitura (RF 1.4, RF 12.2): mensagem aos apoiadores e apenas os métodos ativos (o pendente vem `null`). O CPF do titular sai mascarado (`***.456.789-**`); CNPJ, que é dado público de cadastro, sai completo. A chave Pix sai completa, porque é o que o apoiador copia para pagar. Só missionários com perfil aprovado e conta ativa são visíveis; os demais respondem o mesmo 404. Compartilha o rate limit do perfil público (60 por minuto por IP; 600 para o servidor do BFF)."
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username do missionário (maiúsculas são aceitas e normalizadas).
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: ^[A-Za-z0-9_]+$
+      responses:
+        "200":
+          description: Área de doação pública.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicDonationResponse"
+        "404":
+          description: "Perfil inexistente ou não público. Códigos: `E_MISSIONARY_PROFILE_NOT_FOUND`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "Username com formato inválido. Códigos: `E_VALIDATION_ERROR`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "429":
+          description: "Limite de consultas excedido. Códigos: `E_TOO_MANY_REQUESTS`."
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     bearerAuth:
@@ -2526,6 +2955,16 @@ components:
       schema:
         type: string
         format: uuid
+    FollowedUsername:
+      name: username
+      in: path
+      required: true
+      description: Username do missionário (maiúsculas são aceitas e normalizadas).
+      schema:
+        type: string
+        minLength: 3
+        maxLength: 32
+        pattern: ^[A-Za-z0-9_]+$
   schemas:
     CursorPaginationMeta:
       type: object
@@ -3791,6 +4230,8 @@ components:
         missionaryId:
           type: string
           format: uuid
+        author:
+          $ref: "#/components/schemas/PostAuthor"
         images:
           type: array
           maxItems: 3
@@ -3876,3 +4317,291 @@ components:
             Confirma substituir as imagens mais antigas do missionário quando as
             novas imagens ultrapassam o limite de 50 (RF 8.2). Sem ela, a API
             responde 409 `E_POST_IMAGE_LIMIT_REACHED` e nada é gravado.
+    PostAuthor:
+      type: object
+      description: Missionário autor; presente só nas respostas de `GET /feed`.
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        profilePictureUrl:
+          type:
+            - string
+            - "null"
+          format: uri
+    FollowRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: ^[A-Za-z0-9_]+$
+          description: Username do missionário a seguir (maiúsculas são normalizadas).
+    FollowStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+            - following
+          properties:
+            following:
+              type: boolean
+    Connection:
+      type: object
+      description: Card público de um perfil na lista de seguidores ou de "seguindo".
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum:
+            - MISSIONARY
+            - SUPPORTER
+            - ADMIN
+        biography:
+          type:
+            - string
+            - "null"
+        profilePictureUrl:
+          type:
+            - string
+            - "null"
+          format: uri
+        followedAt:
+          type: string
+          format: date-time
+    FollowingResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - following
+          properties:
+            following:
+              type: array
+              items:
+                $ref: "#/components/schemas/Connection"
+        meta:
+          $ref: "#/components/schemas/CursorPaginationMeta"
+    FollowersResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - followers
+          properties:
+            followers:
+              type: array
+              items:
+                $ref: "#/components/schemas/Connection"
+        meta:
+          $ref: "#/components/schemas/CursorPaginationMeta"
+    PixKeyType:
+      type: string
+      enum:
+        - CPF
+        - CNPJ
+        - EMAIL
+        - PHONE
+        - RANDOM
+      description: CPF e CNPJ só com dígitos (pontuação é removida), e-mail com até 77 caracteres, telefone em E.164 (`+5511912345678`) e chave aleatória (EVP) como UUID.
+    BankAccountType:
+      type: string
+      enum:
+        - CHECKING
+        - SAVINGS
+        - PAYMENT
+    DonationMethodStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - PENDING
+    PixRequest:
+      type: object
+      required:
+        - keyType
+        - key
+      properties:
+        keyType:
+          $ref: "#/components/schemas/PixKeyType"
+        key:
+          type: string
+          minLength: 1
+          maxLength: 140
+    BankTransferRequest:
+      type: object
+      required:
+        - bankName
+        - bankNumber
+        - agency
+        - accountNumber
+        - accountType
+        - holderName
+        - holderDocument
+      properties:
+        bankName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        bankNumber:
+          type: string
+          pattern: ^\d{3}$
+          description: Código do banco na COMPE, por exemplo `001`.
+        agency:
+          type: string
+          pattern: ^\d{1,5}(-[\dxX])?$
+        accountNumber:
+          type: string
+          pattern: ^\d{1,20}-?[\dxX]$
+          description: Número da conta com o dígito verificador.
+        accountType:
+          $ref: "#/components/schemas/BankAccountType"
+        holderName:
+          type: string
+          minLength: 2
+          maxLength: 255
+        holderDocument:
+          type: string
+          description: CPF (11 dígitos) ou CNPJ (14); a pontuação é removida.
+    UpdateDonationSettingsRequest:
+      type: object
+      properties:
+        donationMessage:
+          type:
+            - string
+            - "null"
+          maxLength: 5000
+          description: Apelo ou agradecimento exibido no topo da área (RF 12.1.1).
+        pix:
+          oneOf:
+            - $ref: "#/components/schemas/PixRequest"
+            - type: "null"
+        bankTransfer:
+          oneOf:
+            - $ref: "#/components/schemas/BankTransferRequest"
+            - type: "null"
+    DonationSettings:
+      type: object
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+        donationMessage:
+          type:
+            - string
+            - "null"
+        pix:
+          type: object
+          properties:
+            status:
+              $ref: "#/components/schemas/DonationMethodStatus"
+            keyType:
+              oneOf:
+                - $ref: "#/components/schemas/PixKeyType"
+                - type: "null"
+            key:
+              type:
+                - string
+                - "null"
+        bankTransfer:
+          type: object
+          description: Todos os campos são `null` enquanto o status for `PENDING`.
+          properties:
+            status:
+              $ref: "#/components/schemas/DonationMethodStatus"
+            bankName:
+              type:
+                - string
+                - "null"
+            bankNumber:
+              type:
+                - string
+                - "null"
+            agency:
+              type:
+                - string
+                - "null"
+            accountNumber:
+              type:
+                - string
+                - "null"
+            accountType:
+              oneOf:
+                - $ref: "#/components/schemas/BankAccountType"
+                - type: "null"
+            holderName:
+              type:
+                - string
+                - "null"
+            holderDocument:
+              type:
+                - string
+                - "null"
+              description: Documento completo, só com dígitos.
+    DonationSettingsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            donationSettings:
+              $ref: "#/components/schemas/DonationSettings"
+    PublicDonation:
+      type: object
+      properties:
+        donationMessage:
+          type:
+            - string
+            - "null"
+        pix:
+          oneOf:
+            - type: object
+              properties:
+                keyType:
+                  $ref: "#/components/schemas/PixKeyType"
+                key:
+                  type: string
+            - type: "null"
+        bankTransfer:
+          oneOf:
+            - type: object
+              properties:
+                bankName:
+                  type: string
+                bankNumber:
+                  type: string
+                agency:
+                  type: string
+                accountNumber:
+                  type: string
+                accountType:
+                  $ref: "#/components/schemas/BankAccountType"
+                holderName:
+                  type: string
+                holderDocument:
+                  type: string
+                  description: CPF mascarado (`***.456.789-**`) ou CNPJ formatado.
+            - type: "null"
+    PublicDonationResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            donation:
+              $ref: "#/components/schemas/PublicDonation"

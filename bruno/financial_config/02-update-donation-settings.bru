@@ -1,0 +1,38 @@
+meta {
+  name: Update Donation Settings
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/donation-settings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "donationMessage": "Obrigado por apoiar a missao!",
+    "pix": { "keyType": "EMAIL", "key": "doacoes@example.com" },
+    "bankTransfer": {
+      "bankName": "Banco do Brasil",
+      "bankNumber": "001",
+      "agency": "1234-5",
+      "accountNumber": "12345-6",
+      "accountType": "CHECKING",
+      "holderName": "Missionario Exemplo",
+      "holderDocument": "123.456.789-09"
+    }
+  }
+}
+
+docs {
+  Atualizacao parcial: campo omitido fica como esta, null limpa o metodo (volta
+  a PENDING) e objeto substitui o metodo inteiro. Pix so com a chave (ADR-0039),
+  validada pelo keyType (CPF, CNPJ, EMAIL, PHONE em E.164, RANDOM como UUID).
+  Dados bancarios sao gravados com AES-256-GCM.
+}

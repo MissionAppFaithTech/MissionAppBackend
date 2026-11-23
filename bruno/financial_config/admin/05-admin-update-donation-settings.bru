@@ -1,0 +1,25 @@
+meta {
+  name: Admin Update Donation Settings
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{base_url}}/api/v1/missionaries/{{missionary_id}}/donation-settings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+body:json {
+  {
+    "pix": { "keyType": "PHONE", "key": "+5511912345678" }
+  }
+}
+
+docs {
+  Mesmas regras do PATCH do proprio missionario, para o missionario do id.
+}

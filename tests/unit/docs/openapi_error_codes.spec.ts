@@ -13,6 +13,8 @@ const DOMAIN_SPECS = [
   'impact_project/impact_project.openapi.yaml',
   'media_asset/media_asset.openapi.yaml',
   'post/post.openapi.yaml',
+  'follower/follower.openapi.yaml',
+  'financial_config/financial_config.openapi.yaml',
 ]
 const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const
 

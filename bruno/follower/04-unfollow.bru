@@ -1,0 +1,20 @@
+meta {
+  name: Unfollow Missionary
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{base_url}}/api/v1/account/following/{{missionary_username}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Deixa de seguir. Idempotente: quem nao era seguido responde 200 sem mexer nos
+  contadores. Funciona mesmo que o missionario esteja suspenso.
+}

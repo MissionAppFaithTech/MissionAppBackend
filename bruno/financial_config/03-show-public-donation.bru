@@ -1,0 +1,16 @@
+meta {
+  name: Show Public Donation
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/v1/public/missionaries/{{missionary_username}}/donation
+  auth: none
+}
+
+docs {
+  Area de doacao publica (RF 1.4, RF 12.2): mensagem e so os metodos ativos.
+  CPF do titular mascarado (***.456.789-**); CNPJ completo. Mesmo rate limit do
+  perfil publico (60/min por IP).
+}

@@ -1,0 +1,10 @@
+# Arquivo de agrupamento da pasta financial_config/ (ADR-0027). Não contém paths
+# nem schemas próprios — apenas $refs para os arquivos de conteúdo desta pasta.
+# É este arquivo que o openapi.yaml raiz referencia.
+paths:
+  /missionaries/donation-settings:
+    $ref: './financial_config.openapi.yaml#/paths/~1missionaries~1donation-settings'
+  /missionaries/{id}/donation-settings:
+    $ref: './financial_config.openapi.yaml#/paths/~1missionaries~1{id}~1donation-settings'
+  /public/missionaries/{username}/donation:
+    $ref: './financial_config.openapi.yaml#/paths/~1public~1missionaries~1{username}~1donation'

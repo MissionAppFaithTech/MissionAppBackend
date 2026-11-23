@@ -6,3 +6,5 @@ paths:
     $ref: './post.openapi.yaml#/paths/~1posts'
   /posts/{id}:
     $ref: './post.openapi.yaml#/paths/~1posts~1{id}'
+  /feed:
+    $ref: './post.openapi.yaml#/paths/~1feed'

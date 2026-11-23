@@ -574,5 +574,10 @@ flowchart LR
          <td align="left">Busca de Catálogos Tolerante a Erros no Elasticsearch</td>
          <td>🟢 Aceito</td>
       </tr>
+      <tr>
+         <td><a href="./0043-criptografia-dos-dados-bancarios-com-chave-dedicada.md">ADR-0043</a></td>
+         <td align="left">Criptografia dos Dados Bancários com Chave Dedicada</td>
+         <td>🟡 Proposto</td>
+      </tr>
    </tbody>
 </table>

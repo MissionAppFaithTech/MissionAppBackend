@@ -1,0 +1,19 @@
+meta {
+  name: Admin Show Donation Settings
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/api/v1/missionaries/{{missionary_id}}/donation-settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token_admin}}
+}
+
+docs {
+  Area de doacao de um missionario especifico usando credencial admin.
+}

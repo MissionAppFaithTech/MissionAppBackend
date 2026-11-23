@@ -1,0 +1,27 @@
+meta {
+  name: Feed
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{base_url}}/api/v1/feed
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~scope: all
+  ~cursor: 
+  ~limit: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Feed cronologico (RF 4.4.2, RF 5.3), mais recentes primeiro, por cursor (ADR-0033).
+  scope: all (padrao; proprias + de quem segue), following (so de quem segue) ou
+  own (so as proprias; vazio para quem nao e missionario). Cada post traz author.
+}

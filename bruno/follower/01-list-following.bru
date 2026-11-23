@@ -1,0 +1,25 @@
+meta {
+  name: List Following
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/account/following
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~cursor: 
+  ~limit: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Missionarios que o usuario segue (RF 11.6), mais recentes primeiro, por cursor.
+  Perfis suspensos ou excluidos somem da lista sem desfazer o vinculo.
+}
