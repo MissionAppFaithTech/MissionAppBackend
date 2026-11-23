@@ -15,3 +15,6 @@ overrides:
   undici: 7.30.2
   # NOTE: o @opentelemetry/core 2.x (via @elastic/transport) exige api <1.10.
   '@opentelemetry/api': 1.10.0
+  # NOTE: corrige SNYK-JS-MSGPACKR-22744130 (high) no msgpackr 2.1.2 do bullmq 6.4.1.
+  # TODO: remover ao atualizar o bullmq para >=6.7.1, que já traz o 2.1.4.
+  msgpackr: 2.1.4
