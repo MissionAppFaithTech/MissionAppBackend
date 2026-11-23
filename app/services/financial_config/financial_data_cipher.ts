@@ -1,4 +1,3 @@
-import FinancialDataUnreadableException from '#exceptions/financial_config/financial_data_unreadable_exception'
 import encryption from '@adonisjs/core/services/encryption'
 
 /** Colunas de `financial_configs` gravadas cifradas. */
@@ -22,15 +21,20 @@ export class FinancialDataCipher {
   }
 
   /**
-   * @throws {FinancialDataUnreadableException} Valor gravado que não descriptografa.
+   * Falha alto em vez de devolver `null`: tratar o valor como "não configurado"
+   * esconderia o problema e mandaria o apoiador para um método vazio. É erro
+   * interno (chave errada, chave antiga fora de `_PREVIOUS_KEYS` ou valor
+   * adulterado), então sai como 500 genérico e o detalhe fica só no log.
+   *
+   * @throws {Error} Valor gravado que não descriptografa.
    */
   decrypt(field: EncryptedFinancialField, value: string | null): string | null {
     if (value === null) return null
 
     const plain = encryption.use('financial').decrypt<string>(value, this.purposeOf(field))
     if (typeof plain !== 'string') {
-      throw new FinancialDataUnreadableException(
-        'Não foi possível ler os dados de doação deste missionário'
+      throw new Error(
+        `Dado bancário ilegível em financial_configs (missionário ${this.missionaryId}, campo ${field})`
       )
     }
     return plain

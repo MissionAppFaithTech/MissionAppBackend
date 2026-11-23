@@ -244,7 +244,7 @@ test.group('Área de doação', (group) => {
 
     const response = await client.get(url.own()).bearerToken(attackerToken)
 
-    // NOTE: 500 sai no envelope genérico (ADR-0034); E_FINANCIAL_DATA_UNREADABLE fica no log
+    // NOTE: erro interno sai no envelope genérico de 500 (ADR-0034); o detalhe fica no log
     response.assertStatus(500)
     response.assertBodyContains({ code: 'E_INTERNAL_SERVER_ERROR' })
     assert.notInclude(JSON.stringify(response.body()), 'dono@missao.org')

@@ -25,7 +25,7 @@ A questão central é: **com que chave e de que forma os dados bancários devem 
 - `config/encryption.ts` ganha o encryptor `financial` (`drivers.aes256gcm`). A chave atual vem de `FINANCIAL_DATA_ENCRYPTION_KEY` (obrigatória). Durante uma rotação, as antigas ficam em `FINANCIAL_DATA_ENCRYPTION_PREVIOUS_KEYS` (opcional, separadas por vírgula) e servem só para descriptografar.
 - `pix_key`, `agency`, `account_number`, `holder_name` e `holder_document` viram `text` e guardam só texto cifrado. Código e nome do banco e tipo de conta continuam em claro, porque são públicos e não identificam ninguém.
 - `FinancialDataCipher` (`app/services/financial_config/`) é o único ponto de leitura e escrita dessas colunas. Ele cifra com o `purpose` `financial_config:<missionaryId>:<coluna>`: um texto cifrado copiado para outra linha ou outra coluna não descriptografa.
-- Um valor que não descriptografa (chave errada, rotação incompleta, adulteração) lança `FinancialDataUnreadableException` e responde 500. Ele nunca é tratado como "método pendente".
+- Um valor que não descriptografa (chave errada, rotação incompleta, adulteração) lança um erro interno e responde 500 genérico (ADR-0034), com o detalhe só no log. Ele nunca é tratado como "método pendente".
 - A leitura pública (`GET /public/missionaries/{username}/donation`) mostra o CPF do titular mascarado (`***.456.789-**`). O CNPJ sai completo, por ser dado público de cadastro. A chave Pix sai completa, porque é o que o apoiador copia para pagar.
 
 ## Justificativa
