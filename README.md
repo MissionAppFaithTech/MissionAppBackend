@@ -38,29 +38,43 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── constants
 │   ├── controllers
 │   │   ├── auth
+│   │   ├── financial_config
+│   │   ├── follower
+│   │   ├── impact_project
 │   │   ├── media_asset
 │   │   ├── missionary
+│   │   ├── post
 │   │   └── user
 │   ├── enums
 │   │   ├── authentication_audit
 │   │   ├── financial_config
 │   │   ├── media_asset
 │   │   ├── missionary
+│   │   ├── post
 │   │   ├── refresh_token
 │   │   ├── user
 │   │   └── user_action_audit
 │   ├── events
 │   │   ├── auth
+│   │   ├── media_asset
 │   │   ├── missionary
 │   │   └── user
 │   ├── exceptions
 │   │   ├── auth
-│   │   └── missionary
+│   │   ├── follower
+│   │   ├── impact_project
+│   │   ├── media_asset
+│   │   ├── missionary
+│   │   ├── post
+│   │   └── shared
 │   ├── jobs
 │   │   ├── auth
+│   │   ├── catalog
+│   │   ├── media_asset
 │   │   └── user
 │   ├── listeners
 │   │   ├── auth
+│   │   ├── media_asset
 │   │   ├── missionary
 │   │   └── user
 │   ├── middleware
@@ -70,8 +84,12 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── queues
 │   ├── services
 │   │   ├── auth
+│   │   ├── financial_config
+│   │   ├── follower
+│   │   ├── impact_project
 │   │   ├── media_asset
 │   │   ├── missionary
+│   │   ├── post
 │   │   ├── search
 │   │   ├── shared
 │   │   │   ├── cache
@@ -83,15 +101,21 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   │   ├── auth
 │   │   ├── events
 │   │   │   ├── auth
+│   │   │   ├── media_asset
 │   │   │   ├── missionary
 │   │   │   └── user
 │   │   ├── http
 │   │   └── services
-│   │       └── auth
+│   │       ├── auth
+│   │       └── financial_config
 │   ├── utils
 │   └── validators
+│       ├── financial_config
+│       ├── follower
+│       ├── impact_project
 │       ├── media_asset
 │       ├── missionary
+│       ├── post
 │       ├── shared
 │       │   ├── fields
 │       │   └── schemas
@@ -101,7 +125,15 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── auth
 │   │   └── sessions
 │   ├── environments
+│   ├── financial_config
+│   │   └── admin
+│   ├── follower
+│   ├── impact_project
+│   │   └── admin
+│   ├── media_asset
 │   ├── missionary
+│   │   └── admin
+│   ├── post
 │   │   └── admin
 │   └── user
 ├── client
@@ -115,7 +147,12 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │   ├── api
 │   │   └── v1
 │   │       ├── auth
+│   │       ├── financial_config
+│   │       ├── follower
+│   │       ├── impact_project
+│   │       ├── media_asset
 │   │       ├── missionary
+│   │       ├── post
 │   │       └── user
 │   ├── architecture
 │   │   ├── decisions
@@ -139,13 +176,23 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 ├── tests
 │   ├── functional
 │   │   ├── auth
+│   │   ├── errors
+│   │   ├── financial_config
+│   │   ├── follower
+│   │   ├── impact_project
+│   │   ├── media_asset
 │   │   ├── missionary
+│   │   ├── post
 │   │   └── user
 │   └── unit
 │       ├── commands
 │       ├── config
+│       ├── constants
+│       ├── docs
+│       ├── exceptions
 │       ├── jobs
 │       │   ├── auth
+│       │   ├── catalog
 │       │   └── user
 │       ├── listeners
 │       │   └── user
@@ -160,7 +207,7 @@ O **MissionApp** é uma plataforma open-source de conexão entre **missionários
 │       └── validators
 └── tmp
 
-129 directories
+176 directories
 ```
 <!-- readme-tree end -->
 
