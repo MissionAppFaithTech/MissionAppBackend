@@ -1,0 +1,441 @@
+paths:
+  /missionaries/donation-settings:
+    get:
+      operationId: donationSettingsShow
+      tags: [financial_config]
+      summary: Área de doação do próprio missionário
+      description: >-
+        Mensagem aos apoiadores e métodos de recebimento em claro, com o status
+        de cada um (RF 12.1.4): `ACTIVE` quando configurado, `PENDING` quando
+        não. Os dados bancários ficam cifrados com AES-256-GCM no banco e só são
+        descriptografados nesta resposta.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Área de doação do missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationSettingsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário que não é missionário, ou ADMIN sem informar o missionário.
+            Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Missionário sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+    patch:
+      operationId: donationSettingsUpdate
+      tags: [financial_config]
+      summary: Configura a área de doação do próprio missionário
+      description: >-
+        Atualização parcial (RF 12.1): campo omitido fica como está, `null`
+        limpa o método (volta a `PENDING`) e objeto substitui o método inteiro.
+        Pix só com a chave, sem QR Code (ADR-0039), validada conforme o
+        `keyType`. Os pagamentos acontecem fora do app (RF 12.3).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDonationSettingsRequest'
+      responses:
+        '200':
+          description: Área de doação atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationSettingsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário que não é missionário, ou ADMIN sem informar o missionário.
+            Códigos: `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Missionário sem perfil missionário. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Chave Pix fora do formato do `keyType`, transferência incompleta ou
+            documento do titular que não é CPF/CNPJ. Códigos:
+            `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /missionaries/{id}/donation-settings:
+    get:
+      operationId: donationSettingsAdminShow
+      tags: [financial_config]
+      summary: Área de doação de um missionário (ADMIN)
+      description: >-
+        Mesma resposta de `GET /missionaries/donation-settings`, para o
+        missionário do `id`. Um missionário só pode informar o próprio id.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../missionary/missionary.openapi.yaml#/components/parameters/MissionaryId'
+      responses:
+        '200':
+          description: Área de doação do missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationSettingsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão sobre o missionário do `id`. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Missionário do `id` não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            `id` que não é UUID. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    patch:
+      operationId: donationSettingsAdminUpdate
+      tags: [financial_config]
+      summary: Configura a área de doação de um missionário (ADMIN)
+      description: >-
+        Mesmas regras de `PATCH /missionaries/donation-settings`, para o
+        missionário do `id`. A mensagem aos apoiadores também é gravada no
+        perfil desse missionário.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../missionary/missionary.openapi.yaml#/components/parameters/MissionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDonationSettingsRequest'
+      responses:
+        '200':
+          description: Área de doação atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationSettingsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Usuário sem permissão sobre o missionário do `id`. Códigos:
+            `E_MISSIONARY_PROFILE_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Missionário do `id` não encontrado. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            `id` que não é UUID ou corpo inválido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /public/missionaries/{username}/donation:
+    get:
+      operationId: publicDonationShow
+      tags: [financial_config]
+      summary: Área de doação pública de um missionário
+      description: >-
+        Consulta anônima, só leitura (RF 1.4, RF 12.2): mensagem aos apoiadores
+        e apenas os métodos ativos (o pendente vem `null`). O CPF do titular
+        sai mascarado (`***.456.789-**`); CNPJ, que é dado público de cadastro,
+        sai completo. A chave Pix sai completa, porque é o que o apoiador copia
+        para pagar. Só missionários com perfil aprovado e conta ativa são
+        visíveis; os demais respondem o mesmo 404. Compartilha o rate limit do
+        perfil público (60 por minuto por IP; 600 para o servidor do BFF).
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username do missionário (maiúsculas são aceitas e normalizadas).
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[A-Za-z0-9_]+$'
+      responses:
+        '200':
+          description: Área de doação pública.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicDonationResponse'
+        '404':
+          description: >-
+            Perfil inexistente ou não público. Códigos:
+            `E_MISSIONARY_PROFILE_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Username com formato inválido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+        '429':
+          description: >-
+            Limite de consultas excedido. Códigos: `E_TOO_MANY_REQUESTS`.
+          headers:
+            Retry-After:
+              description: Segundos até a janela do rate limit expirar.
+              schema:
+                type: integer
+                example: 60
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    PixKeyType:
+      type: string
+      enum: [CPF, CNPJ, EMAIL, PHONE, RANDOM]
+      description: >-
+        CPF e CNPJ só com dígitos (pontuação é removida), e-mail com até 77
+        caracteres, telefone em E.164 (`+5511912345678`) e chave aleatória
+        (EVP) como UUID.
+
+    BankAccountType:
+      type: string
+      enum: [CHECKING, SAVINGS, PAYMENT]
+
+    DonationMethodStatus:
+      type: string
+      enum: [ACTIVE, PENDING]
+
+    PixRequest:
+      type: object
+      required: [keyType, key]
+      properties:
+        keyType:
+          $ref: '#/components/schemas/PixKeyType'
+        key:
+          type: string
+          minLength: 1
+          maxLength: 140
+
+    BankTransferRequest:
+      type: object
+      required:
+        [bankName, bankNumber, agency, accountNumber, accountType, holderName, holderDocument]
+      properties:
+        bankName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        bankNumber:
+          type: string
+          pattern: '^\d{3}$'
+          description: 'Código do banco na COMPE, por exemplo `001`.'
+        agency:
+          type: string
+          pattern: '^\d{1,5}(-[\dxX])?$'
+        accountNumber:
+          type: string
+          pattern: '^\d{1,20}-?[\dxX]$'
+          description: Número da conta com o dígito verificador.
+        accountType:
+          $ref: '#/components/schemas/BankAccountType'
+        holderName:
+          type: string
+          minLength: 2
+          maxLength: 255
+        holderDocument:
+          type: string
+          description: CPF (11 dígitos) ou CNPJ (14); a pontuação é removida.
+
+    UpdateDonationSettingsRequest:
+      type: object
+      properties:
+        donationMessage:
+          type: [string, 'null']
+          maxLength: 5000
+          description: Apelo ou agradecimento exibido no topo da área (RF 12.1.1).
+        pix:
+          oneOf:
+            - $ref: '#/components/schemas/PixRequest'
+            - type: 'null'
+        bankTransfer:
+          oneOf:
+            - $ref: '#/components/schemas/BankTransferRequest'
+            - type: 'null'
+
+    DonationSettings:
+      type: object
+      properties:
+        missionaryId:
+          type: string
+          format: uuid
+        donationMessage:
+          type: [string, 'null']
+        pix:
+          type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/DonationMethodStatus'
+            keyType:
+              oneOf:
+                - $ref: '#/components/schemas/PixKeyType'
+                - type: 'null'
+            key:
+              type: [string, 'null']
+        bankTransfer:
+          type: object
+          description: Todos os campos são `null` enquanto o status for `PENDING`.
+          properties:
+            status:
+              $ref: '#/components/schemas/DonationMethodStatus'
+            bankName:
+              type: [string, 'null']
+            bankNumber:
+              type: [string, 'null']
+            agency:
+              type: [string, 'null']
+            accountNumber:
+              type: [string, 'null']
+            accountType:
+              oneOf:
+                - $ref: '#/components/schemas/BankAccountType'
+                - type: 'null'
+            holderName:
+              type: [string, 'null']
+            holderDocument:
+              type: [string, 'null']
+              description: Documento completo, só com dígitos.
+
+    DonationSettingsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            donationSettings:
+              $ref: '#/components/schemas/DonationSettings'
+
+    PublicDonation:
+      type: object
+      properties:
+        donationMessage:
+          type: [string, 'null']
+        pix:
+          oneOf:
+            - type: object
+              properties:
+                keyType:
+                  $ref: '#/components/schemas/PixKeyType'
+                key:
+                  type: string
+            - type: 'null'
+        bankTransfer:
+          oneOf:
+            - type: object
+              properties:
+                bankName:
+                  type: string
+                bankNumber:
+                  type: string
+                agency:
+                  type: string
+                accountNumber:
+                  type: string
+                accountType:
+                  $ref: '#/components/schemas/BankAccountType'
+                holderName:
+                  type: string
+                holderDocument:
+                  type: string
+                  description: CPF mascarado (`***.456.789-**`) ou CNPJ formatado.
+            - type: 'null'
+
+    PublicDonationResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            donation:
+              $ref: '#/components/schemas/PublicDonation'

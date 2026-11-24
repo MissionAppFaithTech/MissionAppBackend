@@ -20,6 +20,12 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   // App
   APP_KEY: Env.schema.secret(),
+
+  // NOTE: chave própria dos dados bancários, separada do APP_KEY para que trocar
+  // ou vazar um não comprometa o outro. Durante uma rotação, a chave anterior vai
+  // em _PREVIOUS_KEYS (separadas por vírgula), usada só para descriptografar.
+  FINANCIAL_DATA_ENCRYPTION_KEY: Env.schema.secret(),
+  FINANCIAL_DATA_ENCRYPTION_PREVIOUS_KEYS: Env.schema.string.optional(),
   APP_URL: Env.schema.string({ format: 'url', tld: false }),
 
   // Session

@@ -6,6 +6,8 @@
 /// <reference path="./manifest.d.ts" />
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
 import type CatalogReferenceTransformer from '#transformers/catalog_reference_transformer'
+import type ConnectionTransformer from '#transformers/connection_transformer'
+import type DonationSettingsTransformer from '#transformers/donation_settings_transformer'
 import type FaithCommunityTransformer from '#transformers/faith_community_transformer'
 import type ImpactProjectTransformer from '#transformers/impact_project_transformer'
 import type MediaAssetTransformer from '#transformers/media_asset_transformer'
@@ -14,6 +16,7 @@ import type MissionaryTransformer from '#transformers/missionary_transformer'
 import type MissionaryWorkAddressTransformer from '#transformers/missionary_work_address_transformer'
 import type PostImageTransformer from '#transformers/post_image_transformer'
 import type PostTransformer from '#transformers/post_transformer'
+import type PublicDonationTransformer from '#transformers/public_donation_transformer'
 import type PublicMissionaryProfileTransformer from '#transformers/public_missionary_profile_transformer'
 import type SessionTransformer from '#transformers/session_transformer'
 import type UserTransformer from '#transformers/user_transformer'
@@ -22,6 +25,14 @@ export namespace Data {
   export type CatalogReference = InferData<CatalogReferenceTransformer>
   export namespace CatalogReference {
     export type Variants = InferVariants<CatalogReferenceTransformer>
+  }
+  export type Connection = InferData<ConnectionTransformer>
+  export namespace Connection {
+    export type Variants = InferVariants<ConnectionTransformer>
+  }
+  export type DonationSettings = InferData<DonationSettingsTransformer>
+  export namespace DonationSettings {
+    export type Variants = InferVariants<DonationSettingsTransformer>
   }
   export type FaithCommunity = InferData<FaithCommunityTransformer>
   export namespace FaithCommunity {
@@ -54,6 +65,10 @@ export namespace Data {
   export type Post = InferData<PostTransformer>
   export namespace Post {
     export type Variants = InferVariants<PostTransformer>
+  }
+  export type PublicDonation = InferData<PublicDonationTransformer>
+  export namespace PublicDonation {
+    export type Variants = InferVariants<PublicDonationTransformer>
   }
   export type PublicMissionaryProfile = InferData<PublicMissionaryProfileTransformer>
   export namespace PublicMissionaryProfile {

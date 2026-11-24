@@ -279,6 +279,55 @@ paths:
               schema:
                 $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
 
+  /feed:
+    get:
+      operationId: feedIndex
+      tags: [post]
+      summary: Feed cronológico do usuário (mais recentes primeiro)
+      description: >-
+        Postagens de quem o usuário segue e, para o missionário, as próprias
+        (RF 4.4.2, RF 5.3). Cada postagem traz `author`. Missionários seguidos
+        que foram suspensos, excluídos ou não estão aprovados saem do feed.
+        Paginação por cursor (ADR-0033).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          description: >-
+            `all` (padrão): próprias e de quem segue. `following`: só de quem
+            segue. `own`: só as próprias, vazio para quem não é missionário.
+          schema:
+            type: string
+            enum: [all, following, own]
+            default: all
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/CursorParam'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página do feed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            `scope` desconhecido, `limit` acima de 20 ou cursor malformado.
+            Códigos: `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
 components:
   parameters:
     PostId:
@@ -324,6 +373,8 @@ components:
         missionaryId:
           type: string
           format: uuid
+        author:
+          $ref: '#/components/schemas/PostAuthor'
         images:
           type: array
           maxItems: 3
@@ -332,6 +383,18 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    PostAuthor:
+      type: object
+      description: Missionário autor; presente só nas respostas de `GET /feed`.
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        profilePictureUrl:
+          type: [string, 'null']
+          format: uri
 
     PostResponse:
       type: object

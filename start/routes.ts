@@ -98,6 +98,9 @@ router
 
     router.resource('posts', controllers.post.Posts).apiOnly().use('*', middleware.auth())
 
+    // Feed cronológico (RF 4.4.2, RF 5.3): seguidos e, para o missionário, as próprias
+    router.get('feed', [controllers.post.Feeds, 'index']).use(middleware.auth())
+
     router
       .resource('missionary-agencies', controllers.missionary.MissionaryAgencies)
       .apiOnly()
@@ -117,6 +120,16 @@ router
       .get('public/missionaries/:username', [controllers.missionary.PublicProfiles, 'show'])
       .use(middleware.publicProfileRateLimit())
       .as('public.missionaries.show')
+
+    // NOTE: área de doação pública (RF 1.4, RF 12.2) — mesmo orçamento de rate
+    // limit do perfil, de onde ela é aberta; o documento do titular sai mascarado
+    router
+      .get('public/missionaries/:username/donation', [
+        controllers.financialConfig.PublicDonations,
+        'show',
+      ])
+      .use(middleware.publicProfileRateLimit())
+      .as('public.missionaries.donation')
 
     router
       .group(() => {
@@ -144,6 +157,19 @@ router
       .patch('account/password', [controllers.user.AccountPassword, 'update'])
       .use(middleware.auth())
 
+    // Rede de conexões (RF 4.4.1, RF 5.2, RF 10.6, RF 11.6): o alvo é sempre um
+    // missionário, identificado pelo username como na URL do perfil
+    router
+      .group(() => {
+        router.get('following', [controllers.follower.Followings, 'index'])
+        router.post('following', [controllers.follower.Followings, 'store'])
+        router.get('following/:username', [controllers.follower.Followings, 'show'])
+        router.delete('following/:username', [controllers.follower.Followings, 'destroy'])
+        router.get('followers', [controllers.follower.Followers, 'index'])
+      })
+      .prefix('account')
+      .use(middleware.auth())
+
     router
       .group(() => {
         router.patch('about', [controllers.missionary.About, 'update'])
@@ -151,6 +177,8 @@ router
         router.patch('profile', [controllers.missionary.Profile, 'update'])
         router.patch('identity', [controllers.missionary.Identity, 'update'])
         router.patch('work-address', [controllers.missionary.WorkAddress, 'update'])
+        router.get('donation-settings', [controllers.financialConfig.DonationSettings, 'show'])
+        router.patch('donation-settings', [controllers.financialConfig.DonationSettings, 'update'])
       })
       .prefix('missionaries')
       .as('missionary')
@@ -162,6 +190,8 @@ router
         router.patch('profile', [controllers.missionary.Profile, 'update'])
         router.patch('identity', [controllers.missionary.Identity, 'update'])
         router.patch('work-address', [controllers.missionary.WorkAddress, 'update'])
+        router.get('donation-settings', [controllers.financialConfig.DonationSettings, 'show'])
+        router.patch('donation-settings', [controllers.financialConfig.DonationSettings, 'update'])
       })
       .prefix('missionaries/:id')
       .as('missionary.admin')

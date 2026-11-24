@@ -1,0 +1,19 @@
+meta {
+  name: Is Following
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/v1/account/following/{{missionary_username}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Responde { following: true|false } para o botao Seguir/Seguindo do perfil.
+}

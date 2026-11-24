@@ -41,7 +41,16 @@ tags:
     description: >-
       Postagens de missionários para o feed, com até 3 imagens por postagem e
       limite de 50 imagens por missionário (substituir as mais antigas exige
-      confirmação).
+      confirmação), e o feed cronológico de quem o usuário segue.
+  - name: follower
+    description: >-
+      Rede de conexões — apoiadores e missionários seguem missionários;
+      listas de "seguindo" e de seguidores.
+  - name: financial_config
+    description: >-
+      Área de doação do missionário — mensagem aos apoiadores, Pix (só chave)
+      e transferência bancária, gravados com AES-256-GCM. O pagamento acontece
+      fora do app.
 
 paths:
   /auth/login:
@@ -84,6 +93,20 @@ paths:
     $ref: './post/openapi.yaml#/paths/~1posts'
   /posts/{id}:
     $ref: './post/openapi.yaml#/paths/~1posts~1{id}'
+  /feed:
+    $ref: './post/openapi.yaml#/paths/~1feed'
+  /account/following:
+    $ref: './follower/openapi.yaml#/paths/~1account~1following'
+  /account/following/{username}:
+    $ref: './follower/openapi.yaml#/paths/~1account~1following~1{username}'
+  /account/followers:
+    $ref: './follower/openapi.yaml#/paths/~1account~1followers'
+  /missionaries/donation-settings:
+    $ref: './financial_config/openapi.yaml#/paths/~1missionaries~1donation-settings'
+  /missionaries/{id}/donation-settings:
+    $ref: './financial_config/openapi.yaml#/paths/~1missionaries~1{id}~1donation-settings'
+  /public/missionaries/{username}/donation:
+    $ref: './financial_config/openapi.yaml#/paths/~1public~1missionaries~1{username}~1donation'
   /missionaries/about:
     $ref: './missionary/openapi.yaml#/paths/~1missionaries~1about'
   /missionaries/profile:

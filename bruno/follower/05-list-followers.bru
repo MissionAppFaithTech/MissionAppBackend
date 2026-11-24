@@ -1,0 +1,24 @@
+meta {
+  name: List Followers
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/v1/account/followers
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~cursor: 
+  ~limit: 20
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+docs {
+  Quem segue o usuario autenticado (RF 10.6), mais recentes primeiro, por cursor.
+}

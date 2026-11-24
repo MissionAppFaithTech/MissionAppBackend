@@ -12,6 +12,14 @@ export const controllers = {
     ResetPassword: () => import('#controllers/auth/reset_password_controller'),
     Sessions: () => import('#controllers/auth/sessions_controller'),
   },
+  financialConfig: {
+    DonationSettings: () => import('#controllers/financial_config/donation_settings_controller'),
+    PublicDonations: () => import('#controllers/financial_config/public_donations_controller'),
+  },
+  follower: {
+    Followers: () => import('#controllers/follower/followers_controller'),
+    Followings: () => import('#controllers/follower/followings_controller'),
+  },
   impactProject: {
     ImpactProjects: () => import('#controllers/impact_project/impact_projects_controller'),
   },
@@ -30,6 +38,7 @@ export const controllers = {
     WorkAddress: () => import('#controllers/missionary/work_address_controller'),
   },
   post: {
+    Feeds: () => import('#controllers/post/feeds_controller'),
     Posts: () => import('#controllers/post/posts_controller'),
   },
   user: {

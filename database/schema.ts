@@ -155,6 +155,7 @@ export class FinancialConfigSchema extends BaseModel {
     'id',
     'missionaryId',
     'pixKey',
+    'pixKeyType',
     'updatedAt',
   ] as const
   $columns = FinancialConfigSchema.$columns
@@ -180,6 +181,8 @@ export class FinancialConfigSchema extends BaseModel {
   declare missionaryId: string
   @column()
   declare pixKey: string | null
+  @column()
+  declare pixKeyType: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }

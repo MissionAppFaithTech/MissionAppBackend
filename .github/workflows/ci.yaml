@@ -50,7 +50,7 @@ jobs:
         run: |
           cp .env.example .env
           # Segredos que o .env.example deixa vazios: aleatórios a cada execução.
-          for name in APP_KEY JWT_SECRET REDIS_PASSWORD RESEND_API_KEY; do
+          for name in APP_KEY FINANCIAL_DATA_ENCRYPTION_KEY JWT_SECRET REDIS_PASSWORD RESEND_API_KEY; do
             echo "$name=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
           done
       # NOTE: --no-schema-generate mantém database/schema.ts; o rollback o
@@ -110,7 +110,7 @@ jobs:
         run: |
           cp .env.example .env
           # Segredos que o .env.example deixa vazios ou de exemplo: aleatórios a cada execução.
-          for name in APP_KEY JWT_SECRET REDIS_PASSWORD RESEND_API_KEY S3_SECRET_KEY; do
+          for name in APP_KEY FINANCIAL_DATA_ENCRYPTION_KEY JWT_SECRET REDIS_PASSWORD RESEND_API_KEY S3_SECRET_KEY; do
             echo "$name=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
           done
       # NOTE: Dragonfly e MinIO via `docker run` porque precisam de argumentos de

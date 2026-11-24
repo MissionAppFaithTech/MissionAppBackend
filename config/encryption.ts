@@ -21,6 +21,21 @@ const encryptionConfig = defineConfig({
        */
       id: 'gcm',
     }),
+
+    /**
+     * Dados bancários do missionário (pix, agência, conta, titular). Chave
+     * própria para que rotacionar o APP_KEY não torne esses dados ilegíveis.
+     */
+    financial: drivers.aes256gcm({
+      keys: [
+        env.get('FINANCIAL_DATA_ENCRYPTION_KEY'),
+        ...(env.get('FINANCIAL_DATA_ENCRYPTION_PREVIOUS_KEYS') ?? '')
+          .split(',')
+          .map((key) => key.trim())
+          .filter(Boolean),
+      ],
+      id: 'financial',
+    }),
   },
 })
 

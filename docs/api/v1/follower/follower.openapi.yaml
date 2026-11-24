@@ -1,0 +1,285 @@
+paths:
+  /account/following:
+    get:
+      operationId: followingIndex
+      tags: [follower]
+      summary: Lista os missionários que o usuário segue (mais recentes primeiro)
+      description: >-
+        Aba "Seguindo" (RF 11.6). Paginação por cursor (ADR-0033): envie o
+        `meta.nextCursor` da resposta anterior em `cursor`. Perfis suspensos ou
+        excluídos somem da lista, mas o vínculo continua gravado.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/CursorParam'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de perfis seguidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowingResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            `limit` acima de 20 ou cursor malformado. Códigos:
+            `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    post:
+      operationId: followingStore
+      tags: [follower]
+      summary: Segue um missionário
+      description: >-
+        Apoiadores e missionários seguem missionários (RF 4.4.1, RF 5.2);
+        ninguém segue apoiadores nem a si mesmo. Idempotente: seguir de novo
+        responde 200 sem duplicar o vínculo nem os contadores
+        `followersCount`/`followingCount`. Só missionários aprovados e com conta
+        ativa podem ser seguidos; os demais respondem o mesmo 404.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowRequest'
+      responses:
+        '200':
+          description: O usuário passa a seguir o missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStatusResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: >-
+            Administradores não seguem perfis. Códigos: `E_FOLLOW_FORBIDDEN`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: >-
+            Username inexistente, de apoiador ou de missionário não visível.
+            Códigos: `E_FOLLOWED_USER_NOT_FOUND`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Username com formato inválido ou o próprio usuário. Códigos:
+            `E_VALIDATION_ERROR`, `E_FOLLOW_SELF`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /account/following/{username}:
+    get:
+      operationId: followingShow
+      tags: [follower]
+      summary: Diz se o usuário segue o missionário
+      description: Estado do botão "Seguir"/"Seguindo" no perfil do missionário.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FollowedUsername'
+      responses:
+        '200':
+          description: Estado atual do vínculo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStatusResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Username com formato inválido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+    delete:
+      operationId: followingDestroy
+      tags: [follower]
+      summary: Deixa de seguir um missionário
+      description: >-
+        Idempotente: deixar de seguir quem não se segue (ou um username
+        inexistente) responde 200 sem alterar os contadores. Funciona mesmo que
+        o missionário esteja suspenso.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FollowedUsername'
+      responses:
+        '200':
+          description: O usuário não segue mais o missionário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStatusResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            Username com formato inválido. Códigos: `E_VALIDATION_ERROR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+  /account/followers:
+    get:
+      operationId: followersIndex
+      tags: [follower]
+      summary: Lista quem segue o usuário (mais recentes primeiro)
+      description: >-
+        Seguidores do próprio usuário (RF 10.6), por cursor (ADR-0033). Contas
+        suspensas ou excluídas não aparecem.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/CursorParam'
+        - $ref: '../auth/auth.openapi.yaml#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de seguidores.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowersResponse'
+        '401':
+          description: >-
+            Access token ausente, inválido ou revogado. Códigos:
+            `E_UNAUTHORIZED_ACCESS`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ErrorResponse'
+        '422':
+          description: >-
+            `limit` acima de 20 ou cursor malformado. Códigos:
+            `E_VALIDATION_ERROR`, `E_INVALID_CURSOR`.
+          content:
+            application/json:
+              schema:
+                $ref: '../auth/auth.openapi.yaml#/components/schemas/ValidationErrorResponse'
+
+components:
+  parameters:
+    FollowedUsername:
+      name: username
+      in: path
+      required: true
+      description: Username do missionário (maiúsculas são aceitas e normalizadas).
+      schema:
+        type: string
+        minLength: 3
+        maxLength: 32
+        pattern: '^[A-Za-z0-9_]+$'
+
+  schemas:
+    FollowRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[A-Za-z0-9_]+$'
+          description: Username do missionário a seguir (maiúsculas são normalizadas).
+
+    FollowStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [following]
+          properties:
+            following:
+              type: boolean
+
+    Connection:
+      type: object
+      description: Card público de um perfil na lista de seguidores ou de "seguindo".
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [MISSIONARY, SUPPORTER, ADMIN]
+        biography:
+          type: [string, 'null']
+        profilePictureUrl:
+          type: [string, 'null']
+          format: uri
+        followedAt:
+          type: string
+          format: date-time
+
+    FollowingResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [following]
+          properties:
+            following:
+              type: array
+              items:
+                $ref: '#/components/schemas/Connection'
+        meta:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/CursorPaginationMeta'
+
+    FollowersResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [followers]
+          properties:
+            followers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Connection'
+        meta:
+          $ref: '../auth/auth.openapi.yaml#/components/schemas/CursorPaginationMeta'

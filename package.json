@@ -57,6 +57,8 @@
     "#validators/impact_project/*": "./app/validators/impact_project/*.js",
     "#validators/post/*": "./app/validators/post/*.js",
     "#validators/user/*": "./app/validators/user/*.js",
+    "#validators/follower/*": "./app/validators/follower/*.js",
+    "#validators/financial_config/*": "./app/validators/financial_config/*.js",
     "#providers/*": "./providers/*.js",
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",

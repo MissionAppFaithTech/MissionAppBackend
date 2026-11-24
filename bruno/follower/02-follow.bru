@@ -1,0 +1,27 @@
+meta {
+  name: Follow Missionary
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/v1/account/following
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "username": "{{missionary_username}}"
+  }
+}
+
+docs {
+  Segue um missionario (RF 4.4.1, RF 5.2). Idempotente. Apoiador nao pode ser
+  seguido (404 E_FOLLOWED_USER_NOT_FOUND), ninguem segue a si mesmo
+  (422 E_FOLLOW_SELF) e ADMIN nao segue perfis (403 E_FOLLOW_FORBIDDEN).
+}
