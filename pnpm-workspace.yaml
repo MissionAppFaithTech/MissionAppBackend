@@ -10,7 +10,7 @@ overrides:
   # WARNING: o @adonisjs/mail 10.4.0 ainda declara nodemailer ^9; as correções
   # dos advisories do addressparser e do cliente SMTP só existem no 10.x.
   # Validado com o transporte Resend — remover quando o Adonis suportar o 10.
-  nodemailer: 10.6.0
+  nodemailer: 10.6.1
   # NOTE: corrige advisories high/critical do Snyk em undici <7.30.2 (via @elastic/transport).
   undici: 7.30.2
   # NOTE: o @opentelemetry/core 2.x (via @elastic/transport) exige api <1.10.
